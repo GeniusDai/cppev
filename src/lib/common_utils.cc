@@ -2,6 +2,7 @@
 #include <string>
 #include <cstring>
 #include <exception>
+#include <signal.h>
 
 namespace cppev {
 
@@ -30,11 +31,17 @@ std::string timestamp(time_t t, const char *format) {
     localtime_r(&t, &s_tm);
     char buf[1024];
     memset(buf, 0, 1024);
-    if (0 == strftime(buf, 1024, format, &s_tm)) {
-        throw_runtime_error("strftime error");
-    }
+    if (0 == strftime(buf, 1024, format, &s_tm))
+    { throw_runtime_error("strftime error"); }
     return buf;
 }
 
+void ignore_signal(int sig) {
+    struct sigaction sigact;
+    memset(&sigact, 0, sizeof(sigact));
+    sigact.sa_handler = SIG_IGN;
+    if (sigaction(sig, &sigact, nullptr) == -1)
+    { throw_runtime_error("sigaction error"); }
+}
 
 }

@@ -29,6 +29,8 @@ time_t sc_time();
 
 std::string timestamp(time_t t = 0, const char *format = nullptr);
 
+void ignore_signal(int sig);
+
 }
 
 #endif

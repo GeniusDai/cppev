@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <iostream>
 #include <functional>
+#include <signal.h>
 #include "cppev/event_loop.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
@@ -224,6 +225,7 @@ public:
 
     void run() {
         // thread pool must run first
+        ignore_signal(SIGPIPE);
         tp_->run();
         acpt_->run();
         tp_->join();
@@ -355,6 +357,7 @@ public:
 
     void run() {
         // thread pool must run first
+        ignore_signal(SIGPIPE);
         tp_->run();
         cont_->run();
         tp_->join();
