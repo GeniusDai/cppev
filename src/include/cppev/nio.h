@@ -138,7 +138,7 @@ public:
     nsocktcp(int sockfd, family f)
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd) {}
 
-    void listen(const char *ip, const int port);
+    void listen(const int port, const char *ip = nullptr);
 
     void listen(const char *path);
 
@@ -161,7 +161,7 @@ public:
     nsockudp(int sockfd, family f)
     : nio(sockfd), nsock(sockfd, f) {}
 
-    void bind(const char *ip, const int port);
+    void bind(const int port, const char *ip = nullptr);
 
     void bind(const char *path);
 

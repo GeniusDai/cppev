@@ -1,2 +1,2 @@
-**Cppev is a event driven C++ library.**
+**Cppev is a C++ event driven library.**
 

@@ -161,7 +161,7 @@ public:
 
     virtual ~acceptor() {}
 
-    void listen(std::string ip, int port, family f);
+    void listen(int port, family f, const char *ip = nullptr);
 
     // Register readable and writable callbacks for conn,
     // only readable is activated
@@ -176,9 +176,9 @@ private:
     std::shared_ptr<event_loop> evp_;
 };
 
-void acceptor::listen(std::string ip, int port, family f) {
+void acceptor::listen(int port, family f, const char *ip) {
     sock_ = nio_factory::get_nsocktcp(f);
-    sock_->listen(ip.c_str(), port);
+    sock_->listen(port, ip);
 }
 
 void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
@@ -218,8 +218,8 @@ public:
         acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
     }
 
-    void listen(const std::string ip, const int port, family f) {
-        acpt_->listen(ip, port, f);
+    void listen(const int port, family f, const char *ip = nullptr) {
+        acpt_->listen(port, f, ip);
     }
 
     void run() {

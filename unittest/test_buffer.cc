@@ -13,7 +13,7 @@ protected:
 
 TEST_F(test_buffer, test_put_get) {
     buffer buf;
-    string str = "cppev is an event driven lib";
+    string str = "Cppev is a C++ event driven library";
     buf.put(str);
     ASSERT_EQ(str.size(), buf.size());
     ASSERT_EQ(str[3], buf[3]);

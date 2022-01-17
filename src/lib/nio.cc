@@ -31,13 +31,15 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
     case AF_INET: {
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         ap->sin_port = htons(port);
-        inet_pton(addr.ss_family, ip, &(ap->sin_addr));
+        if (ip) { inet_pton(addr.ss_family, ip, &(ap->sin_addr)); }
+        else { ap->sin_addr.s_addr = htonl(INADDR_ANY); }
         break;
     }
     case AF_INET6: {
         sockaddr_in6 *ap6 = (sockaddr_in6 *)(&addr);
         ap6->sin6_port = htons(port);
-        inet_pton(addr.ss_family, ip, &(ap6->sin6_addr));
+        if (ip) { inet_pton(addr.ss_family, ip, &(ap6->sin6_addr)); }
+        else { ap6->sin6_addr = in6addr_any; }
         break;
     }
     default: {
@@ -163,7 +165,7 @@ nsock::peername() {
     return query_target(addr);
 }
 
-void nsocktcp::listen(const char *ip, const int port) {
+void nsocktcp::listen(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
@@ -218,7 +220,7 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) {
     return sockfds;
 }
 
-void nsockudp::bind(const char *ip, const int port) {
+void nsockudp::bind(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
