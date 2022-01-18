@@ -12,9 +12,9 @@
 
 Two kinds of thread pool provided:
 
-* 1) Custom type runnable by variadic templates.
+* Custom type runnable by variadic templates.
 
-* 2) Task queue for thread pool with stop function.
+* Task queue for thread pool with stop function.
 
 ## Event Loop
 
