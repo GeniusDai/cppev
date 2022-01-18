@@ -24,14 +24,14 @@ private:
     std::unique_ptr<char[]> buffer_;
 
 public:
-    buffer() : buffer(0) {}
+    buffer() : buffer(1) {}
 
     explicit buffer(int cap) : cap_(cap), start_(0), offset_(0) {
         buffer_ = std::unique_ptr<char[]>(new char[cap_]);
         if (cap_) { memset(buffer_.get(), 0, cap_); }
     }
 
-    char &operator[](int i) { return buffer_.get()[start_+i]; }
+    char &operator[](int i) { return buffer_[start_ + i]; }
 
     int size() const { return offset_ - start_; }
 
@@ -58,11 +58,10 @@ public:
         offset_ = 0;
     }
 
-    void put(const std::string &str) {
-        put(str.c_str(), str.size());
-    }
+    void put(const std::string &str) { put(str.c_str()); }
 
-    void put(const char *str, int len) {
+    void put(const char *str) {
+        int len = strlen(str);
         resize(offset_ + len);
         for (int i = 0; i < len; ++i)
         { buffer_[offset_++] = str[i]; }

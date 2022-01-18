@@ -35,6 +35,21 @@ void set_nio(int fd);
 int _query_family(family f);
 
 class nio : public uncopyable {
+public:
+    explicit nio(int fd) : fd_(fd) {
+        set_nio(fd_);
+        rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
+        wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
+    }
+
+    virtual ~nio() { close(fd_); }
+
+    int fd() const { return fd_; }
+
+    buffer *rbuf() { return rbuffer_.get(); }
+
+    buffer *wbuf() { return wbuffer_.get(); }
+
 protected:
     // File descriptor
     int fd_;
@@ -43,37 +58,10 @@ protected:
     std::unique_ptr<buffer> rbuffer_;
 
     std::unique_ptr<buffer> wbuffer_;
-
-public:
-    explicit nio(int fd) : fd_(fd) {
-        set_nio(fd_);
-        rbuffer_ = std::unique_ptr<buffer>(new buffer(0));
-        wbuffer_ = std::unique_ptr<buffer>(new buffer(0));
-    }
-
-    virtual ~nio() { close(fd_); }
-
-    int fd() const { return fd_; }
-
-    void set_fd(int fd) { fd_ = fd; }
-
-    buffer *rbuf() { return rbuffer_.get(); }
-
-    buffer *wbuf() { return wbuffer_.get(); }
 };
 
 
 class nstream : public virtual nio {
-protected:
-    // Used by tcp-socket
-    bool reset_;
-
-    // End Of File: Used by tcp-socket, pipe, fifo, disk-file
-    bool eof_;
-
-    // Error Of Pipe: Used by tcp-socket, pipe, fifo
-    bool eop_;
-
 public:
     explicit nstream(int fd)
     : nio(fd), reset_(false), eof_(false), eop_(false) {}
@@ -97,14 +85,21 @@ public:
 
     // write until block or unwritable
     int write_all(int step);
+
+protected:
+    // Used by tcp-socket
+    bool reset_;
+
+    // End Of File: Used by tcp-socket, pipe, fifo, disk-file
+    bool eof_;
+
+    // Error Of Pipe: Used by tcp-socket, pipe, fifo
+    bool eop_;
+
 };
 
 
 class nsock : public virtual nio {
-protected:
-    // socket family
-    family family_;
-
 public:
     nsock(int fd, family f) : nio(fd), family_(f) {}
 
@@ -130,6 +125,10 @@ public:
         { throw_runtime_error("getsockopt error"); }
         return optval == 0;
     }
+
+protected:
+    // socket family
+    family family_;
 };
 
 
@@ -153,6 +152,13 @@ public:
     { connect(path.c_str()); }
 
     std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
+
+    std::tuple<std::string, int, family> connpeer() {
+        return std::make_tuple<>(connect_peer_.first, connect_peer_.second, family_);
+    }
+
+private:
+    std::pair<std::string, int> connect_peer_;
 };
 
 
@@ -175,13 +181,6 @@ public:
 typedef void(*fs_handler)(inotify_event *, const char *path);
 
 class nwatcher final : public nstream {
-private:
-    std::unordered_map<int, std::string> wds_;
-
-    std::unordered_map<std::string, int> paths_;
-
-    fs_handler handler_;
-
 public:
     explicit nwatcher(int fd, fs_handler handler = nullptr)
     : nio(fd), nstream(fd), handler_(handler) {}
@@ -210,6 +209,13 @@ public:
             p += sizeof(inotify_event) + evp->len;
         }
     }
+
+private:
+    std::unordered_map<int, std::string> wds_;
+
+    std::unordered_map<std::string, int> paths_;
+
+    fs_handler handler_;
 };
 
 

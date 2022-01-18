@@ -189,6 +189,7 @@ void nsocktcp::listen(const char *path) {
 }
 
 void nsocktcp::connect(const char *ip, const int port) {
+    connect_peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
@@ -198,6 +199,7 @@ void nsocktcp::connect(const char *ip, const int port) {
 }
 
 void nsocktcp::connect(const char *path) {
+    connect_peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);

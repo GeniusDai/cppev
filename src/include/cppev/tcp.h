@@ -68,8 +68,8 @@ public:
     event_loop *random_get_evlp() {
         std::random_device rd;
         std::default_random_engine rde(rd());
-        std::uniform_int_distribution<int> dist(0, evls_.size()-1);
-        return evls_[dist(rde)];
+        std::uniform_int_distribution<int> dist(0, evls.size()-1);
+        return evls[dist(rde)];
     }
 
 private:
@@ -78,13 +78,13 @@ private:
     friend class connector;
 
     // Event loops of thread pool, used for task assign
-    std::vector<event_loop *> evls_;
+    std::vector<event_loop *> evls;
 
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts_;
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
 
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures;
 
-    std::mutex lock_;
+    std::mutex lock;
 };
 
 
@@ -192,11 +192,14 @@ void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
         log::info << "new fd " << p->fd() << " accepted" << log::endl;
         auto sp = std::dynamic_pointer_cast<nio>(p);
         event_loop *io_evlp = d->random_get_evlp();
-        io_evlp->fd_register(sp, fd_event::fd_readable,
-            iohandler::on_readable, true);
+        // The sequence CANNOT be changed, since user defined function may
+        // call try_write, and register readable to another thread may cause
+        // race condition if peer closed very soon.
         io_evlp->fd_register(sp, fd_event::fd_writable,
             iohandler::on_writable, false);
         d->on_accept(sp, io_evlp);
+        io_evlp->fd_register(sp, fd_event::fd_readable,
+            iohandler::on_readable, true);
     }
 }
 
@@ -214,7 +217,7 @@ public:
         tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
             (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
         for (int i = 0; i < tp_->size(); ++i) {
-            data_->evls_.push_back((*tp_)[i]->evp_.get());
+            data_->evls.push_back((*tp_)[i]->evp_.get());
         }
         acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
     }
@@ -288,11 +291,10 @@ private:
 
 void connector::add(std::string ip, int port, family f, int t) {
     tp_shared_data *d = static_cast<tp_shared_data *>(evp_->data());
-    std::unique_lock<std::mutex> lock(d->lock_);
+    std::unique_lock<std::mutex> lock(d->lock);
     auto h = std::make_tuple<>(ip, port, f);
-
-    if (d->hosts_.count(h)) { d->hosts_[h] += t; }
-    else { d->hosts_[h] = t; }
+    if (d->hosts.count(h)) { d->hosts[h] += t; }
+    else { d->hosts[h] = t; }
     wrp_->wbuf()->put("0");
     wrp_->write_all(1);
 }
@@ -301,8 +303,8 @@ void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
     nstream *rdsp = dynamic_cast<nstream *>(iop.get());
     tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
     rdsp->read_all(1);
-    std::unique_lock<std::mutex> lock(d->lock_);
-    for (auto iter = d->hosts_.begin(); iter != d->hosts_.end(); ) {
+    std::unique_lock<std::mutex> lock(d->lock);
+    for (auto iter = d->hosts.begin(); iter != d->hosts.end(); ) {
         for (int i = 0; i < iter->second; ++i) {
             std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp
                 (std::get<2>(iter->first));
@@ -310,7 +312,7 @@ void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
             evp->fd_register(std::dynamic_pointer_cast<nio>(sock),
                 fd_event::fd_writable, connector::on_writable, true);
         }
-        iter = d->hosts_.erase(iter);
+        iter = d->hosts.erase(iter);
     }
 }
 
@@ -319,17 +321,17 @@ void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
     tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
     evp->fd_remove(iop, true);
     if (!iosp->check_connect()) {
-        std::tuple<std::string, int, family> h = iosp->peername();
+        std::tuple<std::string, int, family> h = iosp->connpeer();
         log::info << "connect failed with " << std::get<0>(h) << " "
             << std::get<1>(h) << log::endl;
-        if (d->failures_.count(h)) { d->failures_[h] += 1; }
-        else { d->failures_[h] = 1; }
+        if (d->failures.count(h)) { d->failures[h] += 1; }
+        else { d->failures[h] = 1; }
         return;
     }
     event_loop *io_evlp = d->random_get_evlp();
-    io_evlp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
     io_evlp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
     d->on_connect(iop, io_evlp);
+    io_evlp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
 void connector::run_impl() {
@@ -346,7 +348,7 @@ public:
         tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
             (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
         for (int i = 0; i < tp_->size(); ++i) {
-            data_->evls_.push_back((*tp_)[i]->evp_.get());
+            data_->evls.push_back((*tp_)[i]->evp_.get());
         }
         cont_ = std::shared_ptr<connector>(new connector(data_.get()));
     }
