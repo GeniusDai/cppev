@@ -21,7 +21,7 @@ void set_nio(int fd) {
 static const std::unordered_map<family, int, enum_hash> _fmap = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
-    {family::local, AF_LOCAL}
+    {family::unix, AF_LOCAL}
 };
 
 int _query_family(family f) { return _fmap.at(f); }
@@ -76,7 +76,7 @@ query_target(sockaddr_storage &addr) {
         break;
     }
     case AF_LOCAL: {
-        f = family::local;
+        f = family::unix;
         sockaddr_un *apu = (sockaddr_un *)&addr;
         port = -1;
         memcpy(ip,apu->sun_path, sizeof(apu->sun_path));

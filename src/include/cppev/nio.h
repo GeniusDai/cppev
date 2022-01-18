@@ -27,7 +27,7 @@ class nwatcher;
 enum class family {
     ipv4,
     ipv6,
-    local
+    unix
 };
 
 void set_nio(int fd);
