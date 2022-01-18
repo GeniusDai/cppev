@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <type_traits>
 #include <vector>
+#include <functional>
 #include "cppev/common_utils.h"
 #include "cppev/runnable.h"
 
@@ -20,7 +21,10 @@ class thread_pool : public uncopyable {
 public:
     thread_pool(int thr_num, Args... args) {
         for (int i = 0; i < thr_num; ++i)
-        { thrs_.push_back(std::shared_ptr<Runnable>(new Runnable(args...))); }
+        {
+            thrs_.push_back(std::shared_ptr<Runnable>
+                (new Runnable(std::forward<Args>(args)...)));
+        }
     }
 
     virtual ~thread_pool() {}

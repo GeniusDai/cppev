@@ -322,13 +322,16 @@ void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
     evp->fd_remove(iop, true);
     if (!iosp->check_connect()) {
         std::tuple<std::string, int, family> h = iosp->connpeer();
-        log::info << "connect failed with " << std::get<0>(h) << " "
+        log::error << "connect failed with " << std::get<0>(h) << " "
             << std::get<1>(h) << log::endl;
         if (d->failures.count(h)) { d->failures[h] += 1; }
         else { d->failures[h] = 1; }
         return;
     }
     event_loop *io_evlp = d->random_get_evlp();
+    // The sequence CANNOT be changed, since user defined function may
+    // call try_write, and register readable to another thread may cause
+    // race condition if peer closed very soon.
     io_evlp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
     d->on_connect(iop, io_evlp);
     io_evlp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
