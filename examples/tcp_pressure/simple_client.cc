@@ -4,7 +4,7 @@
 auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
-    cppev::try_write(iop, evp);
+    cppev::async_write(iop, evp);
 };
 
 auto on_write_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {

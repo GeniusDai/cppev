@@ -100,7 +100,7 @@ public:
 
     virtual ~iohandler() {}
 
-    static void try_write(std::shared_ptr<nio> iop, event_loop *evp);
+    static void async_write(std::shared_ptr<nio> iop, event_loop *evp);
 
     static void on_readable(std::shared_ptr<nio> iop, event_loop *evp);
 
@@ -112,7 +112,7 @@ private:
     std::shared_ptr<event_loop> evp_;
 };
 
-void iohandler::try_write(std::shared_ptr<nio> iop, event_loop *evp) {
+void iohandler::async_write(std::shared_ptr<nio> iop, event_loop *evp) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
     iopt->write_all(sysconfig::buffer_io_step);
@@ -193,7 +193,7 @@ void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
         auto sp = std::dynamic_pointer_cast<nio>(p);
         event_loop *io_evlp = d->random_get_evlp();
         // The sequence CANNOT be changed, since user defined function may
-        // call try_write, and register readable to another thread may cause
+        // call async_write, and register readable to another thread may cause
         // race condition if peer closed very soon.
         io_evlp->fd_register(sp, fd_event::fd_writable,
             iohandler::on_writable, false);
@@ -330,7 +330,7 @@ void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
     }
     event_loop *io_evlp = d->random_get_evlp();
     // The sequence CANNOT be changed, since user defined function may
-    // call try_write, and register readable to another thread may cause
+    // call async_write, and register readable to another thread may cause
     // race condition if peer closed very soon.
     io_evlp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
     d->on_connect(iop, io_evlp);
@@ -389,7 +389,7 @@ private:
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
 
-constexpr auto try_write = iohandler::try_write;
+constexpr auto async_write = iohandler::async_write;
 
 }
 

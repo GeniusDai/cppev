@@ -2,14 +2,14 @@
 #include "cppev/tcp.h"
 
 auto on_accept = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
-    iop->wbuf()->put("cppev is an event driven lib");
-    cppev::try_write(iop, evp);
+    iop->wbuf()->put("Cppev is a C++ event driven library");
+    cppev::async_write(iop, evp);
     cppev::log::info << "write message to " << iop->fd() << cppev::log::endl;
 };
 
 auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     iop->wbuf()->put(iop->rbuf()->get());
-    cppev::try_write(iop, evp);
+    cppev::async_write(iop, evp);
 };
 
 int main() {

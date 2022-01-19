@@ -21,7 +21,7 @@ void set_nio(int fd) {
 static const std::unordered_map<family, int, enum_hash> _fmap = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
-    {family::unix, AF_LOCAL}
+    {family::local, AF_LOCAL}
 };
 
 int _query_family(family f) { return _fmap.at(f); }
@@ -50,7 +50,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
 
 static void set_path(sockaddr_storage &addr, const char *path) {
     sockaddr_un *ap = (sockaddr_un *)(&addr);
-    strcpy(ap->sun_path, path);
+    strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
 static std::tuple<std::string, int, family>
@@ -76,7 +76,7 @@ query_target(sockaddr_storage &addr) {
         break;
     }
     case AF_LOCAL: {
-        f = family::unix;
+        f = family::local;
         sockaddr_un *apu = (sockaddr_un *)&addr;
         port = -1;
         memcpy(ip,apu->sun_path, sizeof(apu->sun_path));
@@ -182,7 +182,7 @@ void nsocktcp::listen(const char *path) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
     set_path(addr, path);
-    if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_runtime_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     { throw_runtime_error("listen error"); }
@@ -204,7 +204,8 @@ void nsocktcp::connect(const char *path) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
     set_path(addr, path);
-    if (::connect(fd_, (sockaddr *)&addr, sizeof(addr)) < 0 && errno != EINPROGRESS)
+    int addr_len = SUN_LEN((sockaddr_un *)&addr);
+    if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 && errno != EINPROGRESS)
     { throw_runtime_error("connect error"); }
 }
 
@@ -237,7 +238,7 @@ void nsockudp::bind(const char *path) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = _query_family(family_);
     set_path(addr, path);
-    if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_runtime_error("bind error"); }
 }
 

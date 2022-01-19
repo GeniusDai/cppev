@@ -27,7 +27,7 @@ class nwatcher;
 enum class family {
     ipv4,
     ipv6,
-    unix
+    local
 };
 
 void set_nio(int fd);
@@ -81,10 +81,10 @@ public:
     int write_chunk(int len);
 
     // read until block or unreadable
-    int read_all(int step);
+    int read_all(int step = 128);
 
     // write until block or unwritable
-    int write_all(int step);
+    int write_all(int step = 128);
 
 protected:
     // Used by tcp-socket

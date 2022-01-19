@@ -8,20 +8,20 @@ The simple server just send a message to the client, then echo any message back 
 
 ### Step 1. Define handler
 
-On the socket accepted, put the message to the write buffer, then trying to send it. The try_write here means if the message is very long then would register writable event to do asynchrous write.
+On the socket accepted, put the message to the write buffer, then trying to send it. The async_write here means if the message is very long then would register writable event to do asynchrous write.
 
 On the socket sys-buffer read completed, retrieve the message from read buffer, then put to the write buffer and trying to send it.
 
 ```
 auto on_accept = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     iop->wbuf()->put("cppev is an event driven lib");
-    cppev::try_write(iop, evp);
+    cppev::async_write(iop, evp);
     cppev::log::info << "write message to " << iop->fd() << cppev::log::endl;
 };
 
 auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     iop->wbuf()->put(iop->rbuf()->get());
-    cppev::try_write(iop, evp);
+    cppev::async_write(iop, evp);
 };
 ```
 
@@ -52,7 +52,7 @@ Handler is similiar with the server, just we prompt a message to show our (may b
 auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
-    cppev::try_write(iop, evp);
+    cppev::async_write(iop, evp);
 };
 
 auto on_write_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
