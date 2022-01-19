@@ -29,14 +29,22 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
     case AF_INET: {
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         ap->sin_port = htons(port);
-        if (ip) { inet_pton(addr.ss_family, ip, &(ap->sin_addr)); }
+        if (ip) {
+            int rtn = inet_pton(addr.ss_family, ip, &(ap->sin_addr));
+            if (rtn == 0) { throw_logic_error("inet_pton error"); }
+            else if (rtn == -1) { throw_runtime_error("inet_pton error"); }
+        }
         else { ap->sin_addr.s_addr = htonl(INADDR_ANY); }
         break;
     }
     case AF_INET6: {
         sockaddr_in6 *ap6 = (sockaddr_in6 *)(&addr);
         ap6->sin6_port = htons(port);
-        if (ip) { inet_pton(addr.ss_family, ip, &(ap6->sin6_addr)); }
+        if (ip) {
+            int rtn = inet_pton(addr.ss_family, ip, &(ap6->sin6_addr));
+            if (rtn == 0) { throw_logic_error("inet_pton error"); }
+            else if (rtn == -1) { throw_runtime_error("inet_pton error"); }
+        }
         else { ap6->sin6_addr = in6addr_any; }
         break;
     }
@@ -62,7 +70,7 @@ query_target(sockaddr_storage &addr) {
         f = family::ipv4;
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         port = ntohs(ap->sin_port);
-        if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) < 0)
+        if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) == nullptr)
         { throw_runtime_error("inet_ntop error"); }
         break;
     }
@@ -70,7 +78,7 @@ query_target(sockaddr_storage &addr) {
         f = family::ipv6;
         sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);
         port = ntohs(ap->sin6_port);
-        if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) < 0)
+        if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) == nullptr)
         { throw_runtime_error("inet_ntop error"); }
         break;
     }
