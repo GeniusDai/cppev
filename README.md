@@ -2,13 +2,13 @@
 
 # Architecture
 
-## Nonblock IO
+### Nonblock IO
 
 * Support disk-file / pipe / fifo / inotify / socket.
 
 * Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
-## Thread Pool
+### Thread Pool
 
 Two kinds of thread pool provided:
 
@@ -16,19 +16,19 @@ Two kinds of thread pool provided:
 
 * Task queue for thread pool with stop function.
 
-## Event Loop
+### Event Loop
 
 * Support readable / writable event for fd, use io-multiplexing.
 
 * Support event priority and multi-thread shared data.
 
-## Tcp Socket Handle
+### Tcp Socket Handle
 
 * Server: acceptor-thread and io-thread-pool
 
 * Client: connector-thread and io-thread-pool
 
-## Others
+### Others
 
 * Async Logger: Support multi-thread write concurrently by rwlock, buffer outdate, backend-thread sleep, elegant destruction.
 
