@@ -66,11 +66,12 @@ Use 32 io-threads to perform the handler, also implicitly there will one thread 
 
 ```
 int main() {
-    cppev::tcp_server server(32);
-    server.set_on_accept(on_accept);
-    server.set_on_read_complete(on_read_complete);
-    server.listen(8888, cppev::family::ipv6);
-    server.run();
+    cppev::tcp_client client(32);
+    client.set_on_read_complete(on_read_complete);
+    client.set_on_write_complete(on_write_complete);
+    client.add("127.0.0.1", 8888, cppev::family::ipv4, 10000);
+    client.add("::1", 8888, cppev::family::ipv6, 10000);
+    client.run();
     return 0;
 }
 ```
