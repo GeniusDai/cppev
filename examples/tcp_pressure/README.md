@@ -27,14 +27,14 @@ auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *e
 
 ### Step 2. Start Server
 
-Use 32 io-threads to perform the handler, also implicitly there will one thread perform the accept operation. Set handlers to the server, start to listen in port with ipv6 network layer protocol.
+Use 32 io-threads to perform the handler, also implicitly there will one thread perform the accept operation. Set handlers to the server, start to listen in port with ipv4 network layer protocol.
 
 ```
 int main() {
     cppev::tcp_server server(32);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
-    server.listen(8888, cppev::family::ipv6);
+    server.listen(8888, cppev::family::ipv4);
     server.run();
     return 0;
 }
@@ -64,7 +64,7 @@ auto on_write_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *
 
 Use 32 io-threads to perform the handler, also implicitly there will one thread perform the connect operation. Set handlers to the client, then use 10000 ipv4/ipv6 tcp sockets to perform the pressure test.
 
-Since cross network layer protocol is quite okay, so it's fine to connect to the server we just defined.
+Since cross network layer protocol is okay if server uses ipv4, so it's fine to connect to the server we just defined.
 
 Don't forget to set the ulimit-params of your system since the socket number is much more than the default.
 
