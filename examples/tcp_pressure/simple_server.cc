@@ -16,7 +16,7 @@ int main() {
     cppev::tcp_server server(32);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
-    server.listen(8888, cppev::family::ipv6);
+    server.listen(8888, cppev::family::ipv4);
     server.run();
     return 0;
 }
