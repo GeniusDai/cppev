@@ -18,13 +18,11 @@ void set_nio(int fd) {
     { throw_runtime_error("fcntl error"); }
 }
 
-static const std::unordered_map<family, int, enum_hash> _fmap = {
+const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
     {family::local, AF_LOCAL}
 };
-
-int _query_family(family f) { return _fmap.at(f); }
 
 static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) {
     switch (addr.ss_family) {
@@ -56,14 +54,15 @@ static void set_path(sockaddr_storage &addr, const char *path) {
 static std::tuple<std::string, int, family>
 query_target(sockaddr_storage &addr) {
     int port;
-    char ip[sizeof(sockaddr_storage)]; memset(ip, 0, 128);
+    char ip[sizeof(sockaddr_storage)];
+    memset(ip, 0, sizeof(ip));
     family f;
     switch(addr.ss_family) {
     case AF_INET : {
         f = family::ipv4;
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         port = ntohs(ap->sin_port);
-        if (inet_ntop(ap->sin_family, &addr, ip, sizeof(addr)) < 0)
+        if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) < 0)
         { throw_runtime_error("inet_ntop error"); }
         break;
     }
@@ -71,15 +70,9 @@ query_target(sockaddr_storage &addr) {
         f = family::ipv6;
         sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);
         port = ntohs(ap->sin6_port);
-        if (inet_ntop(ap->sin6_family, &addr, ip, sizeof(addr)) < 0)
+        if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) < 0)
         { throw_runtime_error("inet_ntop error"); }
         break;
-    }
-    case AF_LOCAL: {
-        f = family::local;
-        sockaddr_un *apu = (sockaddr_un *)&addr;
-        port = -1;
-        memcpy(ip,apu->sun_path, sizeof(apu->sun_path));
     }
     default: {
         throw_logic_error("unknown socket family");
@@ -168,7 +161,7 @@ nsock::peername() {
 void nsocktcp::listen(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     set_reuse();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
@@ -180,7 +173,7 @@ void nsocktcp::listen(const int port, const char *ip) {
 void nsocktcp::listen(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_runtime_error("bind error"); }
@@ -192,7 +185,7 @@ void nsocktcp::connect(const char *ip, const int port) {
     connect_peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     if (::connect(fd_, (sockaddr *)&addr, sizeof(addr)) < 0 && errno != EINPROGRESS)
     { throw_runtime_error("connect error"); }
@@ -202,7 +195,7 @@ void nsocktcp::connect(const char *path) {
     connect_peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_path(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
     if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 && errno != EINPROGRESS)
@@ -226,7 +219,7 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) {
 void nsockudp::bind(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     set_reuse();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
@@ -236,7 +229,7 @@ void nsockudp::bind(const int port, const char *ip) {
 void nsockudp::bind(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_runtime_error("bind error"); }
@@ -245,14 +238,29 @@ void nsockudp::bind(const char *path) {
 std::tuple<std::string, int, family> nsockudp::recv() {
     sockaddr_storage addr;
     socklen_t len;
+    switch (family_) {
+    case family::ipv4 : {
+        len = sizeof(sockaddr_in);
+        recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
+            rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
+        return query_target(addr);
+    }
+    case family::ipv6 : {
+        len = sizeof(sockaddr_in6);
+        recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
+            rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
+        return query_target(addr);
+    }
+    default : {}
+    }
     recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
-        rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
-    return query_target(addr);
+        rbuf()->cap_ - rbuf()->offset_, 0, nullptr, nullptr);
+    return std::make_tuple<>("", -1, family_);
 }
 
 void nsockudp::send(const char *ip, const int port) {
     sockaddr_storage addr;
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, sizeof(addr));
@@ -260,10 +268,10 @@ void nsockudp::send(const char *ip, const int port) {
 
 void nsockudp::send(const char *path) {
     sockaddr_storage addr;
-    addr.ss_family = _query_family(family_);
+    addr.ss_family = query_family(family_);
     set_path(addr, path);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
-        0, (sockaddr *)&addr, sizeof(addr));
+        0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
 }
 
 }

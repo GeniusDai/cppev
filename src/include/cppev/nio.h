@@ -32,7 +32,7 @@ enum class family {
 
 void set_nio(int fd);
 
-int _query_family(family f);
+int query_family(family f);
 
 class nio : public uncopyable {
 public:
@@ -100,12 +100,13 @@ protected:
 
 
 class nsock : public virtual nio {
+    friend class nio_factory;
 public:
     nsock(int fd, family f) : nio(fd), family_(f) {}
 
     virtual ~nsock() {}
 
-    int get_family() { return _query_family(family_); }
+    int get_family() { return query_family(family_); }
 
     std::tuple<std::string, int, family> sockname();
 
@@ -129,6 +130,10 @@ public:
 protected:
     // socket family
     family family_;
+
+    static const std::unordered_map<family, int, enum_hash> fmap_;
+
+    static int query_family(family f) { return fmap_.at(f); }
 };
 
 
@@ -222,13 +227,13 @@ private:
 class nio_factory {
 public:
     static std::shared_ptr<nsocktcp> get_nsocktcp(family f) {
-        int fd = ::socket(_query_family(f), SOCK_STREAM, 0);
+        int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
         if (fd < 0) { throw_runtime_error("socket error"); }
         return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
     }
 
     static std::shared_ptr<nsockudp> get_nsockudp(family f) {
-        int fd = ::socket(_query_family(f), SOCK_DGRAM, 0);
+        int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
         if (fd < 0) { throw_runtime_error("socket error"); }
         std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
         sock->rbuf()->resize(sysconfig::udp_buffer_size);
