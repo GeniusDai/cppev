@@ -119,14 +119,6 @@ public:
         { throw_runtime_error("setsockopt error"); }
     }
 
-    bool check_connect() {
-        int optval;
-        socklen_t len = sizeof(optval);
-        if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
-        { throw_runtime_error("getsockopt error"); }
-        return optval == 0;
-    }
-
 protected:
     // socket family
     family family_;
@@ -148,18 +140,24 @@ public:
 
     void connect(const char *ip, const int port);
 
-    void connect(std::string ip, const int port)
-    { connect(ip.c_str(), port); }
+    void connect(std::string ip, const int port) { connect(ip.c_str(), port); }
 
     void connect(const char *path);
 
-    void connect(std::string path)
-    { connect(path.c_str()); }
+    void connect(std::string path) { connect(path.c_str()); }
 
     std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
 
     std::tuple<std::string, int, family> connpeer() {
         return std::make_tuple<>(connect_peer_.first, connect_peer_.second, family_);
+    }
+
+    bool check_connect() {
+        int optval;
+        socklen_t len = sizeof(optval);
+        if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
+        { throw_runtime_error("getsockopt error"); }
+        return optval == 0;
     }
 
 private:
@@ -180,7 +178,11 @@ public:
 
     void send(const char *ip, const int port);
 
+    void send(std::string ip, const int port) { send(ip.c_str(), port); }
+
     void send(const char *path);
+
+    void send(std::string path) { send(path.c_str()); }
 };
 
 typedef void(*fs_handler)(inotify_event *, const char *path);
