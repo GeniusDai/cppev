@@ -52,6 +52,7 @@ Handler is similiar with the server, just we prompt a message to show our (may b
 auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     cppev::async_write(iop, evp);
 };
 

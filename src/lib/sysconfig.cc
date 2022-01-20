@@ -13,8 +13,8 @@ int udp_buffer_size = 2048;
 // param backlog for ::listen()
 int listen_number = 1024;
 
-// param size for ::epoll_create()
-int event_number = 1024;
+// param size for ::epoll_create() and ::epoll_wait()
+int event_number = 2048;
 
 // logger thread buffer outdate timespan in seconds
 int buffer_outdate = 30;
