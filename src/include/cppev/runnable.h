@@ -26,19 +26,19 @@ public:
             return nullptr;
         };
         if (pthread_create(&thr_, nullptr, thr_func, this) != 0)
-        { throw_runtime_error("pthread_create error"); }
+        { throw_system_error("pthread_create error"); }
     }
 
     // Wait until thread finish
     void join() {
         if (pthread_join(thr_, nullptr) != 0)
-        { throw_runtime_error("pthread_join error"); }
+        { throw_system_error("pthread_join error"); }
     }
 
     // Cancel thread
     void cancel() {
         if (pthread_cancel(thr_) != 0)
-        { throw_runtime_error("pthread_cancel error"); }
+        { throw_system_error("pthread_cancel error"); }
         join();
     }
 

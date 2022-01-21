@@ -24,7 +24,7 @@ cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop, cppev::event_loo
         break;
     }
     case cppev::family::local : {
-        cppev::log::info << "[unix-domain] --> ";
+        cppev::log::info << "[\tunix-domain\t] --> ";
         break;
     }
     }

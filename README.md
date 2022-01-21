@@ -8,19 +8,19 @@
 
 * Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
+### Event Loop
+
+* Support readable / writable event for fd, using io-multiplexing.
+
+* Support event priority and multi-thread shared data.
+
 ### Thread Pool
 
 Two kinds of thread pool provided:
 
-* Custom type runnable by variadic templates.
+* Custom type runnable by variadic template.
 
 * Task queue for thread pool with stop function.
-
-### Event Loop
-
-* Support readable / writable event for fd, use io-multiplexing.
-
-* Support event priority and multi-thread shared data.
 
 ### Tcp Socket Handle
 
@@ -32,7 +32,7 @@ Two kinds of thread pool provided:
 
 * Async Logger: Support multi-thread write concurrently by rwlock, buffer outdate, backend-thread sleep, elegant destruction.
 
-* Thread and Synchronization: Encapsulation of POSIX thread lib, runnable is a thread base class similiar to Java, provide rwlock and its RAII, spinlock.
+* Thread and Synchronization: Encapsulate POSIX thread lib, including pthread, rwlock and its RAII, spinlock.
 
 # Prerequirement
 
@@ -41,3 +41,9 @@ Two kinds of thread pool provided:
 * g++: Support C++11.
 
 * others: googletest / cmake / make.
+
+# Examples
+
+* Tcp Pressure: Perform cross socket family pressure test for ipv6 server.
+
+* Event Driven Nio: Demo how to use event loop for the nio classes.

@@ -53,7 +53,7 @@ public:
 
     event_loop(void *data = nullptr) : data_(data) {
         ev_fd_ = epoll_create(sysconfig::event_number);
-        if (ev_fd_ < 0) { throw_runtime_error("epoll_create error"); }
+        if (ev_fd_ < 0) { throw_system_error("epoll_create error"); }
         on_loop_ = [](event_loop *) -> void {};
     }
 

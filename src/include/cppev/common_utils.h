@@ -23,6 +23,8 @@ private:
 
 void throw_logic_error(const char *str);
 
+void throw_system_error(const char *str);
+
 void throw_runtime_error(const char *str);
 
 time_t sc_time();

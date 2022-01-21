@@ -13,28 +13,28 @@ class spinlock final : public uncopyable {
 public:
     spinlock() {
         if (pthread_spin_init(&lock_, PTHREAD_PROCESS_PRIVATE) != 0)
-        { throw_runtime_error("pthread_spin_init error"); }
+        { throw_system_error("pthread_spin_init error"); }
     }
 
     ~spinlock() {
         if (pthread_spin_destroy(&lock_) != 0)
-        { throw_runtime_error("pthread_spin_destroy error"); }
+        { throw_system_error("pthread_spin_destroy error"); }
     }
 
     void lock() {
         if (pthread_spin_lock(&lock_) != 0)
-        { throw_runtime_error("pthread_spin_lock error"); }
+        { throw_system_error("pthread_spin_lock error"); }
     }
 
     void unlock() {
         if (pthread_spin_unlock(&lock_) != 0)
-        { throw_runtime_error("pthread_spin_unlock error"); }
+        { throw_system_error("pthread_spin_unlock error"); }
     }
 
     bool trylock() {
         if (pthread_spin_trylock(&lock_) == 0) { return true; }
         if (errno == EBUSY) { return false; }
-        throw_runtime_error("pthread_spin_trylock error");
+        throw_system_error("pthread_spin_trylock error");
     }
 
 private:
@@ -47,27 +47,27 @@ class rwlock final : public uncopyable {
 public:
     rwlock() {
         if (pthread_rwlock_init(&lock_, nullptr) != 0)
-        { throw_runtime_error("pthread_rwlock_init error"); }
+        { throw_system_error("pthread_rwlock_init error"); }
     }
 
     ~rwlock() {
         if (pthread_rwlock_destroy(&lock_) != 0)
-        { throw_runtime_error("pthread_rwlock_destroy error"); }
+        { throw_system_error("pthread_rwlock_destroy error"); }
     }
 
     void unlock() {
         if (::pthread_rwlock_unlock(&lock_) != 0)
-        { throw_runtime_error("pthread_rwlock_destroy error"); }
+        { throw_system_error("pthread_rwlock_destroy error"); }
     }
 
     void rdlock() {
         if (::pthread_rwlock_rdlock(&lock_) != 0)
-        { throw_runtime_error("pthread_rwlock_rdlock error"); }
+        { throw_system_error("pthread_rwlock_rdlock error"); }
 
     }
     void wrlock() {
         if (::pthread_rwlock_wrlock(&lock_) != 0)
-        { throw_runtime_error("pthread_rwlock_wrlock error"); }
+        { throw_system_error("pthread_rwlock_wrlock error"); }
 
     }
 

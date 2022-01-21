@@ -106,7 +106,7 @@ public:
 
     virtual ~nsock() {}
 
-    int get_family() { return query_family(family_); }
+    family sockfamily() { return family_; }
 
     std::tuple<std::string, int, family> sockname();
 
@@ -116,7 +116,7 @@ public:
         int optval = 1;
         socklen_t len = sizeof(optval);
         if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
-        { throw_runtime_error("setsockopt error"); }
+        { throw_system_error("setsockopt error"); }
     }
 
 protected:
@@ -156,7 +156,7 @@ public:
         int optval;
         socklen_t len = sizeof(optval);
         if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
-        { throw_runtime_error("getsockopt error"); }
+        { throw_system_error("getsockopt error"); }
         return optval == 0;
     }
 
@@ -196,7 +196,7 @@ public:
 
     void add_watch(std::string path, uint32_t events) {
         int wd = inotify_add_watch(fd_, path.c_str(), events);
-        if (wd < 0) { throw_runtime_error("inotify_add_watch error"); }
+        if (wd < 0) { throw_system_error("inotify_add_watch error"); }
         if (wds_.count(wd) == 0) { wds_[wd] = path; paths_[path] = wd; }
     }
 
@@ -204,7 +204,7 @@ public:
         int wd = paths_[path];
         paths_.erase(path); wds_.erase(wd);
         if (inotify_rm_watch(fd_, paths_[path]) < 0)
-        { throw_runtime_error("inotify_rm_watch error"); }
+        { throw_system_error("inotify_rm_watch error"); }
     }
 
     void process_events() {
@@ -230,13 +230,13 @@ class nio_factory {
 public:
     static std::shared_ptr<nsocktcp> get_nsocktcp(family f) {
         int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
-        if (fd < 0) { throw_runtime_error("socket error"); }
+        if (fd < 0) { throw_system_error("socket error"); }
         return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
     }
 
     static std::shared_ptr<nsockudp> get_nsockudp(family f) {
         int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
-        if (fd < 0) { throw_runtime_error("socket error"); }
+        if (fd < 0) { throw_system_error("socket error"); }
         std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
         sock->rbuf()->resize(sysconfig::udp_buffer_size);
         sock->wbuf()->resize(sysconfig::udp_buffer_size);
@@ -245,7 +245,7 @@ public:
 
     static std::shared_ptr<nwatcher> get_nwatcher() {
         int fd = inotify_init();
-        if (fd < 0) { throw_runtime_error("inotify_init error"); }
+        if (fd < 0) { throw_system_error("inotify_init error"); }
         return std::shared_ptr<nwatcher>(new nwatcher(fd));
     }
 

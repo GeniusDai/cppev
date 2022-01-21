@@ -264,7 +264,7 @@ public:
 
     connector(std::shared_ptr<event_loop> evp) : evp_(evp) {
         int pipefd[2];
-        if (pipe(pipefd) == -1) { throw_runtime_error("pipe error"); }
+        if (pipe(pipefd) == -1) { throw_system_error("pipe error"); }
         rdp_ = std::shared_ptr<nstream>(new nstream(pipefd[0]));
         wrp_ = std::shared_ptr<nstream>(new nstream(pipefd[1]));
     }

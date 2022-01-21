@@ -51,7 +51,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
         ev.data.fd = iop->fd();
         ev.events = fd_map_to_sys(ev_type);
         if (epoll_ctl(ev_fd_, EPOLL_CTL_ADD, iop->fd(), &ev) < 0)
-        { throw_runtime_error("epoll_ctl error"); }
+        { throw_system_error("epoll_ctl error"); }
     }
 }
 
@@ -61,7 +61,7 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean) {
     log::info << "clean callbacks" << log::endl;
 
     if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
-    { throw_runtime_error("epoll_ctl error"); }
+    { throw_system_error("epoll_ctl error"); }
     if (clean) {
         std::unique_lock<std::mutex> lock(lock_);
         fds_.erase(iop->fd());
@@ -73,7 +73,7 @@ void event_loop::loop_once(int timeout) {
     // 1. Add to priority queue
     epoll_event evs[sysconfig::event_number];
     int nums = epoll_wait(ev_fd_, evs, sysconfig::event_number, timeout);
-    if (nums < 0 && errno != EINTR) { throw_runtime_error("epoll_wait error"); }
+    if (nums < 0 && errno != EINTR) { throw_system_error("epoll_wait error"); }
     for (int i = 0; i < nums; ++i) {
         std::unique_lock<std::mutex> lock(lock_);
         int fd = evs[i].data.fd;

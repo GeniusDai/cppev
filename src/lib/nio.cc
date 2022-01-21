@@ -13,9 +13,9 @@ namespace cppev {
 
 void set_nio(int fd) {
     int flags = fcntl(fd, F_GETFL);
-    if (flags < 0) { throw_runtime_error("fcntl error"); }
+    if (flags < 0) { throw_system_error("fcntl error"); }
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-    { throw_runtime_error("fcntl error"); }
+    { throw_system_error("fcntl error"); }
 }
 
 const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
@@ -32,7 +32,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
         if (ip) {
             int rtn = inet_pton(addr.ss_family, ip, &(ap->sin_addr));
             if (rtn == 0) { throw_logic_error("inet_pton error"); }
-            else if (rtn == -1) { throw_runtime_error("inet_pton error"); }
+            else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap->sin_addr.s_addr = htonl(INADDR_ANY); }
         break;
@@ -43,7 +43,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
         if (ip) {
             int rtn = inet_pton(addr.ss_family, ip, &(ap6->sin6_addr));
             if (rtn == 0) { throw_logic_error("inet_pton error"); }
-            else if (rtn == -1) { throw_runtime_error("inet_pton error"); }
+            else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap6->sin6_addr = in6addr_any; }
         break;
@@ -71,7 +71,7 @@ query_target(sockaddr_storage &addr) {
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         port = ntohs(ap->sin_port);
         if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) == nullptr)
-        { throw_runtime_error("inet_ntop error"); }
+        { throw_system_error("inet_ntop error"); }
         break;
     }
     case AF_INET6 : {
@@ -79,7 +79,7 @@ query_target(sockaddr_storage &addr) {
         sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);
         port = ntohs(ap->sin6_port);
         if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) == nullptr)
-        { throw_runtime_error("inet_ntop error"); }
+        { throw_system_error("inet_ntop error"); }
         break;
     }
     default: {
@@ -99,7 +99,7 @@ int nstream::read_chunk(int len) {
             if (errno == EINTR) { continue; }
             if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
             else if (errno == ECONNRESET) { reset_ = true; break; }
-            else { throw_runtime_error("read error"); }
+            else { throw_system_error("read error"); }
         }
         rbuffer_->offset_ += curr;
         len -= curr;
@@ -118,7 +118,7 @@ int nstream::write_chunk(int len) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
             else if (errno == EPIPE) { eop_ = true; break; }
             else if (errno == ECONNRESET) { reset_ = true; break; }
-            else { throw_runtime_error("write error"); }
+            else { throw_system_error("write error"); }
         }
         wbuffer_->start_ += curr;
         len -= curr;
@@ -153,7 +153,7 @@ nsock::sockname() {
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getsockname(fd_, (sockaddr *)&addr, &len) < 0)
-    { throw_runtime_error("getsockname error"); }
+    { throw_system_error("getsockname error"); }
     return query_target(addr);
 }
 
@@ -162,7 +162,7 @@ nsock::peername() {
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getpeername(fd_, (sockaddr *)&addr, &len) < 0)
-    { throw_runtime_error("getsockname error"); }
+    { throw_system_error("getsockname error"); }
     return query_target(addr);
 }
 
@@ -173,9 +173,9 @@ void nsocktcp::listen(const int port, const char *ip) {
     set_ip_port(addr, ip, port);
     set_reuse();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
-    { throw_runtime_error("bind error"); }
+    { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number))
-    { throw_runtime_error("listen error"); }
+    { throw_system_error("listen error"); }
 }
 
 void nsocktcp::listen(const char *path) {
@@ -184,9 +184,9 @@ void nsocktcp::listen(const char *path) {
     addr.ss_family = query_family(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
-    { throw_runtime_error("bind error"); }
+    { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number) < 0)
-    { throw_runtime_error("listen error"); }
+    { throw_system_error("listen error"); }
 }
 
 void nsocktcp::connect(const char *ip, const int port) {
@@ -196,7 +196,7 @@ void nsocktcp::connect(const char *ip, const int port) {
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     if (::connect(fd_, (sockaddr *)&addr, sizeof(addr)) < 0 && errno != EINPROGRESS)
-    { throw_runtime_error("connect error"); }
+    { throw_system_error("connect error"); }
 }
 
 void nsocktcp::connect(const char *path) {
@@ -207,7 +207,7 @@ void nsocktcp::connect(const char *path) {
     set_path(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
     if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 && errno != EINPROGRESS)
-    { throw_runtime_error("connect error"); }
+    { throw_system_error("connect error"); }
 }
 
 std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) {
@@ -216,7 +216,7 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) {
         int sockfd = ::accept(fd_, nullptr, nullptr);
         if (sockfd == -1) {
             if(errno == EAGAIN || errno == EWOULDBLOCK) { break; }
-            else { throw_runtime_error("accept error"); }
+            else { throw_system_error("accept error"); }
         } else {
             sockfds.emplace_back(new nsocktcp(sockfd, family_));
         }
@@ -231,7 +231,7 @@ void nsockudp::bind(const int port, const char *ip) {
     set_ip_port(addr, ip, port);
     set_reuse();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
-    { throw_runtime_error("bind error"); }
+    { throw_system_error("bind error"); }
 }
 
 void nsockudp::bind(const char *path) {
@@ -240,7 +240,7 @@ void nsockudp::bind(const char *path) {
     addr.ss_family = query_family(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
-    { throw_runtime_error("bind error"); }
+    { throw_system_error("bind error"); }
 }
 
 std::tuple<std::string, int, family> nsockudp::recv() {
