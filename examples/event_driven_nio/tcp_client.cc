@@ -34,6 +34,7 @@ void connect_to_servers() {
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_writable, client_cb);
     evlp.fd_register(tcp_unix, cppev::fd_event::fd_writable, client_cb);
 
+    // Cross socket family
     auto tcp_ipv4_to_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     tcp_ipv4_to_ipv6->connect("127.0.0.1", tcp_ipv6_port);
     evlp.fd_register(tcp_ipv4_to_ipv6, cppev::fd_event::fd_writable, client_cb);
