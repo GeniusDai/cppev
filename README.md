@@ -24,9 +24,23 @@ Two kinds of thread pool provided:
 
 ### Tcp Socket Handle
 
+Reactor similiar to netty:
+
 * Server: acceptor-thread and io-thread-pool
 
 * Client: connector-thread and io-thread-pool
+
+Five callbacks could be registered:
+
+* on_accept: server accept connection (works only for server)
+
+* on_connect: client establish connection (works only for client)
+
+* on_read_complete: data read into rbuffer complete
+
+* on_write_complete: data write from wbuffer complete
+
+* on_closed: peer closed socket
 
 ### Others
 
