@@ -21,13 +21,11 @@ enum class fd_event {
 };
 
 constexpr fd_event operator&(fd_event a, fd_event b) {
-    return static_cast<fd_event>
-        (static_cast<int>(a) & static_cast<int>(b));
+    return static_cast<fd_event>(static_cast<int>(a) & static_cast<int>(b));
 }
 
 constexpr fd_event operator|(fd_event a, fd_event b) {
-    return static_cast<fd_event>
-        (static_cast<int>(a) | static_cast<int>(b));
+    return static_cast<fd_event>(static_cast<int>(a) | static_cast<int>(b));
 }
 
 enum priority {
@@ -49,15 +47,19 @@ public:
 
     void *data() { return data_; }
 
-    int fd_loads() const { return fds_.size(); }
-
-    event_loop(void *data = nullptr) : data_(data) {
+    event_loop(void *data = nullptr) : data_(data)
+    {
         ev_fd_ = epoll_create(sysconfig::event_number);
         if (ev_fd_ < 0) { throw_system_error("epoll_create error"); }
         on_loop_ = [](event_loop *) -> void {};
     }
 
     virtual ~event_loop() { close(ev_fd_); }
+
+    // measure the loads of event loop
+    int fd_loads() const { return fds_.size(); }
+
+    void set_on_loop(ev_handler h) { on_loop_ = h; }
 
     // register fd to event pollor, default activate callback
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
@@ -66,9 +68,11 @@ public:
     // remove fd from event pollor, default clean callback
     void fd_remove(std::shared_ptr<nio> iop, bool clean = true);
 
+    // wait for events, only loop once, timeout unit is millisecond
     void loop_once(int timeout = -1);
 
-    void loop(int timeout = -1) {
+    void loop(int timeout = -1)
+    {
         while(true) {
             on_loop_(this);
             loop_once();
@@ -88,13 +92,11 @@ private:
     // thread pool shared data, may be used for callbacks
     void *data_;
 
-    // fds --> <priority, nio, event, cb>
-    std::unordered_multimap<int,
-        std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
+    // <priority, nio, callback, event>
+    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
 
-    // <priority, nio, event, cb>
-    std::priority_queue<
-        std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_events_;
+    // <priority, nio, callback>
+    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_events_;
 };
 
 }
