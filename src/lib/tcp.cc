@@ -58,7 +58,7 @@ void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
 
     for (auto &p : conns) {
         log::info << "new fd " << p->fd() << " accepted" << log::endl;
-        event_loop *io_evlp = d->random_get_evlp();
+        event_loop *io_evlp = d->minloads_get_evlp();
         io_evlp->fd_register(std::dynamic_pointer_cast<nio>(p),
             fd_event::fd_writable, acceptor::on_writable, true);
     }
@@ -101,7 +101,7 @@ void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
             std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp
                 (std::get<2>(iter->first));
             sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
-            event_loop *io_evlp = d->random_get_evlp();
+            event_loop *io_evlp = d->minloads_get_evlp();
             io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
                 fd_event::fd_writable, connector::on_writable, true);
         }
