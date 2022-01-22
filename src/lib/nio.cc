@@ -148,8 +148,14 @@ int nstream::write_all(int step) {
     return total;
 }
 
-std::tuple<std::string, int, family>
-nsock::sockname() {
+void nsock::set_reuse() {
+    int optval = 1;
+    socklen_t len = sizeof(optval);
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
+    { throw_system_error("setsockopt error"); }
+}
+
+std::tuple<std::string, int, family> nsocktcp::sockname() {
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getsockname(fd_, (sockaddr *)&addr, &len) < 0)
@@ -157,13 +163,20 @@ nsock::sockname() {
     return query_target(addr);
 }
 
-std::tuple<std::string, int, family>
-nsock::peername() {
+std::tuple<std::string, int, family> nsocktcp::peername() {
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getpeername(fd_, (sockaddr *)&addr, &len) < 0)
     { throw_system_error("getsockname error"); }
     return query_target(addr);
+}
+
+bool nsocktcp::check_connect() {
+    int optval;
+    socklen_t len = sizeof(optval);
+    if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
+    { throw_system_error("getsockopt error"); }
+    return optval == 0;
 }
 
 void nsocktcp::listen(const int port, const char *ip) {
@@ -280,6 +293,50 @@ void nsockudp::send(const char *path) {
     set_path(addr, path);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
+}
+
+void nwatcher::add_watch(std::string path, uint32_t events) {
+    int wd = inotify_add_watch(fd_, path.c_str(), events);
+    if (wd < 0) { throw_system_error("inotify_add_watch error"); }
+    if (wds_.count(wd) == 0) { wds_[wd] = path; paths_[path] = wd; }
+}
+
+void nwatcher::del_watch(std::string path) {
+    int wd = paths_[path];
+    paths_.erase(path); wds_.erase(wd);
+    if (inotify_rm_watch(fd_, paths_[path]) < 0)
+    { throw_system_error("inotify_rm_watch error"); }
+}
+
+void nwatcher::process_events() {
+    int len = read_chunk(sysconfig::inotify_step);
+    char *p = rbuf()->buf();
+    for (char *s = p; s < p + len; ++s) {
+        inotify_event *evp = (inotify_event *)s;
+        handler_(evp, wds_[evp->wd].c_str());
+        p += sizeof(inotify_event) + evp->len;
+    }
+}
+
+std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f) {
+    int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
+    if (fd < 0) { throw_system_error("socket error"); }
+    return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
+}
+
+std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
+    int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
+    if (fd < 0) { throw_system_error("socket error"); }
+    std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
+    sock->rbuf()->resize(sysconfig::udp_buffer_size);
+    sock->wbuf()->resize(sysconfig::udp_buffer_size);
+    return sock;
+}
+
+std::shared_ptr<nwatcher> nio_factory::get_nwatcher() {
+    int fd = inotify_init();
+    if (fd < 0) { throw_system_error("inotify_init error"); }
+    return std::shared_ptr<nwatcher>(new nwatcher(fd));
 }
 
 }

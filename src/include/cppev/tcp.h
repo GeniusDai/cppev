@@ -165,6 +165,7 @@ public:
 
     virtual ~acceptor() {}
 
+    // Specify listening socket's port and family
     void listen(int port, family f, const char *ip = nullptr);
 
     // Listen socket readable, this function will be executed by acceptor-thread
@@ -280,6 +281,7 @@ public:
 
     virtual ~connector() {}
 
+    // Add connection task (ip, port, family)
     void add(std::string ip, int port, family f, int t = 1);
 
     // New connect target added, this function will be executed by connector-thread
@@ -288,6 +290,7 @@ public:
     // This function will be executed by io-thread
     static void on_writable(std::shared_ptr<nio> iop, event_loop *evp);
 
+    // Register readable to event loop and start loop
     void run_impl() override;
 
 private:

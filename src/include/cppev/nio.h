@@ -36,7 +36,8 @@ int query_family(family f);
 
 class nio : public uncopyable {
 public:
-    explicit nio(int fd) : fd_(fd) {
+    explicit nio(int fd) : fd_(fd)
+    {
         set_nio(fd_);
         rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
         wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
@@ -46,17 +47,20 @@ public:
 
     int fd() const { return fd_; }
 
+    // read buffer
     buffer *rbuf() { return rbuffer_.get(); }
 
+    // write buffer
     buffer *wbuf() { return wbuffer_.get(); }
 
 protected:
     // File descriptor
     int fd_;
 
-    // IO buffer, should be initialized
+    // read buffer, should be initialized
     std::unique_ptr<buffer> rbuffer_;
 
+    // write buffer, should be initialized
     std::unique_ptr<buffer> wbuffer_;
 };
 
@@ -108,16 +112,7 @@ public:
 
     family sockfamily() { return family_; }
 
-    std::tuple<std::string, int, family> sockname();
-
-    std::tuple<std::string, int, family> peername();
-
-    void set_reuse() {
-        int optval = 1;
-        socklen_t len = sizeof(optval);
-        if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
-        { throw_system_error("setsockopt error"); }
-    }
+    void set_reuse();
 
 protected:
     // socket family
@@ -136,28 +131,32 @@ public:
 
     void listen(const int port, const char *ip = nullptr);
 
+    void listen(const int port, const std::string &ip) { listen(port, ip.c_str()); }
+
     void listen(const char *path);
+
+    void listen(const std::string &path) { listen(path.c_str()); }
 
     void connect(const char *ip, const int port);
 
-    void connect(std::string ip, const int port) { connect(ip.c_str(), port); }
+    void connect(const std::string &ip, const int port) { connect(ip.c_str(), port); }
 
     void connect(const char *path);
 
-    void connect(std::string path) { connect(path.c_str()); }
+    void connect(const std::string &path) { connect(path.c_str()); }
+
+    bool check_connect();
 
     std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
 
-    std::tuple<std::string, int, family> connpeer() {
-        return std::make_tuple<>(connect_peer_.first, connect_peer_.second, family_);
-    }
+    std::tuple<std::string, int, family> sockname();
 
-    bool check_connect() {
-        int optval;
-        socklen_t len = sizeof(optval);
-        if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
-        { throw_system_error("getsockopt error"); }
-        return optval == 0;
+    std::tuple<std::string, int, family> peername();
+
+    std::tuple<std::string, int, family> connpeer()
+    {
+        return std::make_tuple<>(connect_peer_.first,
+            connect_peer_.second, family_);
     }
 
 private:
@@ -172,17 +171,21 @@ public:
 
     void bind(const int port, const char *ip = nullptr);
 
+    void bind(const int port, const std::string &ip) { bind(port, ip.c_str()); }
+
     void bind(const char *path);
+
+    void bind(const std::string &path) { bind(path.c_str()); }
 
     std::tuple<std::string, int, family> recv();
 
     void send(const char *ip, const int port);
 
-    void send(std::string ip, const int port) { send(ip.c_str(), port); }
+    void send(const std::string &ip, const int port) { send(ip.c_str(), port); }
 
     void send(const char *path);
 
-    void send(std::string path) { send(path.c_str()); }
+    void send(const std::string &path) { send(path.c_str()); }
 };
 
 typedef void(*fs_handler)(inotify_event *, const char *path);
@@ -194,28 +197,11 @@ public:
 
     void set_handler(fs_handler handler) { handler_ = handler; }
 
-    void add_watch(std::string path, uint32_t events) {
-        int wd = inotify_add_watch(fd_, path.c_str(), events);
-        if (wd < 0) { throw_system_error("inotify_add_watch error"); }
-        if (wds_.count(wd) == 0) { wds_[wd] = path; paths_[path] = wd; }
-    }
+    void add_watch(std::string path, uint32_t events);
 
-    void del_watch(std::string path) {
-        int wd = paths_[path];
-        paths_.erase(path); wds_.erase(wd);
-        if (inotify_rm_watch(fd_, paths_[path]) < 0)
-        { throw_system_error("inotify_rm_watch error"); }
-    }
+    void del_watch(std::string path);
 
-    void process_events() {
-        int len = read_chunk(sysconfig::inotify_step);
-        char *p = rbuf()->buf();
-        for (char *s = p; s < p + len; ++s) {
-            inotify_event *evp = (inotify_event *)s;
-            handler_(evp, wds_[evp->wd].c_str());
-            p += sizeof(inotify_event) + evp->len;
-        }
-    }
+    void process_events();
 
 private:
     std::unordered_map<int, std::string> wds_;
@@ -228,27 +214,11 @@ private:
 
 class nio_factory {
 public:
-    static std::shared_ptr<nsocktcp> get_nsocktcp(family f) {
-        int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
-        if (fd < 0) { throw_system_error("socket error"); }
-        return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
-    }
+    static std::shared_ptr<nsocktcp> get_nsocktcp(family f);
 
-    static std::shared_ptr<nsockudp> get_nsockudp(family f) {
-        int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
-        if (fd < 0) { throw_system_error("socket error"); }
-        std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
-        sock->rbuf()->resize(sysconfig::udp_buffer_size);
-        sock->wbuf()->resize(sysconfig::udp_buffer_size);
-        return sock;
-    }
+    static std::shared_ptr<nsockudp> get_nsockudp(family f);
 
-    static std::shared_ptr<nwatcher> get_nwatcher() {
-        int fd = inotify_init();
-        if (fd < 0) { throw_system_error("inotify_init error"); }
-        return std::shared_ptr<nwatcher>(new nwatcher(fd));
-    }
-
+    static std::shared_ptr<nwatcher> get_nwatcher();
 };
 
 }
