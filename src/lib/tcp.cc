@@ -2,6 +2,26 @@
 
 namespace cppev {
 
+event_loop *tp_shared_data::random_get_evlp() {
+    std::random_device rd;
+    std::default_random_engine rde(rd());
+    std::uniform_int_distribution<int> dist(0, evls.size()-1);
+    return evls[dist(rde)];
+}
+
+event_loop *tp_shared_data::minloads_get_evlp() {
+    int minloads = INT32_MAX;
+    event_loop *minloads_evp;
+    for (auto evp : evls) {
+        // This is not thread safe but it's okay
+        if (evp->fd_loads() < minloads) {
+            minloads_evp = evp;
+            minloads = evp->fd_loads();
+        }
+    }
+    return minloads_evp;
+}
+
 void iohandler::async_write(std::shared_ptr<nio> iop, event_loop *evp) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
@@ -131,6 +151,42 @@ void connector::run_impl() {
     evp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_readable, true);
     evp_->loop();
+}
+
+tcp_server::tcp_server(int thr_num) {
+    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
+    tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
+        (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
+    for (int i = 0; i < tp_->size(); ++i) {
+        data_->evls.push_back((*tp_)[i]->evp_.get());
+    }
+    acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
+}
+
+ void tcp_server::run() {
+    ignore_signal(SIGPIPE);
+    tp_->run();
+    acpt_->run();
+    tp_->join();
+    acpt_->join();
+}
+
+tcp_client::tcp_client(int thr_num) {
+    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
+    tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
+        (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
+    for (int i = 0; i < tp_->size(); ++i) {
+        data_->evls.push_back((*tp_)[i]->evp_.get());
+    }
+    cont_ = std::shared_ptr<connector>(new connector(data_.get()));
+}
+
+void tcp_client::run() {
+    ignore_signal(SIGPIPE);
+    tp_->run();
+    cont_->run();
+    tp_->join();
+    cont_->join();
 }
 
 }

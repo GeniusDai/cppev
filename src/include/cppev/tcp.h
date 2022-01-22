@@ -67,27 +67,9 @@ public:
     // Used by iohandler when socket closed
     fd_handler on_closed;
 
-    event_loop *random_get_evlp()
-    {
-        std::random_device rd;
-        std::default_random_engine rde(rd());
-        std::uniform_int_distribution<int> dist(0, evls.size()-1);
-        return evls[dist(rde)];
-    }
+    event_loop *random_get_evlp();
 
-    event_loop *minloads_get_evlp()
-    {
-        int minloads = INT32_MAX;
-        event_loop *minloads_evp;
-        for (auto evp : evls) {
-            // This is not thread safe but it's okay
-            if (evp->fd_loads() < minloads) {
-                minloads_evp = evp;
-                minloads = evp->fd_loads();
-            }
-        }
-        return minloads_evp;
-    }
+    event_loop *minloads_get_evlp();
 
 private:
     friend class tcp_server;
@@ -159,31 +141,10 @@ private:
 
 class tcp_server final {
 public:
-    tcp_server(int thr_num)
-    {
-        data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
-        tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
-            (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
-        for (int i = 0; i < tp_->size(); ++i) {
-            data_->evls.push_back((*tp_)[i]->evp_.get());
-        }
-        acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
-    }
+    tcp_server(int thr_num);
 
     void listen(const int port, family f, const char *ip = nullptr)
-    {
-        acpt_->listen(port, f, ip);
-    }
-
-    void run()
-    {
-        // thread pool must run first
-        ignore_signal(SIGPIPE);
-        tp_->run();
-        acpt_->run();
-        tp_->join();
-        acpt_->join();
-    }
+    { acpt_->listen(port, f, ip); }
 
     void set_on_accept(fd_handler handler)
     { data_->on_accept = handler; }
@@ -196,6 +157,8 @@ public:
 
     void set_on_closed(fd_handler handler)
     { data_->on_closed = handler; }
+
+    void run();
 
 private:
     std::shared_ptr<tp_shared_data> data_;
@@ -244,31 +207,10 @@ private:
 
 class tcp_client final {
 public:
-    tcp_client(int thr_num)
-    {
-        data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
-        tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
-            (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
-        for (int i = 0; i < tp_->size(); ++i) {
-            data_->evls.push_back((*tp_)[i]->evp_.get());
-        }
-        cont_ = std::shared_ptr<connector>(new connector(data_.get()));
-    }
+    tcp_client(int thr_num);
 
     void add(const std::string ip, const int port, family f, int t = 1)
-    {
-        cont_->add(ip, port, f, t);
-    }
-
-    void run()
-    {
-        // thread pool must run first
-        ignore_signal(SIGPIPE);
-        tp_->run();
-        cont_->run();
-        tp_->join();
-        cont_->join();
-    }
+    { cont_->add(ip, port, f, t); }
 
     void set_on_connect(fd_handler handler)
     { data_->on_connect = handler; }
@@ -281,6 +223,8 @@ public:
 
     void set_on_closed(fd_handler handler)
     { data_->on_closed = handler; }
+
+    void run();
 
 private:
     std::shared_ptr<tp_shared_data> data_;
