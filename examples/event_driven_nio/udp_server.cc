@@ -8,7 +8,7 @@ int udp_ipv6_port = 9000;
 
 const char *udp_unix_path = "./udp_unix";
 
-cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop* evp) -> void {
+cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::nsockudp *ioup = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = ioup->recv();
     cppev::log::info << "udp --> fd " << iop->fd() << " --> ";

@@ -1,14 +1,14 @@
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 
-auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
+auto on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    cppev::async_write(iop, evp);
+    cppev::async_write(iop);
 };
 
-auto on_write_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
+auto on_write_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::log::info << "write message complete" << cppev::log::endl;
 };
 

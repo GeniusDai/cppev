@@ -22,59 +22,58 @@ event_loop *tp_shared_data::minloads_get_evlp() {
     return minloads_evp;
 }
 
-void iohandler::async_write(std::shared_ptr<nio> iop, event_loop *evp) {
+void iohandler::async_write(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
+    tp_shared_data *dp = static_cast<tp_shared_data *>(iop->evlp()->data());
     iopt->write_all(sysconfig::buffer_io_step);
     if (0 == iopt->wbuf()->size()) {
-        dp->on_write_complete(iop, evp);
+        dp->on_write_complete(iop);
     } else {
-        evp->fd_remove(iop, false);
-        evp->fd_register(iop, fd_event::fd_writable);
+        iop->evlp()->fd_remove(iop, false);
+        iop->evlp()->fd_register(iop, fd_event::fd_writable);
     }
 }
 
-void iohandler::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
+void iohandler::on_readable(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
+    tp_shared_data *dp = static_cast<tp_shared_data *>(iop->evlp()->data());
     iopt->read_all(sysconfig::buffer_io_step);
-    dp->on_read_complete(iop, evp);
+    dp->on_read_complete(iop);
     iopt->rbuf()->clear();
     if (iopt->eof() || iopt->is_reset()) {
-        dp->on_closed(iop, evp);
-        evp->fd_remove(iop, true);
+        dp->on_closed(iop);
+        iop->evlp()->fd_remove(iop, true);
     }
 }
 
-void iohandler::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
+void iohandler::on_writable(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
+    tp_shared_data *dp = static_cast<tp_shared_data *>(iop->evlp()->data());
     iopt->write_all(sysconfig::buffer_io_step);
     if (0 == iopt->wbuf()->size()) {
-        evp->fd_remove(iop, false);
-        dp->on_write_complete(iop, evp);
-        evp->fd_register(iop, fd_event::fd_readable);
+        iop->evlp()->fd_remove(iop, false);
+        dp->on_write_complete(iop);
+        iop->evlp()->fd_register(iop, fd_event::fd_readable);
     }
     if (iopt->eop() || iopt->is_reset()) {
-        dp->on_closed(iop, evp);
-        evp->fd_remove(iop, true);
+        dp->on_closed(iop);
+        iop->evlp()->fd_remove(iop, true);
     }
 }
-
 
 void acceptor::listen(int port, family f, const char *ip) {
     sock_ = nio_factory::get_nsocktcp(f);
     sock_->listen(port, ip);
 }
 
-void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
+void acceptor::on_readable(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
     std::vector<std::shared_ptr<nsocktcp> > conns = iopt->accept();
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
+    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
 
     for (auto &p : conns) {
         log::info << "new fd " << p->fd() << " accepted" << log::endl;
@@ -84,15 +83,15 @@ void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
     }
 }
 
-void acceptor::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
+void acceptor::on_writable(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
     if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-    evp->fd_remove(iop, true);
+    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
+    iop->evlp()->fd_remove(iop, true);
     // The sequence CANNOT be changed, since on_accept may call async_write
-    evp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_accept(iop, evp);
-    evp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
+    iop->evlp()->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
+    d->on_accept(iop);
+    iop->evlp()->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
 void acceptor::run_impl() {
@@ -111,9 +110,9 @@ void connector::add(std::string ip, int port, family f, int t) {
     wrp_->write_all(1);
 }
 
-void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
+void connector::on_readable(std::shared_ptr<nio> iop) {
     nstream *rdsp = dynamic_cast<nstream *>(iop.get());
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
+    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     rdsp->read_all(1);
     std::unique_lock<std::mutex> lock(d->lock);
     for (auto iter = d->hosts.begin(); iter != d->hosts.end(); ) {
@@ -129,10 +128,10 @@ void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
     }
 }
 
-void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
+void connector::on_writable(std::shared_ptr<nio> iop) {
     nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-    evp->fd_remove(iop, true);      // remove previous callback
+    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
+    iop->evlp()->fd_remove(iop, true);      // remove previous callback
     if (!iopt->check_connect()) {
         std::tuple<std::string, int, family> h = iopt->connpeer();
         log::error << "connect failed with " << std::get<0>(h) << " "
@@ -142,9 +141,9 @@ void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
         return;
     }
     // The sequence CANNOT be changed since on_connect may call aysnc_write
-    evp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_connect(iop, evp);
-    evp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
+    iop->evlp()->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
+    d->on_connect(iop);
+    iop->evlp()->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
 void connector::run_impl() {

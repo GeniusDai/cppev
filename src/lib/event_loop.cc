@@ -42,6 +42,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     log::info << "activate" << log::endl;
 
     if (ev_cb) {
+        iop->set_evlp(this);
         std::unique_lock<std::mutex> lock(lock_);
         fds_.emplace(iop->fd(), std::tuple<int, std::shared_ptr<nio>,
             fd_event_cb, fd_event>(prio, iop, ev_cb, ev_type));
@@ -103,7 +104,7 @@ void event_loop::loop_once(int timeout) {
     while (fd_events_.size()) {
         auto ev = fd_events_.top();
         fd_events_.pop();
-        (std::get<2>(ev))(std::get<1>(ev), this);
+        (std::get<2>(ev))(std::get<1>(ev));
     }
 
 }

@@ -39,7 +39,7 @@ typedef void (*ev_handler)(event_loop *);
 
 // the event_loop for callback must be "this", so MUST NOT use shared_ptr
 // as the smart pointer will destruct the object.
-typedef void(*fd_event_cb)(std::shared_ptr<nio> iop, event_loop* evp);
+typedef void(*fd_event_cb)(std::shared_ptr<nio> iop);
 
 class event_loop : public uncopyable {
 public:

@@ -8,7 +8,7 @@ int tcp_ipv6_port = 9000;
 
 const char *tcp_unix_path = "./tcp_unix";
 
-cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop* evp) -> void {
+cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
     cppev::log::info << "tcp --> fd " << iops->fd() << " --> ";
@@ -21,14 +21,14 @@ cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop, cppev::event_lo
         cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << "] ";
     }
     cppev::log::info << " --> " << iops->rbuf()->get() << cppev::log::endl;
-    evp->fd_remove(iop);
+    iop->evlp()->fd_remove(iop);
 };
 
-cppev::fd_event_cb listen_cb = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop* evp) -> void {
+cppev::fd_event_cb listen_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     std::vector<std::shared_ptr<cppev::nsocktcp> > vts = iopt->accept(1);
     std::shared_ptr<cppev::nio> conn = std::dynamic_pointer_cast<cppev::nio>(vts[0]);
-    evp->fd_register(conn, cppev::fd_event::fd_readable, conn_cb, true);
+    iop->evlp()->fd_register(conn, cppev::fd_event::fd_readable, conn_cb, true);
 };
 
 void start_server_loop() {

@@ -23,7 +23,7 @@ class tcp_server;
 class tcp_client;
 
 // Idle function for callback
-auto idle_handler = [] (std::shared_ptr<nio> iop, event_loop *evp) -> void {};
+auto idle_handler = [] (std::shared_ptr<nio> iop) -> void {};
 
 using fd_handler = fd_event_cb;
 
@@ -99,11 +99,11 @@ public:
 
     virtual ~iohandler() {}
 
-    static void async_write(std::shared_ptr<nio> iop, event_loop *evp);
+    static void async_write(std::shared_ptr<nio> iop);
 
-    static void on_readable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_readable(std::shared_ptr<nio> iop);
 
-    static void on_writable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_writable(std::shared_ptr<nio> iop);
 
     void run_impl() override { evp_->loop(); }
 
@@ -125,10 +125,10 @@ public:
     void listen(int port, family f, const char *ip = nullptr);
 
     // Listen socket readable, this function will be executed by acceptor-thread
-    static void on_readable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_readable(std::shared_ptr<nio> iop);
 
     // This function will be executed by io-thread
-    static void on_writable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
@@ -189,10 +189,10 @@ public:
     void add(std::string ip, int port, family f, int t = 1);
 
     // New connect target added, this function will be executed by connector-thread
-    static void on_readable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_readable(std::shared_ptr<nio> iop);
 
     // This function will be executed by io-thread
-    static void on_writable(std::shared_ptr<nio> iop, event_loop *evp);
+    static void on_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;

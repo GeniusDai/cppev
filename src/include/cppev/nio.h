@@ -23,6 +23,7 @@ class nsock;
 class nsockudp;
 class nsocktcp;
 class nwatcher;
+class event_loop;
 
 enum class family {
     ipv4,
@@ -49,6 +50,10 @@ public:
     // write buffer
     buffer *wbuf() { return wbuffer_.get(); }
 
+    event_loop *evlp() { return evlp_; }
+
+    void set_evlp(event_loop *evlp) { evlp_ = evlp; }
+
 protected:
     // File descriptor
     int fd_;
@@ -58,6 +63,8 @@ protected:
 
     // write buffer, should be initialized
     std::unique_ptr<buffer> wbuffer_;
+
+    event_loop *evlp_;
 
 private:
     // set fd to nonblock
