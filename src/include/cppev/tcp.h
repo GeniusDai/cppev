@@ -75,6 +75,20 @@ public:
         return evls[dist(rde)];
     }
 
+    event_loop *minloads_get_evlp()
+    {
+        int minloads = INT32_MAX;
+        event_loop *minloads_evp;
+        for (auto evp : evls) {
+            // This is not thread safe but it's okay
+            if (evp->fd_loads() < minloads) {
+                minloads_evp = evp;
+                minloads = evp->fd_loads();
+            }
+        }
+        return minloads_evp;
+    }
+
 private:
     friend class tcp_server;
     friend class tcp_client;
