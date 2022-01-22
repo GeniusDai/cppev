@@ -1,13 +1,13 @@
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 
-auto on_accept = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_accept = [](std::shared_ptr<cppev::nio> iop) -> void {
     iop->wbuf()->put("Cppev is a C++ event driven library");
     cppev::async_write(iop);
     cppev::log::info << "write message to " << iop->fd() << cppev::log::endl;
 };
 
-auto on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     iop->wbuf()->put(iop->rbuf()->get());
     cppev::async_write(iop);
 };

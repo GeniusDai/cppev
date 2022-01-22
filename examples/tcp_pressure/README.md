@@ -13,15 +13,15 @@ On the socket accepted, put the message to the write buffer, then trying to send
 On the socket sys-buffer read completed, retrieve the message from read buffer, then put to the write buffer and trying to send it.
 
 ```
-auto on_accept = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
-    iop->wbuf()->put("cppev is an event driven lib");
-    cppev::async_write(iop, evp);
+cppev::fd_event_cb on_accept = [](std::shared_ptr<cppev::nio> iop) -> void {
+    iop->wbuf()->put("Cppev is a C++ event driven library");
+    cppev::async_write(iop);
     cppev::log::info << "write message to " << iop->fd() << cppev::log::endl;
 };
 
-auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
+cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     iop->wbuf()->put(iop->rbuf()->get());
-    cppev::async_write(iop, evp);
+    cppev::async_write(iop);
 };
 ```
 
@@ -49,14 +49,14 @@ The simple client just echo any message back to the server.
 Handler is similiar with the server, just we prompt a message to show our (may be) asynchrous write completed.
 
 ```
-auto on_read_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
+cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    cppev::async_write(iop, evp);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    cppev::async_write(iop);
 };
 
-auto on_write_complete = [](std::shared_ptr<cppev::nio> iop, cppev::event_loop *evp) -> void {
+cppev::fd_event_cb on_write_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::log::info << "write message complete" << cppev::log::endl;
 };
 ```
