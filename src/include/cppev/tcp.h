@@ -27,8 +27,10 @@ auto idle_handler = [] (std::shared_ptr<nio> iop, event_loop *evp) -> void {};
 
 using fd_handler = fd_event_cb;
 
-struct host_hash {
-    size_t operator()(const std::tuple<std::string, int, family> &h) const {
+struct host_hash
+{
+    size_t operator()(const std::tuple<std::string, int, family> &h) const
+    {
         size_t ret = 0;
         ret += std::hash<std::string>()(std::get<0>(h));
         ret += static_cast<size_t>(std::get<1>(h)) * 100;
@@ -65,7 +67,8 @@ public:
     // Used by iohandler when socket closed
     fd_handler on_closed;
 
-    event_loop *random_get_evlp() {
+    event_loop *random_get_evlp()
+    {
         std::random_device rd;
         std::default_random_engine rde(rd());
         std::uniform_int_distribution<int> dist(0, evls.size()-1);
@@ -112,49 +115,6 @@ private:
     std::shared_ptr<event_loop> evp_;
 };
 
-void iohandler::async_write(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
-    iopt->write_all(sysconfig::buffer_io_step);
-    if (0 == iopt->wbuf()->size()) {
-        dp->on_write_complete(iop, evp);
-    } else {
-        evp->fd_remove(iop, false);
-        evp->fd_register(iop, fd_event::fd_writable);
-    }
-}
-
-void iohandler::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
-    iopt->read_all(sysconfig::buffer_io_step);
-    dp->on_read_complete(iop, evp);
-    iopt->rbuf()->clear();
-    if (iopt->eof() || iopt->is_reset()) {
-        dp->on_closed(iop, evp);
-        evp->fd_remove(iop, true);
-    }
-}
-
-void iohandler::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(evp->data());
-    iopt->write_all(sysconfig::buffer_io_step);
-    if (0 == iopt->wbuf()->size()) {
-        evp->fd_remove(iop, false);
-        dp->on_write_complete(iop, evp);
-        evp->fd_register(iop, fd_event::fd_readable);
-    }
-    if (iopt->eop() || iopt->is_reset()) {
-        dp->on_closed(iop, evp);
-        evp->fd_remove(iop, true);
-    }
-}
-
-
 class acceptor : public runnable {
 public:
     acceptor(tp_shared_data *data)
@@ -183,46 +143,10 @@ private:
     std::shared_ptr<event_loop> evp_;
 };
 
-void acceptor::listen(int port, family f, const char *ip) {
-    sock_ = nio_factory::get_nsocktcp(f);
-    sock_->listen(port, ip);
-}
-
-void acceptor::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    std::vector<std::shared_ptr<nsocktcp> > conns = iopt->accept();
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-
-    for (auto &p : conns) {
-        log::info << "new fd " << p->fd() << " accepted" << log::endl;
-        event_loop *io_evlp = d->random_get_evlp();
-        io_evlp->fd_register(std::dynamic_pointer_cast<nio>(p),
-            fd_event::fd_writable, acceptor::on_writable, true);
-    }
-}
-
-void acceptor::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr) { throw_logic_error("dynamic_cast error"); }
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-    evp->fd_remove(iop, true);
-    // The sequence CANNOT be changed, since on_accept may call async_write
-    evp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_accept(iop, evp);
-    evp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
-}
-
-void acceptor::run_impl() {
-    evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
-        fd_event::fd_readable, acceptor::on_readable, true);
-    evp_->loop();
-}
-
-
 class tcp_server final {
 public:
-    tcp_server(int thr_num) {
+    tcp_server(int thr_num)
+    {
         data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
         tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
             (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
@@ -232,11 +156,13 @@ public:
         acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
     }
 
-    void listen(const int port, family f, const char *ip = nullptr) {
+    void listen(const int port, family f, const char *ip = nullptr)
+    {
         acpt_->listen(port, f, ip);
     }
 
-    void run() {
+    void run()
+    {
         // thread pool must run first
         ignore_signal(SIGPIPE);
         tp_->run();
@@ -272,7 +198,8 @@ public:
     : connector(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
     {}
 
-    connector(std::shared_ptr<event_loop> evp) : evp_(evp) {
+    connector(std::shared_ptr<event_loop> evp) : evp_(evp)
+    {
         int pipefd[2];
         if (pipe(pipefd) == -1) { throw_system_error("pipe error"); }
         rdp_ = std::shared_ptr<nstream>(new nstream(pipefd[0]));
@@ -301,62 +228,10 @@ private:
     std::shared_ptr<nstream> rdp_;
 };
 
-void connector::add(std::string ip, int port, family f, int t) {
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp_->data());
-    std::unique_lock<std::mutex> lock(d->lock);
-    auto h = std::make_tuple<>(ip, port, f);
-    if (d->hosts.count(h)) { d->hosts[h] += t; }
-    else { d->hosts[h] = t; }
-    wrp_->wbuf()->put("0");
-    wrp_->write_all(1);
-}
-
-void connector::on_readable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nstream *rdsp = dynamic_cast<nstream *>(iop.get());
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-    rdsp->read_all(1);
-    std::unique_lock<std::mutex> lock(d->lock);
-    for (auto iter = d->hosts.begin(); iter != d->hosts.end(); ) {
-        for (int i = 0; i < iter->second; ++i) {
-            std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp
-                (std::get<2>(iter->first));
-            sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
-            event_loop *io_evlp = d->random_get_evlp();
-            io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
-                fd_event::fd_writable, connector::on_writable, true);
-        }
-        iter = d->hosts.erase(iter);
-    }
-}
-
-void connector::on_writable(std::shared_ptr<nio> iop, event_loop *evp) {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp->data());
-    evp->fd_remove(iop, true);      // remove previous callback
-    if (!iopt->check_connect()) {
-        std::tuple<std::string, int, family> h = iopt->connpeer();
-        log::error << "connect failed with " << std::get<0>(h) << " "
-            << std::get<1>(h) << log::endl;
-        if (d->failures.count(h)) { d->failures[h] += 1; }
-        else { d->failures[h] = 1; }
-        return;
-    }
-    // The sequence CANNOT be changed since on_connect may call aysnc_write
-    evp->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_connect(iop, evp);
-    evp->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
-}
-
-void connector::run_impl() {
-    evp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
-        fd_event::fd_readable, connector::on_readable, true);
-    evp_->loop();
-}
-
-
 class tcp_client final {
 public:
-    tcp_client(int thr_num) {
+    tcp_client(int thr_num)
+    {
         data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
         tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
             (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
@@ -366,11 +241,13 @@ public:
         cont_ = std::shared_ptr<connector>(new connector(data_.get()));
     }
 
-    void add(const std::string ip, const int port, family f, int t = 1) {
+    void add(const std::string ip, const int port, family f, int t = 1)
+    {
         cont_->add(ip, port, f, t);
     }
 
-    void run() {
+    void run()
+    {
         // thread pool must run first
         ignore_signal(SIGPIPE);
         tp_->run();

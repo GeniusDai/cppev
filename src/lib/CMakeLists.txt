@@ -4,6 +4,7 @@ set (LIB
     common_utils.cc
     async_logger.cc
     sysconfig.cc
+    tcp.cc
 )
 
 add_library("cppev" SHARED ${LIB})
