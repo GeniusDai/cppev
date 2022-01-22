@@ -119,7 +119,7 @@ public:
 
     family sockfamily() { return family_; }
 
-    void set_reuse();
+    void set_reuseaddr();
 
 protected:
     // socket family

@@ -148,7 +148,7 @@ int nstream::write_all(int step) {
     return total;
 }
 
-void nsock::set_reuse() {
+void nsock::set_reuseaddr() {
     int optval = 1;
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
@@ -184,7 +184,7 @@ void nsocktcp::listen(const int port, const char *ip) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
-    set_reuse();
+    set_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
     { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number))
@@ -242,7 +242,7 @@ void nsockudp::bind(const int port, const char *ip) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
-    set_reuse();
+    set_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
     { throw_system_error("bind error"); }
 }
