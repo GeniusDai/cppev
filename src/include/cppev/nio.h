@@ -30,15 +30,11 @@ enum class family {
     local
 };
 
-void set_nio(int fd);
-
-int query_family(family f);
-
 class nio : public uncopyable {
 public:
     explicit nio(int fd) : fd_(fd)
     {
-        set_nio(fd_);
+        set_nonblock();
         rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
         wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
     }
@@ -62,6 +58,10 @@ protected:
 
     // write buffer, should be initialized
     std::unique_ptr<buffer> wbuffer_;
+
+private:
+    // set fd to nonblock
+    void set_nonblock();
 };
 
 

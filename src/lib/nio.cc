@@ -11,10 +11,10 @@
 
 namespace cppev {
 
-void set_nio(int fd) {
-    int flags = fcntl(fd, F_GETFL);
+void nio::set_nonblock() {
+    int flags = fcntl(fd_, F_GETFL);
     if (flags < 0) { throw_system_error("fcntl error"); }
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
+    if (fcntl(fd_, F_SETFL, flags | O_NONBLOCK) < 0)
     { throw_system_error("fcntl error"); }
 }
 
