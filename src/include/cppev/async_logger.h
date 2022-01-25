@@ -39,7 +39,7 @@ private:
     void write_debug();
 
     // thread_id --> < buffer, recursive_mutex, recursive_level, timestamp >
-    std::unordered_map<pid_t, std::tuple<std::shared_ptr<buffer>,
+    std::unordered_map<tid, std::tuple<std::shared_ptr<buffer>,
         std::shared_ptr<std::recursive_mutex>, int, time_t> > logs_;
 
     int level_;

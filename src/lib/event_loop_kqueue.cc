@@ -6,7 +6,6 @@
 #include <tuple>
 #include <iostream>
 #include <thread>
-#include <sys/syscall.h>
 #include <ctime>
 #include "cppev/event_loop.h"
 #include "cppev/common_utils.h"
@@ -32,7 +31,7 @@ static fd_event fd_map_to_event(uint32_t ev) {
 
 event_loop::event_loop(void *data) : data_(data) {
     ev_fd_ = kqueue();
-    if (ev_fd_ < 0) { throw_system_error("epoll_create error"); }
+    if (ev_fd_ < 0) { throw_system_error("kqueue error"); }
     on_loop_ = [](event_loop *) -> void {};
 }
 
@@ -58,9 +57,9 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     }
     if (activate) {
         struct kevent ev;
-        EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type) , EV_ADD, 0, 0, nullptr);
+        EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_ONESHOT, 0, 0, nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
-        { throw_system_error("epoll_ctl error"); }
+        { throw_system_error("kevent error"); }
     }
 }
 
@@ -70,10 +69,9 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean) {
     log::info << "clean callbacks" << log::endl;
 
     struct kevent ev;
-    EV_SET(&ev, iop->fd(), 0, EV_DELETE, 0, 0, nullptr);
-    if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
-    { throw_system_error("epoll_ctl error"); }
-
+    EV_SET(&ev, iop->fd(), fd_map_to_sys(fd_event::fd_readable | fd_event::fd_writable),
+        EV_DELETE, 0, 0, nullptr);
+    kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr);
     if (clean) {
         std::unique_lock<std::mutex> lock(lock_);
         fds_.erase(iop->fd());
@@ -83,11 +81,16 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean) {
 void event_loop::loop_once(int timeout) {
     log::info << "start event loop" << log::endl;
     // 1. Add to priority queue
-    struct timespec ts;
-    ts.tv_sec = timeout / 1000;
-    ts.tv_nsec = (timeout % 1000) * 1000 * 1000;
+    int nums;
     struct kevent evs[sysconfig::event_number];
-    int nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, &ts);
+    if (timeout < 0) {
+        nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, nullptr);
+    } else {
+        struct timespec ts;
+        ts.tv_sec = timeout / 1000;
+        ts.tv_nsec = (timeout % 1000) * 1000 * 1000;
+        nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, &ts);
+    }
     for (int i = 0; i < nums; ++i) {
         std::unique_lock<std::mutex> lock(lock_);
         int fd = evs[i].ident;

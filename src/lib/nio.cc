@@ -35,6 +35,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
             else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap->sin_addr.s_addr = htonl(INADDR_ANY); }
+        addr.ss_len = sizeof(sockaddr_in);
         break;
     }
     case AF_INET6: {
@@ -46,6 +47,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
             else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap6->sin6_addr = in6addr_any; }
+        addr.ss_len = sizeof(sockaddr_in6);
         break;
     }
     default: {
@@ -56,6 +58,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
 
 static void set_path(sockaddr_storage &addr, const char *path) {
     sockaddr_un *ap = (sockaddr_un *)(&addr);
+    addr.ss_len = sizeof(sockaddr_un);
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
@@ -185,7 +188,7 @@ void nsocktcp::listen(const int port, const char *ip) {
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     set_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, addr.ss_len ) < 0)
     { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     { throw_system_error("listen error"); }
@@ -208,7 +211,7 @@ void nsocktcp::connect(const char *ip, const int port) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
-    if (::connect(fd_, (sockaddr *)&addr, sizeof(addr)) < 0 && errno != EINPROGRESS)
+    if (::connect(fd_, (sockaddr *)&addr, addr.ss_len) < 0 && errno != EINPROGRESS)
     { throw_system_error("connect error"); }
 }
 
@@ -243,7 +246,7 @@ void nsockudp::bind(const int port, const char *ip) {
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     set_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, addr.ss_len) < 0)
     { throw_system_error("bind error"); }
 }
 

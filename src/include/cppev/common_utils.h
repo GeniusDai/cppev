@@ -2,6 +2,9 @@
 #define _common_utils_h_6C0224787A17_
 
 #include <functional>
+#include <ctime>
+#include <string>
+#include <thread>
 
 namespace cppev {
 
@@ -32,6 +35,10 @@ time_t sc_time();
 std::string timestamp(time_t t = 0, const char *format = nullptr);
 
 void ignore_signal(int sig);
+
+typedef pthread_t tid;
+
+tid gettid();
 
 }
 

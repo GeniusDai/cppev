@@ -45,4 +45,10 @@ void ignore_signal(int sig) {
     { throw_system_error("sigaction error"); }
 }
 
+tid gettid() {
+    static thread_local tid thr_id = 0;
+    if (thr_id == 0) { thr_id = pthread_self(); }
+    return thr_id;
+}
+
 }

@@ -6,7 +6,6 @@
 #include <tuple>
 #include <iostream>
 #include <thread>
-#include <sys/syscall.h>
 #include "cppev/event_loop.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"

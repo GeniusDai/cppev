@@ -1,4 +1,3 @@
-#include <sys/syscall.h>
 #include <tuple>
 #include <mutex>
 #include <ctime>
@@ -24,7 +23,7 @@ namespace log {
 std::mutex async_logger::global_lock_;
 
 async_logger &async_logger::operator<<(const std::string s) {
-    pid_t thr_id = syscall(SYS_gettid);
+    tid thr_id = gettid();
     {
         rdlockguard rdlock(lock_);
         if (logs_.count(thr_id) != 0) {
@@ -51,7 +50,7 @@ async_logger &async_logger::operator<<(const int x) {
 
 async_logger &async_logger::operator<<(const async_logger &) {
     (*this) << "\n";
-    pid_t thr_id = syscall(SYS_gettid);
+    tid thr_id = gettid();
     {
         rdlockguard rdlock(lock_);
         int lock_count = std::get<2>(logs_[thr_id]);
@@ -65,7 +64,7 @@ async_logger &async_logger::operator<<(const async_logger &) {
 
 void async_logger::write_debug() {
     std::stringstream ss;
-    pid_t thr_id = syscall(SYS_gettid);
+    tid thr_id = gettid();
     ss << "- [";
     if (level_ == 1) { ss << "INFO] ["; }
     else { ss << "ERROR] ["; }
@@ -75,7 +74,7 @@ void async_logger::write_debug() {
 
 void async_logger::run_impl() {
     while (true) {
-        std::unordered_set<pid_t> outdate_list;
+        std::unordered_set<tid> outdate_list;
         bool delay = true;
         {
             rdlockguard rdlock(lock_);
