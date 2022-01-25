@@ -46,7 +46,7 @@ public:
     // @Ret: whether thread finishes
     bool wait_for(std::chrono::milliseconds span) {
         std::future_status stat = fut_.wait_for(span);
-        bool ret;
+        bool ret = false;
         switch (stat) {
         case std::future_status::ready :
             join();

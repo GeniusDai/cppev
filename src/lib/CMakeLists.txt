@@ -1,10 +1,10 @@
 set (LIB
     nio.cc
+    async_logger.cc
+    common_utils.cc
+    sysconfig.cc
     event_loop_epoll.cc
     event_loop_kqueue.cc
-    common_utils.cc
-    async_logger.cc
-    sysconfig.cc
     tcp.cc
 )
 

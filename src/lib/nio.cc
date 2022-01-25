@@ -187,7 +187,7 @@ void nsocktcp::listen(const int port, const char *ip) {
     set_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, sizeof(addr)) < 0)
     { throw_system_error("bind error"); }
-    if (::listen(fd_, sysconfig::listen_number))
+    if (::listen(fd_, sysconfig::listen_number) < 0)
     { throw_system_error("listen error"); }
 }
 

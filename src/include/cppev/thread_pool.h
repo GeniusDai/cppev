@@ -17,7 +17,7 @@ namespace cppev {
 
 template<typename Runnable, typename... Args>
 class thread_pool : public uncopyable {
-    static_assert(std::is_base_of<runnable, Runnable>::value);
+    static_assert(std::is_base_of<runnable, Runnable>::value, "template error");
 public:
     thread_pool(int thr_num, Args... args) {
         for (int i = 0; i < thr_num; ++i)
