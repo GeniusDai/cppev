@@ -60,7 +60,7 @@ static void set_path(sockaddr_storage &addr, const char *path) {
 }
 
 static std::tuple<std::string, int, family>
-query_target(sockaddr_storage &addr) {
+query_ip_port_family(sockaddr_storage &addr) {
     int port;
     char ip[sizeof(sockaddr_storage)];
     memset(ip, 0, sizeof(ip));
@@ -160,7 +160,7 @@ std::tuple<std::string, int, family> nsocktcp::sockname() {
     socklen_t len = sizeof(addr);
     if (getsockname(fd_, (sockaddr *)&addr, &len) < 0)
     { throw_system_error("getsockname error"); }
-    return query_target(addr);
+    return query_ip_port_family(addr);
 }
 
 std::tuple<std::string, int, family> nsocktcp::peername() {
@@ -168,7 +168,7 @@ std::tuple<std::string, int, family> nsocktcp::peername() {
     socklen_t len = sizeof(addr);
     if (getpeername(fd_, (sockaddr *)&addr, &len) < 0)
     { throw_system_error("getsockname error"); }
-    return query_target(addr);
+    return query_ip_port_family(addr);
 }
 
 bool nsocktcp::check_connect() {
@@ -264,13 +264,13 @@ std::tuple<std::string, int, family> nsockudp::recv() {
         len = sizeof(sockaddr_in);
         recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
             rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
-        return query_target(addr);
+        return query_ip_port_family(addr);
     }
     case family::ipv6 : {
         len = sizeof(sockaddr_in6);
         recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
             rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
-        return query_target(addr);
+        return query_ip_port_family(addr);
     }
     default : {}
     }
