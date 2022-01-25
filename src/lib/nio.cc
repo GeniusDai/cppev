@@ -295,6 +295,8 @@ void nsockudp::send(const char *path) {
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
 }
 
+#ifdef __linux__
+
 void nwatcher::add_watch(std::string path, uint32_t events) {
     int wd = inotify_add_watch(fd_, path.c_str(), events);
     if (wd < 0) { throw_system_error("inotify_add_watch error"); }
@@ -318,6 +320,8 @@ void nwatcher::process_events() {
     }
 }
 
+#endif
+
 std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f) {
     int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
     if (fd < 0) { throw_system_error("socket error"); }
@@ -333,10 +337,14 @@ std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
     return sock;
 }
 
+#ifdef __linux__
+
 std::shared_ptr<nwatcher> nio_factory::get_nwatcher() {
     int fd = inotify_init();
     if (fd < 0) { throw_system_error("inotify_init error"); }
     return std::shared_ptr<nwatcher>(new nwatcher(fd));
 }
+
+#endif
 
 }

@@ -1,4 +1,5 @@
-#include <sys/epoll.h>
+#ifdef __linux__
+
 #include <exception>
 #include <memory>
 #include <cassert>
@@ -10,6 +11,7 @@
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"
+#include <sys/epoll.h>
 
 namespace cppev {
 
@@ -25,6 +27,12 @@ static fd_event fd_map_to_event(uint32_t ev) {
     if (ev & EPOLLIN) { flags = flags | fd_event::fd_readable; }
     if (ev & EPOLLOUT) { flags = flags | fd_event::fd_writable; }
     return flags;
+}
+
+event_loop::event_loop(void *data) : data_(data) {
+    ev_fd_ = epoll_create(sysconfig::event_number);
+    if (ev_fd_ < 0) { throw_system_error("epoll_create error"); }
+    on_loop_ = [](event_loop *) -> void {};
 }
 
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
@@ -111,3 +119,4 @@ void event_loop::loop_once(int timeout) {
 
 }
 
+#endif

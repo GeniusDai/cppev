@@ -7,8 +7,6 @@
 #include <queue>
 #include <tuple>
 #include <mutex>
-#include <sys/epoll.h>
-#include <sys/inotify.h>
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/common_utils.h"
@@ -45,12 +43,7 @@ public:
 
     void *data() { return data_; }
 
-    event_loop(void *data = nullptr) : data_(data)
-    {
-        ev_fd_ = epoll_create(sysconfig::event_number);
-        if (ev_fd_ < 0) { throw_system_error("epoll_create error"); }
-        on_loop_ = [](event_loop *) -> void {};
-    }
+    event_loop(void *data = nullptr);
 
     virtual ~event_loop() { close(ev_fd_); }
 

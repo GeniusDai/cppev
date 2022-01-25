@@ -2,7 +2,6 @@
 #define _nio_h_6C0224787A17_
 
 #include <sys/socket.h>
-#include <sys/inotify.h>
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -14,6 +13,10 @@
 #include "cppev/buffer.h"
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"
+
+#ifdef __linux__
+#include <sys/inotify.h>
+#endif
 
 namespace cppev {
 
@@ -195,6 +198,8 @@ public:
     void send(const std::string &path) { send(path.c_str()); }
 };
 
+#ifdef __linux__
+
 typedef void(*fs_handler)(inotify_event *, const char *path);
 
 class nwatcher final : public nstream {
@@ -218,6 +223,7 @@ private:
     fs_handler handler_;
 };
 
+#endif
 
 class nio_factory {
 public:
@@ -225,7 +231,9 @@ public:
 
     static std::shared_ptr<nsockudp> get_nsockudp(family f);
 
+#ifdef __linux__
     static std::shared_ptr<nwatcher> get_nwatcher();
+#endif
 };
 
 }
