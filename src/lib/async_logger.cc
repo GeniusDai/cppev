@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <unistd.h>
 #include <cassert>
+#include <ios>
 #include "cppev/lock.h"
 #include "cppev/async_logger.h"
 #include "cppev/common_utils.h"
@@ -68,8 +69,14 @@ void async_logger::write_debug() {
     ss << "- [";
     if (level_ == 1) { ss << "INFO] ["; }
     else { ss << "ERROR] ["; }
-    ss << timestamp() << "] [LWP " << thr_id << "] ";
+    ss << timestamp();
+#ifdef __linux__
+    ss << "] [LWP " << thr_id << "] ";
+#elif defined(__APPLE__)
+    ss << "] [TID 0x" << std::hex << thr_id << "] ";
+#endif
     std::get<0>(logs_[thr_id])->put(ss.str());
+
 }
 
 void async_logger::run_impl() {

@@ -36,7 +36,11 @@ std::string timestamp(time_t t = 0, const char *format = nullptr);
 
 void ignore_signal(int sig);
 
-typedef pthread_t tid;
+#ifdef __linux__
+typedef pid_t tid;
+#elif defined(__APPLE__)
+typedef uint64_t tid;
+#endif
 
 tid gettid();
 

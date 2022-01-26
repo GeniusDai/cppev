@@ -98,7 +98,7 @@ void event_loop::loop_once(int timeout) {
                 { log::info << "writable event "; }
                 log::info << "for fd " << fd << log::endl;
 
-                fd_events_.emplace(
+                fd_cbs_.emplace(
                     std::get<0>(begin->second),
                     std::get<1>(begin->second),
                     std::get<2>(begin->second)
@@ -108,9 +108,9 @@ void event_loop::loop_once(int timeout) {
         }
     }
     // 2. Pop from priority queue
-    while (fd_events_.size()) {
-        auto ev = fd_events_.top();
-        fd_events_.pop();
+    while (fd_cbs_.size()) {
+        auto ev = fd_cbs_.top();
+        fd_cbs_.pop();
         (std::get<2>(ev))(std::get<1>(ev));
     }
 

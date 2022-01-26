@@ -56,8 +56,16 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
             fd_event_cb, fd_event>(prio, iop, ev_cb, ev_type));
     }
     if (activate) {
+        {
+            std::unique_lock<std::mutex> lock(lock_);
+            if (fd_events_.count(iop->fd())) {
+                fd_events_[iop->fd()] = fd_events_[iop->fd()] | ev_type;
+            } else {
+                fd_events_[iop->fd()] = ev_type;
+            }
+        }
         struct kevent ev;
-        EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_ONESHOT, 0, 0, nullptr);
+        EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0, 0, nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
         { throw_system_error("kevent error"); }
     }
@@ -68,10 +76,16 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean) {
     if (!clean) { log::info << "not "; }
     log::info << "clean callbacks" << log::endl;
 
+    fd_event ev_type;
+    {
+        std::unique_lock<std::mutex> lock(lock_);
+        ev_type = fd_events_[iop->fd()];
+        fd_events_.erase(iop->fd());
+    }
     struct kevent ev;
-    EV_SET(&ev, iop->fd(), fd_map_to_sys(fd_event::fd_readable | fd_event::fd_writable),
-        EV_DELETE, 0, 0, nullptr);
-    kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr);
+    EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type), EV_DELETE, 0, 0, nullptr);
+    if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
+    { throw_system_error("kevent error"); }
     if (clean) {
         std::unique_lock<std::mutex> lock(lock_);
         fds_.erase(iop->fd());
@@ -107,7 +121,7 @@ void event_loop::loop_once(int timeout) {
                 { log::info << "writable event "; }
                 log::info << "for fd " << fd << log::endl;
 
-                fd_events_.emplace(
+                fd_cbs_.emplace(
                     std::get<0>(begin->second),
                     std::get<1>(begin->second),
                     std::get<2>(begin->second)
@@ -117,9 +131,9 @@ void event_loop::loop_once(int timeout) {
         }
     }
     // 2. Pop from priority queue
-    while (fd_events_.size()) {
-        auto ev = fd_events_.top();
-        fd_events_.pop();
+    while (fd_cbs_.size()) {
+        auto ev = fd_cbs_.top();
+        fd_cbs_.pop();
         (std::get<2>(ev))(std::get<1>(ev));
     }
 

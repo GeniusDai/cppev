@@ -87,7 +87,10 @@ private:
     std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
 
     // <priority, nio, callback>
-    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_events_;
+    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_cbs_;
+
+    // activate events
+    std::unordered_map<int, fd_event> fd_events_;
 };
 
 }

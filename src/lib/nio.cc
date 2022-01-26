@@ -287,7 +287,7 @@ void nsockudp::send(const char *ip, const int port) {
     addr.ss_family = query_family(family_);
     set_ip_port(addr, ip, port);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
-        0, (sockaddr *)&addr, sizeof(addr));
+        0, (sockaddr *)&addr, addr.ss_len);
 }
 
 void nsockudp::send(const char *path) {
@@ -296,6 +296,21 @@ void nsockudp::send(const char *path) {
     set_path(addr, path);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
+}
+
+std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f) {
+    int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
+    if (fd < 0) { throw_system_error("socket error"); }
+    return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
+}
+
+std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
+    int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
+    if (fd < 0) { throw_system_error("socket error"); }
+    std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
+    sock->rbuf()->resize(sysconfig::udp_buffer_size);
+    sock->wbuf()->resize(sysconfig::udp_buffer_size);
+    return sock;
 }
 
 #ifdef __linux__
@@ -322,25 +337,6 @@ void nwatcher::process_events() {
         p += sizeof(inotify_event) + evp->len;
     }
 }
-
-#endif
-
-std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f) {
-    int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
-    if (fd < 0) { throw_system_error("socket error"); }
-    return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
-}
-
-std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
-    int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
-    if (fd < 0) { throw_system_error("socket error"); }
-    std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
-    sock->rbuf()->resize(sysconfig::udp_buffer_size);
-    sock->wbuf()->resize(sysconfig::udp_buffer_size);
-    return sock;
-}
-
-#ifdef __linux__
 
 std::shared_ptr<nwatcher> nio_factory::get_nwatcher() {
     int fd = inotify_init();

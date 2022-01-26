@@ -5,6 +5,13 @@
 #include <system_error>
 #include <signal.h>
 
+#ifdef __linux__
+#include <sys/syscall.h>
+#elif defined(__APPLE__)
+#include <pthread.h>
+#endif
+
+
 namespace cppev {
 
 void throw_system_error(const char *str) {
@@ -46,8 +53,12 @@ void ignore_signal(int sig) {
 }
 
 tid gettid() {
+#ifdef __linux__
+    static thread_local tid thr_id = syscall(SYS_gettid);
+#elif defined(__APPLE__)
     static thread_local tid thr_id = 0;
-    if (thr_id == 0) { thr_id = pthread_self(); }
+    if (thr_id == 0) { pthread_threadid_np(0, &thr_id); }
+#endif
     return thr_id;
 }
 
