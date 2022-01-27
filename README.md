@@ -4,7 +4,7 @@
 
 ### Nonblock IO
 
-* Support disk-file / pipe / fifo / inotify / socket.
+* Support disk-file / pipe / fifo / socket.
 
 * Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
@@ -44,9 +44,11 @@ Five callbacks could be registered:
 
 ### Others
 
-* Async Logger: Support multi-thread write concurrently by rwlock, buffer outdate, backend-thread sleep, elegant destruction.
+* Async Logger: Support multi-thread concurrent write, buffer outdate, backend-thread sleep, elegant destruction.
 
-* Thread and Synchronization: Encapsulate POSIX thread lib, including pthread, rwlock and its RAII, spinlock.
+* Thread and Synchronization: Encapsulation of pthread, rwlock and its RAII.
+
+* Linux Peculiar: Support inotify and spinlock.
 
 # Prerequirement
 
@@ -64,8 +66,8 @@ Five callbacks could be registered:
 
 # Issues and Maintenance
 
-* Due to rapid development, regression issue may occur intermittently. Please pull latest code when you're blocked by compile/runtime issue in the dev branch.
+* Due to rapid development, regression issue may occur intermittently in the dev branch. Try git pull when you're blocked by compile/runtime issue.
 
-* Repo is long-term maintained, author will keep working on the todo-list.
+* Repo will be long-term maintained, author will keep working on the todo-list.
 
-* If you found any shortage or any new feature you think is nice to have, please feel free to raise an issue.
+* If you found any shortage or any new feature nice to have, feel free to raise an issue.
