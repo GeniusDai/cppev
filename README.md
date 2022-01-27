@@ -50,7 +50,7 @@ Five callbacks could be registered:
 
 # Prerequirement
 
-* Linux: Support epoll/inotify/spinlock, and no bug in glibc.
+* Unix: Linux / macOS
 
 * g++: Support C++11.
 
@@ -61,3 +61,11 @@ Five callbacks could be registered:
 * Tcp Pressure: Perform cross socket family pressure test for ipv6 server.
 
 * Event Driven Nio: Demo how to use event loop for the nio classes.
+
+# Issues and Maintenance
+
+* Due to rapid development, regression issue may occur intermittently. Please pull latest code when you're blocked by compile/runtime issue in the dev branch.
+
+* Repo is long-term maintained, author will keep working on the todo-list.
+
+* If you found any shortage or any new feature you think is nice to have, please feel free to raise an issue.

@@ -24,6 +24,11 @@ const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
     {family::local, AF_LOCAL}
 };
 
+const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ = {
+    {family::ipv4, sizeof(sockaddr_in)},
+    {family::ipv6, sizeof(sockaddr_in6)}
+};
+
 static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) {
     switch (addr.ss_family) {
     case AF_INET: {
@@ -35,7 +40,6 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
             else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap->sin_addr.s_addr = htonl(INADDR_ANY); }
-        addr.ss_len = sizeof(sockaddr_in);
         break;
     }
     case AF_INET6: {
@@ -47,7 +51,6 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
             else if (rtn == -1) { throw_system_error("inet_pton error"); }
         }
         else { ap6->sin6_addr = in6addr_any; }
-        addr.ss_len = sizeof(sockaddr_in6);
         break;
     }
     default: {
@@ -58,7 +61,6 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port) 
 
 static void set_path(sockaddr_storage &addr, const char *path) {
     sockaddr_un *ap = (sockaddr_un *)(&addr);
-    addr.ss_len = sizeof(sockaddr_un);
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
@@ -151,7 +153,7 @@ int nstream::write_all(int step) {
     return total;
 }
 
-void nsock::set_reuseaddr() {
+void nsock::set_reuseaddr(bool enable) {
     int optval = 1;
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
@@ -185,10 +187,10 @@ bool nsocktcp::check_connect() {
 void nsocktcp::listen(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
     set_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, addr.ss_len ) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     { throw_system_error("listen error"); }
@@ -197,7 +199,7 @@ void nsocktcp::listen(const int port, const char *ip) {
 void nsocktcp::listen(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_system_error("bind error"); }
@@ -209,9 +211,9 @@ void nsocktcp::connect(const char *ip, const int port) {
     connect_peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    if (::connect(fd_, (sockaddr *)&addr, addr.ss_len) < 0 && errno != EINPROGRESS)
+    if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0 && errno != EINPROGRESS)
     { throw_system_error("connect error"); }
 }
 
@@ -219,7 +221,7 @@ void nsocktcp::connect(const char *path) {
     connect_peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
     if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 && errno != EINPROGRESS)
@@ -243,17 +245,17 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) {
 void nsockudp::bind(const int port, const char *ip) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
     set_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, addr.ss_len) < 0)
+    if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     { throw_system_error("bind error"); }
 }
 
 void nsockudp::bind(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     { throw_system_error("bind error"); }
@@ -284,28 +286,28 @@ std::tuple<std::string, int, family> nsockudp::recv() {
 
 void nsockudp::send(const char *ip, const int port) {
     sockaddr_storage addr;
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
-        0, (sockaddr *)&addr, addr.ss_len);
+        0, (sockaddr *)&addr, faddr_len_.at(family_));
 }
 
 void nsockudp::send(const char *path) {
     sockaddr_storage addr;
-    addr.ss_family = query_family(family_);
+    addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
 }
 
 std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f) {
-    int fd = ::socket(nsock::query_family(f), SOCK_STREAM, 0);
+    int fd = ::socket(nsock::fmap_.at(f), SOCK_STREAM, 0);
     if (fd < 0) { throw_system_error("socket error"); }
     return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
 }
 
 std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
-    int fd = ::socket(nsock::query_family(f), SOCK_DGRAM, 0);
+    int fd = ::socket(nsock::fmap_.at(f), SOCK_DGRAM, 0);
     if (fd < 0) { throw_system_error("socket error"); }
     std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
     sock->rbuf()->resize(sysconfig::udp_buffer_size);
@@ -313,7 +315,9 @@ std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
     return sock;
 }
 
-#ifdef __linux__
+
+// inotify for linux
+#if defined(__linux__)
 
 void nwatcher::add_watch(std::string path, uint32_t events) {
     int wd = inotify_add_watch(fd_, path.c_str(), events);

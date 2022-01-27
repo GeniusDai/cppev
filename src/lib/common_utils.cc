@@ -7,6 +7,7 @@
 
 #ifdef __linux__
 #include <sys/syscall.h>
+#include <unistd.h>
 #elif defined(__APPLE__)
 #include <pthread.h>
 #endif

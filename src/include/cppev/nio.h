@@ -122,7 +122,7 @@ public:
 
     family sockfamily() { return family_; }
 
-    void set_reuseaddr();
+    void set_reuseaddr(bool enable=true);
 
 protected:
     // socket family
@@ -130,7 +130,7 @@ protected:
 
     static const std::unordered_map<family, int, enum_hash> fmap_;
 
-    static int query_family(family f) { return fmap_.at(f); }
+    static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
 
