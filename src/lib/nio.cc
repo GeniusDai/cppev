@@ -1,5 +1,6 @@
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
+#include "cppev/common_utils.h"
 #include <sys/socket.h>
 #include <exception>
 #include <unistd.h>
@@ -8,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <climits>
+#include <netinet/tcp.h>
 
 namespace cppev {
 
@@ -153,11 +155,68 @@ int nstream::write_all(int step) {
     return total;
 }
 
-void nsock::set_reuseaddr(bool enable) {
-    int optval = 1;
+void nsock::set_so_reuseaddr(bool enable) {
+    int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
     { throw_system_error("setsockopt error"); }
+}
+
+void nsock::set_so_reuseport(bool enable) {
+    int optval = static_cast<int>(enable);
+    socklen_t len = sizeof(optval);
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT,  &optval, len) == -1)
+    { throw_system_error("setsockopt error"); }
+}
+
+void nsock::set_so_rcvbuf(int size) {
+    
+}
+
+void nsock::set_so_sndbuf(int size) {
+
+}
+
+void nsock::set_so_rcvlowat(int size) {
+
+}
+
+void nsock::set_so_sndlowat(int size) {
+
+}
+
+void nsocktcp::set_so_keepalive(bool enable) {
+    int optval = static_cast<int>(enable);
+    socklen_t len = sizeof(optval);
+    if (setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &optval, len) == -1)
+    { throw_system_error("setsockopt error"); }
+}
+
+void nsocktcp::set_so_linger(bool l_onoff, int l_linger) {
+
+}
+
+void nsockudp::set_so_broadcast(bool enable) {
+    int optval = static_cast<int>(enable);
+    socklen_t len = sizeof(optval);
+    if (setsockopt(fd_, SOL_SOCKET, SO_BROADCAST,  &optval, len) == -1)
+    { throw_system_error("setsockopt error"); }
+}
+
+void nsocktcp::set_tcp_nodelay(bool enable) {
+    int optval = static_cast<int>(enable);
+    socklen_t len = sizeof(optval);
+    if (setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY,  &optval, len) == -1)
+    { throw_system_error("setsockopt error"); }
+}
+
+void nsocktcp::shutdown(shut_howto howto) {
+    switch (howto) {
+    case shut_howto::shut_rd : { ::shutdown(fd_, SHUT_RD); }
+    case shut_howto::shut_wr : { ::shutdown(fd_, SHUT_WR); }
+    case shut_howto::shut_rdwr : { ::shutdown(fd_, SHUT_RDWR); }
+    default: { throw_logic_error("unknown shutdown howto"); }
+    }
 }
 
 std::tuple<std::string, int, family> nsocktcp::sockname() {
@@ -189,7 +248,7 @@ void nsocktcp::listen(const int port, const char *ip) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    set_reuseaddr();
+    set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     { throw_system_error("bind error"); }
     if (::listen(fd_, sysconfig::listen_number) < 0)
@@ -208,7 +267,7 @@ void nsocktcp::listen(const char *path) {
 }
 
 void nsocktcp::connect(const char *ip, const int port) {
-    connect_peer_ = std::make_pair<>(ip, port);
+    peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -218,7 +277,7 @@ void nsocktcp::connect(const char *ip, const int port) {
 }
 
 void nsocktcp::connect(const char *path) {
-    connect_peer_ = std::make_pair<>(path, -1);
+    peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -247,7 +306,7 @@ void nsockudp::bind(const int port, const char *ip) {
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    set_reuseaddr();
+    set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     { throw_system_error("bind error"); }
 }

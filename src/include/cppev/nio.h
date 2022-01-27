@@ -122,7 +122,23 @@ public:
 
     family sockfamily() { return family_; }
 
-    void set_reuseaddr(bool enable=true);
+    // SO_REUSEADDR
+    void set_so_reuseaddr(bool enable=true);
+
+    // SO_REUSEPORT
+    void set_so_reuseport(bool enable=true);
+
+    // SO_RCVBUF
+    void set_so_rcvbuf(int size);
+
+    // SO_SNDBUF
+    void set_so_sndbuf(int size);
+
+    // SO_RCVLOWAT
+    void set_so_rcvlowat(int size);
+
+    // SO_SNDLOWAT
+    void set_so_sndlowat(int size);
 
 protected:
     // socket family
@@ -133,6 +149,11 @@ protected:
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
+enum class shut_howto {
+    shut_rd,
+    shut_wr,
+    shut_rdwr
+};
 
 class nsocktcp final : public nsock, public nstream  {
 public:
@@ -163,14 +184,24 @@ public:
 
     std::tuple<std::string, int, family> peername();
 
-    std::tuple<std::string, int, family> connpeer()
-    {
-        return std::make_tuple<>(connect_peer_.first,
-            connect_peer_.second, family_);
+    std::tuple<std::string, int, family> connpeer() {
+        return std::make_tuple<>(peer_.first, peer_.second, family_);
     }
 
+    void shutdown(shut_howto howto);
+
+    // SO_KEEPALIVE
+    void set_so_keepalive(bool enable=true);
+
+    // SO_LINGER
+    void set_so_linger(bool l_onoff, int l_linger);
+
+    // TCP_NODELAY
+    void set_tcp_nodelay(bool enable=true);
+
 private:
-    std::pair<std::string, int> connect_peer_;
+    // Record peer for connect syscall
+    std::pair<std::string, int> peer_;
 };
 
 
@@ -196,6 +227,9 @@ public:
     void send(const char *path);
 
     void send(const std::string &path) { send(path.c_str()); }
+
+    // SO_BROADCAST
+    void set_so_broadcast(bool enable=true);
 };
 
 #ifdef __linux__
