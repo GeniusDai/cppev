@@ -164,17 +164,17 @@ public:
 
     void listen(const int port, const std::string &ip) { listen(port, ip.c_str()); }
 
-    void listen(const char *path);
-
-    void listen(const std::string &path) { listen(path.c_str()); }
-
     void connect(const char *ip, const int port);
 
     void connect(const std::string &ip, const int port) { connect(ip.c_str(), port); }
 
-    void connect(const char *path);
+    void listen_unix(const char *path);
 
-    void connect(const std::string &path) { connect(path.c_str()); }
+    void listen_unix(const std::string &path) { listen_unix(path.c_str()); }
+
+    void connect_unix(const char *path);
+
+    void connect_unix(const std::string &path) { connect_unix(path.c_str()); }
 
     bool check_connect();
 
@@ -214,19 +214,21 @@ public:
 
     void bind(const int port, const std::string &ip) { bind(port, ip.c_str()); }
 
-    void bind(const char *path);
-
-    void bind(const std::string &path) { bind(path.c_str()); }
-
-    std::tuple<std::string, int, family> recv();
-
     void send(const char *ip, const int port);
 
     void send(const std::string &ip, const int port) { send(ip.c_str(), port); }
 
-    void send(const char *path);
+    std::tuple<std::string, int, family> recv();
 
-    void send(const std::string &path) { send(path.c_str()); }
+    void bind_unix(const char *path);
+
+    void bind_unix(const std::string &path) { bind_unix(path.c_str()); }
+
+    void send_unix(const char *path);
+
+    void send_unix(const std::string &path) { send_unix(path.c_str()); }
+
+    void recv_unix();
 
     // SO_BROADCAST
     void set_so_broadcast(bool enable=true);

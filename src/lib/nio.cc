@@ -255,7 +255,7 @@ void nsocktcp::listen(const int port, const char *ip) {
     { throw_system_error("listen error"); }
 }
 
-void nsocktcp::listen(const char *path) {
+void nsocktcp::listen_unix(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -276,7 +276,7 @@ void nsocktcp::connect(const char *ip, const int port) {
     { throw_system_error("connect error"); }
 }
 
-void nsocktcp::connect(const char *path) {
+void nsocktcp::connect_unix(const char *path) {
     peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -311,7 +311,7 @@ void nsockudp::bind(const int port, const char *ip) {
     { throw_system_error("bind error"); }
 }
 
-void nsockudp::bind(const char *path) {
+void nsockudp::bind_unix(const char *path) {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -322,25 +322,15 @@ void nsockudp::bind(const char *path) {
 
 std::tuple<std::string, int, family> nsockudp::recv() {
     sockaddr_storage addr;
-    socklen_t len;
-    switch (family_) {
-    case family::ipv4 : {
-        len = sizeof(sockaddr_in);
-        recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
-            rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
-        return query_ip_port_family(addr);
-    }
-    case family::ipv6 : {
-        len = sizeof(sockaddr_in6);
-        recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
-            rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
-        return query_ip_port_family(addr);
-    }
-    default : {}
-    }
+    socklen_t len = faddr_len_.at(family_);
+    recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
+        rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
+    return query_ip_port_family(addr);
+}
+
+void nsockudp::recv_unix() {
     recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
         rbuf()->cap_ - rbuf()->offset_, 0, nullptr, nullptr);
-    return std::make_tuple<>("", -1, family_);
 }
 
 void nsockudp::send(const char *ip, const int port) {
@@ -351,7 +341,7 @@ void nsockudp::send(const char *ip, const int port) {
         0, (sockaddr *)&addr, faddr_len_.at(family_));
 }
 
-void nsockudp::send(const char *path) {
+void nsockudp::send_unix(const char *path) {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);

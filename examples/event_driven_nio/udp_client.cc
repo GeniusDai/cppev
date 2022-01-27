@@ -26,7 +26,7 @@ void connect_to_servers() {
     udp_ipv4->send("127.0.0.1", udp_ipv6_port);     // NOT OK
     udp_ipv6->send("::1", udp_ipv4_port);           // OK IN LINUX
 
-    udp_unix->send(udp_unix_path);
+    udp_unix->send_unix(udp_unix_path);
 
 }
 

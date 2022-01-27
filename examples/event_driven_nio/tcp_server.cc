@@ -41,7 +41,7 @@ void start_server_loop() {
 
     tcp_ipv4->listen(tcp_ipv4_port);
     tcp_ipv6->listen(tcp_ipv6_port);
-    tcp_unix->listen(tcp_unix_path);
+    tcp_unix->listen_unix(tcp_unix_path);
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listen_cb);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listen_cb);
