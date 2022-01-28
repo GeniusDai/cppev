@@ -264,7 +264,7 @@ void nsocktcp::set_so_linger(bool l_onoff, int l_linger) {
 std::pair<bool, int> nsocktcp::get_so_linger() {
     struct linger lg;
     socklen_t len = sizeof(lg);
-    if (getsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &lg, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_LINGER,  &lg, &len) == -1)
     { throw_system_error("getsockopt error"); }
     return std::make_pair<>(static_cast<bool>(lg.l_onoff), lg.l_linger);
 }
