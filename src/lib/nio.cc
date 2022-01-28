@@ -160,14 +160,14 @@ void nsock::set_so_reuseaddr(bool enable) {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_REUSEADDR"); }
 }
 
 bool nsock::get_so_reuseaddr() {
     int optval;
     socklen_t len = sizeof(optval);
     if (getsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_REUSEADDR"); }
     return static_cast<bool>(optval);
 }
 
@@ -175,66 +175,66 @@ void nsock::set_so_reuseport(bool enable) {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT,  &optval, len) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_REUSEPORT"); }
 }
 
 bool nsock::get_so_reuseport() {
     int optval;
     socklen_t len = sizeof(optval);
     if (getsockopt(fd_, SOL_SOCKET, SO_REUSEPORT,  &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_REUSEPORT"); }
     return static_cast<bool>(optval);
 }
 
 void nsock::set_so_rcvbuf(int size) {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, sizeof(size)) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_RCVBUF"); }
 }
 
 int nsock::get_so_rcvbuf() {
     int size;
     socklen_t len = sizeof(size);
     if (getsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_RCVBUF"); }
     return size;
 }
 
 void nsock::set_so_sndbuf(int size) {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, sizeof(size)) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_SNDBUF"); }
 }
 
 int nsock::get_so_sndbuf() {
     int size;
     socklen_t len = sizeof(size);
     if (getsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_SNDBUF"); }
     return size;
 }
 
 void nsock::set_so_rcvlowat(int size) {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, sizeof(size)) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_RCVLOWAT"); }
 }
 
 int nsock::get_so_rcvlowat() {
     int size;
     socklen_t len = sizeof(size);
     if (getsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_RCVLOWAT"); }
     return size;
 }
 
 void nsock::set_so_sndlowat(int size) {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, sizeof(size)) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_SNDLOWAT"); }
 }
 
 int nsock::get_so_sndlowat() {
     int size;
     socklen_t len = sizeof(size);
     if (getsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_SNDLOWAT"); }
     return size;
 }
 
@@ -242,14 +242,14 @@ void nsocktcp::set_so_keepalive(bool enable) {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &optval, len) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_KEEPALIVE"); }
 }
 
 bool nsocktcp::get_so_keepalive() {
     int optval;
     socklen_t len = sizeof(optval);
     if (getsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_KEEPALIVE"); }
     return static_cast<bool>(optval);
 }
 
@@ -258,14 +258,14 @@ void nsocktcp::set_so_linger(bool l_onoff, int l_linger) {
     lg.l_onoff = static_cast<int>(l_onoff);
     lg.l_linger = l_linger;
     if (setsockopt(fd_, SOL_SOCKET, SO_LINGER,  &lg, sizeof(lg)) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_LINGER"); }
 }
 
 std::pair<bool, int> nsocktcp::get_so_linger() {
     struct linger lg;
     socklen_t len = sizeof(lg);
     if (getsockopt(fd_, SOL_SOCKET, SO_LINGER,  &lg, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_LINGER"); }
     return std::make_pair<>(static_cast<bool>(lg.l_onoff), lg.l_linger);
 }
 
@@ -273,14 +273,14 @@ void nsockudp::set_so_broadcast(bool enable) {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, SOL_SOCKET, SO_BROADCAST,  &optval, len) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for SO_BROADCAST"); }
 }
 
 bool nsockudp::get_so_broadcast() {
     int optval;
     socklen_t len = sizeof(optval);
     if (getsockopt(fd_, SOL_SOCKET, SO_BROADCAST,  &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for SO_BROADCAST"); }
     return static_cast<bool>(optval);
 }
 
@@ -288,14 +288,14 @@ void nsocktcp::set_tcp_nodelay(bool enable) {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY,  &optval, len) == -1)
-    { throw_system_error("setsockopt error"); }
+    { throw_system_error("setsockopt error for TCP_NODELAY"); }
 }
 
 bool nsocktcp::get_tcp_nodelay() {
     int optval;
     socklen_t len = sizeof(optval);
     if (getsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
+    { throw_system_error("getsockopt error for TCP_NODELAY"); }
     return static_cast<bool>(optval);
 }
 

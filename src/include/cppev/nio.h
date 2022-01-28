@@ -134,10 +134,10 @@ public:
     // getsockopt SO_REUSEPORT
     bool get_so_reuseport();
 
-    // setsockopt SO_RCVBUF
+    // setsockopt SO_RCVBUF, actual value = size*2 in linux
     void set_so_rcvbuf(int size);
 
-    // getsockopt SO_RCVBUF
+    // getsockopt SO_RCVBUF, actual value = size*2 in linux
     int get_so_rcvbuf();
 
     // setsockopt SO_SNDBUF
@@ -152,10 +152,10 @@ public:
     // getsockopt SO_RCVLOWAT
     int get_so_rcvlowat();
 
-    // setsockopt SO_SNDLOWAT
+    // setsockopt SO_SNDLOWAT, Protocol not available in linux
     void set_so_sndlowat(int size);
 
-    // getsockopt SO_SNDLOWAT
+    // getsockopt SO_SNDLOWAT, Protocol not available in linux
     int get_so_sndlowat();
 
 protected:
