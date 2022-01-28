@@ -170,19 +170,23 @@ void nsock::set_so_reuseport(bool enable) {
 }
 
 void nsock::set_so_rcvbuf(int size) {
-    
+    if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, sizeof(size)) == -1)
+    { throw_system_error("setsockopt error"); }
 }
 
 void nsock::set_so_sndbuf(int size) {
-
+    if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, sizeof(size)) == -1)
+    { throw_system_error("setsockopt error"); }
 }
 
 void nsock::set_so_rcvlowat(int size) {
-
+    if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, sizeof(size)) == -1)
+    { throw_system_error("setsockopt error"); }
 }
 
 void nsock::set_so_sndlowat(int size) {
-
+    if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, sizeof(size)) == -1)
+    { throw_system_error("setsockopt error"); }
 }
 
 void nsocktcp::set_so_keepalive(bool enable) {
@@ -193,7 +197,11 @@ void nsocktcp::set_so_keepalive(bool enable) {
 }
 
 void nsocktcp::set_so_linger(bool l_onoff, int l_linger) {
-
+    struct linger lg;
+    lg.l_onoff = static_cast<int>(l_onoff);
+    lg.l_linger = l_linger;
+    if (setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &lg, sizeof(lg)) == -1)
+    { throw_system_error("setsockopt error"); }
 }
 
 void nsockudp::set_so_broadcast(bool enable) {
