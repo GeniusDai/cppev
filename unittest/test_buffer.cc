@@ -1,19 +1,17 @@
 #include <gtest/gtest.h>
 #include "cppev/buffer.h"
 
-using namespace std;
-using namespace cppev;
-using namespace testing;
+namespace cppev {
 
-class test_buffer : public Test {
+class TestBuffer : public testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
 };
 
-TEST_F(test_buffer, test_put_get) {
+TEST_F(TestBuffer, test_put_get) {
     buffer buf;
-    string str = "Cppev is a C++ event driven library";
+    std::string str = "Cppev is a C++ event driven library";
     buf.put(str);
     ASSERT_EQ(str.size(), buf.size());
     ASSERT_EQ(str[3], buf[3]);
@@ -25,7 +23,9 @@ TEST_F(test_buffer, test_put_get) {
     ASSERT_FALSE(strcmp(str.substr(offset, str.size() - offset).c_str(), buf.buf()) );
 }
 
+}
+
 int main(int argc, char **argv) {
-    InitGoogleTest();
+    testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }
