@@ -215,7 +215,7 @@ public:
     bool get_so_keepalive();
 
     // setsockopt SO_LINGER
-    void set_so_linger(bool l_onoff, int l_linger);
+    void set_so_linger(bool l_onoff, int l_linger=0);
 
     // getsockopt SO_LINGER
     std::pair<bool, int> get_so_linger();
