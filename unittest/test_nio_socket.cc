@@ -3,7 +3,9 @@
 
 namespace cppev {
 
-class TestNioSocket : public testing::TestWithParam<std::tuple<family, bool, int> > {
+class TestNioSocket
+: public testing::TestWithParam<std::tuple<family, bool, int, int> >
+{
 protected:
     void SetUp() override {}
     void TearDown() override {}
@@ -15,7 +17,7 @@ TEST_P(TestNioSocket, test_tcp_socket) {
     sock->set_so_reuseaddr(std::get<1>(p));
     sock->set_so_reuseport(std::get<1>(p));
     sock->set_so_keepalive(std::get<1>(p));
-    sock->set_so_linger(std::get<1>(p), std::get<2>(p));
+    sock->set_so_linger(std::get<1>(p), std::get<3>(p));
     sock->set_tcp_nodelay(std::get<1>(p));
     EXPECT_EQ(sock->get_so_reuseaddr(), std::get<1>(p));
     EXPECT_EQ(sock->get_so_reuseport(), std::get<1>(p));
@@ -23,7 +25,7 @@ TEST_P(TestNioSocket, test_tcp_socket) {
     EXPECT_EQ(sock->get_tcp_nodelay(), std::get<1>(p));
     auto lg = sock->get_so_linger();
     EXPECT_EQ(lg.first, std::get<1>(p));
-    if (lg.first) { EXPECT_EQ(lg.second, std::get<2>(p)); }
+    if (lg.first) { EXPECT_EQ(lg.second, std::get<3>(p)); }
 
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
@@ -61,9 +63,10 @@ TEST_P(TestNioSocket, test_udp_socket) {
 
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestNioSocket,
     testing::Combine(
-        testing::Values(family::ipv4, family::ipv6),
-        testing::Bool(),
-        testing::Values(8192, 16384, 32768)
+        testing::Values(family::ipv4, family::ipv6),    // protocol family
+        testing::Bool(),                                // enable option
+        testing::Values(8192, 16384, 32768),            // buffer or low water mark
+        testing::Values(16, 32, 64, 128)                // linger-time
     )
 );
 
