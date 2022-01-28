@@ -122,23 +122,41 @@ public:
 
     family sockfamily() { return family_; }
 
-    // SO_REUSEADDR
+    // setsockopt SO_REUSEADDR
     void set_so_reuseaddr(bool enable=true);
 
-    // SO_REUSEPORT
+    // getsockopt SO_REUSEADDR
+    bool get_so_reuseaddr();
+
+    // setsockopt SO_REUSEPORT
     void set_so_reuseport(bool enable=true);
 
-    // SO_RCVBUF
+    // getsockopt SO_REUSEPORT
+    bool get_so_reuseport();
+
+    // setsockopt SO_RCVBUF
     void set_so_rcvbuf(int size);
 
-    // SO_SNDBUF
+    // getsockopt SO_RCVBUF
+    int get_so_rcvbuf();
+
+    // setsockopt SO_SNDBUF
     void set_so_sndbuf(int size);
 
-    // SO_RCVLOWAT
+    // getsockopt SO_SNDBUF
+    int get_so_sndbuf();
+
+    // setsockopt SO_RCVLOWAT
     void set_so_rcvlowat(int size);
 
-    // SO_SNDLOWAT
+    // getsockopt SO_RCVLOWAT
+    int get_so_rcvlowat();
+
+    // setsockopt SO_SNDLOWAT
     void set_so_sndlowat(int size);
+
+    // getsockopt SO_SNDLOWAT
+    int get_so_sndlowat();
 
 protected:
     // socket family
@@ -190,14 +208,23 @@ public:
 
     void shutdown(shut_howto howto);
 
-    // SO_KEEPALIVE
+    // setsockopt SO_KEEPALIVE
     void set_so_keepalive(bool enable=true);
 
-    // SO_LINGER
+    // getsockopt SO_KEEPALIVE
+    bool get_so_keepalive();
+
+    // setsockopt SO_LINGER
     void set_so_linger(bool l_onoff, int l_linger);
 
-    // TCP_NODELAY
+    // getsockopt SO_LINGER
+    std::pair<bool, int> get_so_linger();
+
+    // setsockopt TCP_NODELAY
     void set_tcp_nodelay(bool enable=true);
+
+    // getsockopt TCP_NODELAY
+    bool get_tcp_nodelay();
 
 private:
     // Record peer for connect syscall
@@ -230,8 +257,11 @@ public:
 
     void recv_unix();
 
-    // SO_BROADCAST
+    // setsockopt SO_BROADCAST
     void set_so_broadcast(bool enable=true);
+
+    // getsockopt SO_BROADCAST
+    bool get_so_broadcast();
 };
 
 #ifdef __linux__
