@@ -44,7 +44,7 @@ private:
 };
 
 #endif
-
+#define __CPPEV_USE_POSIX_RWLOCK__
 #if defined(__CPPEV_USE_POSIX_RWLOCK__)
 
 class rwlock final : public uncopyable {

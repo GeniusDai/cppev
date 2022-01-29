@@ -1,6 +1,7 @@
+#include "cppev/lock.h"
+
 #if !defined(__CPPEV_USE_POSIX_RWLOCK__)
 
-#include "cppev/lock.h"
 #include <pthread.h>
 #include <unordered_set>
 #include <cassert>
