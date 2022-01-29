@@ -23,14 +23,14 @@ namespace log {
 
 std::mutex async_logger::global_lock_;
 
-async_logger &async_logger::operator<<(const std::string s) {
+async_logger &async_logger::operator<<(const char *str) {
     tid thr_id = gettid();
     {
         rdlockguard rdlock(lock_);
         if (logs_.count(thr_id) != 0) {
             std::get<1>(logs_[thr_id])->lock();
             if (++std::get<2>(logs_[thr_id]) == 1) { write_debug(); }
-            std::get<0>(logs_[thr_id])->put(s);
+            std::get<0>(logs_[thr_id])->put(str);
             return *this;
         }
     }
@@ -39,14 +39,28 @@ async_logger &async_logger::operator<<(const std::string s) {
         std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, sc_time());
     write_debug();
     std::get<1>(logs_[thr_id])->lock();
-    std::get<0>(logs_[thr_id])->put(s);
+    std::get<0>(logs_[thr_id])->put(str);
     return *this;
 }
 
+async_logger &async_logger::operator<<(const std::string &str) {
+    return (*this) << str.c_str();
+}
+
+async_logger &async_logger::operator<<(const long x) {
+    return (*this) << std::to_string(x).c_str();
+}
+
 async_logger &async_logger::operator<<(const int x) {
-    std::stringstream ss;
-    ss << x;
-    return (*this) << ss.str();
+    return (*this) << std::to_string(x).c_str();
+}
+
+async_logger &async_logger::operator<<(const double x) {
+    return (*this) << std::to_string(x).c_str();
+}
+
+async_logger &async_logger::operator<<(const float x) {
+    return (*this) << std::to_string(x).c_str();
 }
 
 async_logger &async_logger::operator<<(const async_logger &) {

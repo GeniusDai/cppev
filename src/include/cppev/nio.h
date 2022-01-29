@@ -194,7 +194,7 @@ public:
 
     void connect_unix(const std::string &path) { connect_unix(path.c_str()); }
 
-    bool check_connect();
+    bool check_connect()  { return get_so_error() == 0; }
 
     std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
 
@@ -225,6 +225,9 @@ public:
 
     // getsockopt TCP_NODELAY
     bool get_tcp_nodelay();
+
+    // getsockopt SO_ERROR, option cannot be set
+    int get_so_error();
 
 private:
     // Record peer for connect syscall

@@ -4,9 +4,11 @@
 #include "cppev/common_utils.h"
 #include <pthread.h>
 #include <exception>
+#include <unordered_set>
 
 namespace cppev {
 
+// spinlock for linux
 #if _POSIX_C_SOURCE >= 200112L
 
 class spinlock final : public uncopyable {
@@ -43,6 +45,8 @@ private:
 
 #endif
 
+#if defined(__CPPEV_USE_POSIX_RWLOCK__)
+
 class rwlock final : public uncopyable {
 public:
     rwlock() {
@@ -74,6 +78,48 @@ public:
 private:
     pthread_rwlock_t lock_;
 };
+
+#else
+
+class rwlock final : public uncopyable {
+public:
+    rwlock();
+
+    ~rwlock();
+
+    void unlock();
+
+    void rdlock();
+
+    void wrlock();
+
+private:
+    // mutex protect: count_ / rd_waiters / wr_waiters / wr_owner / rd_owners
+    pthread_mutex_t lock_;
+
+    // cv for threads waiting for read lock
+    pthread_cond_t rd_cond_;
+
+    // cv for threads waiting for write lock 
+    pthread_cond_t wr_cond_;
+
+    // reference count value
+    int count_;
+
+    // number of threads waiting for read lock
+    int rd_waiters_;
+
+    // number of threads waiting for write lock
+    int wr_waiters_;
+
+    // for debug: write lock owner
+    tid wr_owner_;
+
+    // for debug: read lock owners
+    std::unordered_set<tid> rd_owners_;
+};
+
+#endif
 
 class rdlockguard final : public uncopyable {
 public:

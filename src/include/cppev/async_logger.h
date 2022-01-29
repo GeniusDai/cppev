@@ -29,9 +29,17 @@ public:
 
     void run_impl() override;
 
-    async_logger &operator<<(const std::string str);
+    async_logger &operator<<(const char *str);
+
+    async_logger &operator<<(const std::string &str);
+
+    async_logger &operator<<(const long x);
 
     async_logger &operator<<(const int x);
+
+    async_logger &operator<<(const double x);
+
+    async_logger &operator<<(const float x);
 
     async_logger &operator<<(const async_logger &);
 

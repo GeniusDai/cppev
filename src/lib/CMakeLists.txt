@@ -6,6 +6,7 @@ set (LIB
     event_loop_epoll.cc
     event_loop_kqueue.cc
     tcp.cc
+    lock.cc
 )
 
 add_library("cppev" SHARED ${LIB})

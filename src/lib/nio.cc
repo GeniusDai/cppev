@@ -21,6 +21,65 @@ void nio::set_nonblock() {
     { throw_system_error("fcntl error"); }
 }
 
+int nstream::read_chunk(int len) {
+    rbuffer_->resize(rbuffer_->offset_ + len);
+    int origin_offset = rbuffer_->offset_;
+    while (len) {
+        int curr = read(fd_, rbuffer_->buffer_.get() + rbuffer_->offset_, len);
+        if (curr == 0) { eof_ = true; break; }
+        if (curr == -1) {
+            if (errno == EINTR) { continue; }
+            if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
+            else if (errno == ECONNRESET) { reset_ = true; break; }
+            else { throw_system_error("read error"); }
+        }
+        rbuffer_->offset_ += curr;
+        len -= curr;
+    }
+    return rbuffer_->offset_ - origin_offset;
+}
+
+int nstream::write_chunk(int len) {
+    int origin_start = wbuffer_->start_;
+    len = std::min(len, wbuffer_->size());
+    while (len) {
+        len = std::min(len, wbuffer_->size());
+        int curr = write(fd_, wbuffer_->buffer_.get() + wbuffer_->start_, len);
+        if (curr == -1) {
+            if (errno == EINTR) { continue; }
+            if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
+            else if (errno == EPIPE) { eop_ = true; break; }
+            else if (errno == ECONNRESET) { reset_ = true; break; }
+            else { throw_system_error("write error"); }
+        }
+        wbuffer_->start_ += curr;
+        len -= curr;
+    }
+    int curr_start = wbuffer_->start_;
+    if (0 == wbuffer_->size()) { wbuffer_->clear(); }
+    return curr_start - origin_start;
+}
+
+int nstream::read_all(int step) {
+    int total = 0;
+    while(true) {
+        int curr = read_chunk(step);
+        total += curr;
+        if (curr != step) { break; }
+    }
+    return total;
+}
+
+int nstream::write_all(int step) {
+    int total = 0;
+    while(true) {
+        int curr = write_chunk(step);
+        total += curr;
+        if (curr != step) { break; }
+    }
+    return total;
+}
+
 const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
@@ -95,65 +154,6 @@ query_ip_port_family(sockaddr_storage &addr) {
     }
     }
     return std::make_tuple<>(std::string(ip), port, f);
-}
-
-int nstream::read_chunk(int len) {
-    rbuffer_->resize(rbuffer_->offset_ + len);
-    int origin_offset = rbuffer_->offset_;
-    while (len) {
-        int curr = read(fd_, rbuffer_->buffer_.get() + rbuffer_->offset_, len);
-        if (curr == 0) { eof_ = true; break; }
-        if (curr == -1) {
-            if (errno == EINTR) { continue; }
-            if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
-            else if (errno == ECONNRESET) { reset_ = true; break; }
-            else { throw_system_error("read error"); }
-        }
-        rbuffer_->offset_ += curr;
-        len -= curr;
-    }
-    return rbuffer_->offset_ - origin_offset;
-}
-
-int nstream::write_chunk(int len) {
-    int origin_start = wbuffer_->start_;
-    len = std::min(len, wbuffer_->size());
-    while (len) {
-        len = std::min(len, wbuffer_->size());
-        int curr = write(fd_, wbuffer_->buffer_.get() + wbuffer_->start_, len);
-        if (curr == -1) {
-            if (errno == EINTR) { continue; }
-            if (errno == EAGAIN || errno == EWOULDBLOCK) { break; }
-            else if (errno == EPIPE) { eop_ = true; break; }
-            else if (errno == ECONNRESET) { reset_ = true; break; }
-            else { throw_system_error("write error"); }
-        }
-        wbuffer_->start_ += curr;
-        len -= curr;
-    }
-    int curr_start = wbuffer_->start_;
-    if (0 == wbuffer_->size()) { wbuffer_->clear(); }
-    return curr_start - origin_start;
-}
-
-int nstream::read_all(int step) {
-    int total = 0;
-    while(true) {
-        int curr = read_chunk(step);
-        total += curr;
-        if (curr != step) { break; }
-    }
-    return total;
-}
-
-int nstream::write_all(int step) {
-    int total = 0;
-    while(true) {
-        int curr = write_chunk(step);
-        total += curr;
-        if (curr != step) { break; }
-    }
-    return total;
 }
 
 void nsock::set_so_reuseaddr(bool enable) {
@@ -299,6 +299,14 @@ bool nsocktcp::get_tcp_nodelay() {
     return static_cast<bool>(optval);
 }
 
+int nsocktcp::get_so_error() {
+    int optval;
+    socklen_t len = sizeof(optval);
+    if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
+    { throw_system_error("getsockopt error for SO_ERROR"); }
+    return optval;
+}
+
 void nsocktcp::shutdown(shut_howto howto) {
     switch (howto) {
     case shut_howto::shut_rd : { ::shutdown(fd_, SHUT_RD); }
@@ -322,14 +330,6 @@ std::tuple<std::string, int, family> nsocktcp::peername() {
     if (getpeername(fd_, (sockaddr *)&addr, &len) < 0)
     { throw_system_error("getsockname error"); }
     return query_ip_port_family(addr);
-}
-
-bool nsocktcp::check_connect() {
-    int optval;
-    socklen_t len = sizeof(optval);
-    if (getsockopt(fd_, SOL_SOCKET, SO_ERROR, &optval, &len) == -1)
-    { throw_system_error("getsockopt error"); }
-    return optval == 0;
 }
 
 void nsocktcp::listen(const int port, const char *ip) {

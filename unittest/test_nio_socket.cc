@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "cppev/nio.h"
+#include <unordered_set>
 
 namespace cppev {
 
@@ -29,14 +30,13 @@ TEST_P(TestNioSocket, test_tcp_socket) {
 
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
-    // sock->set_so_sndlowat(std::get<2>(p));   // LINUX: Protocol not available
     sock->set_so_rcvlowat(std::get<2>(p));
-    EXPECT_TRUE(sock->get_so_rcvbuf() == std::get<2>(p)
-        || sock->get_so_rcvbuf() == std::get<2>(p) * 2);
-    EXPECT_TRUE(sock->get_so_sndbuf() == std::get<2>(p)
-        || sock->get_so_sndbuf() == std::get<2>(p) * 2);
-    // EXPECT_EQ(sock->get_so_sndlowat(), std::get<2>(p));  // LINUX: Protocol not available
+    std::unordered_set<int> buf_size{std::get<2>(p), std::get<2>(p)*2};
+    EXPECT_TRUE(buf_size.count(sock->get_so_rcvbuf()));
+    EXPECT_TRUE(buf_size.count(sock->get_so_sndbuf()));
     EXPECT_EQ(sock->get_so_rcvlowat(), std::get<2>(p));
+
+    EXPECT_EQ(sock->get_so_error(), 0);
 }
 
 TEST_P(TestNioSocket, test_udp_socket) {
@@ -51,13 +51,10 @@ TEST_P(TestNioSocket, test_udp_socket) {
 
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
-    // sock->set_so_sndlowat(std::get<2>(p));   // LINUX: Protocol not available
     sock->set_so_rcvlowat(std::get<2>(p));
-    EXPECT_TRUE(sock->get_so_rcvbuf() == std::get<2>(p)
-        || sock->get_so_rcvbuf() == std::get<2>(p) * 2);
-    EXPECT_TRUE(sock->get_so_sndbuf() == std::get<2>(p)
-        || sock->get_so_sndbuf() == std::get<2>(p) * 2);
-    // EXPECT_EQ(sock->get_so_sndlowat(), std::get<2>(p));  // LINUX: Protocol not available
+    std::unordered_set<int> buf_size{std::get<2>(p), std::get<2>(p)*2};
+    EXPECT_TRUE(buf_size.count(sock->get_so_rcvbuf()));
+    EXPECT_TRUE(buf_size.count(sock->get_so_sndbuf()));
     EXPECT_EQ(sock->get_so_rcvlowat(), std::get<2>(p));
 }
 

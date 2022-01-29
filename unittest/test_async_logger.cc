@@ -6,6 +6,8 @@
 
 namespace cppev {
 
+const char *str = "Cppev is a C++ event driven library";
+
 class TestAsyncLogger {
 public:
     int thr_num = 50;
@@ -15,18 +17,34 @@ public:
         sysconfig::buffer_outdate = 1;
         auto output = [this](int i) -> void {
             for (int j = 0; j < this->loop_num; ++j) {
-                log::info << "testing logger " << i << " round" << log::endl;
+                log::info << str << " round [" << i << "]" << log::endl;
                 std::this_thread::sleep_for(std::chrono::microseconds(1));
-                log::error << "testing logger " << i << " round" << log::endl;
+                log::error << str << " round [" << i << "]" << log::endl;
             }
             std::random_device rd;
             std::default_random_engine rde(rd());
             std::uniform_int_distribution<int> dist(0, 1500);
-            std::this_thread::sleep_for(std::chrono::milliseconds(dist(rde)));
+            int value = dist(rde);
+            std::this_thread::sleep_for(std::chrono::milliseconds(value));
+            float x1 = value;
+            double x2 = value;
+            int x3 = value;
+            long x4 = value;
             for (int j = 0; j < this->loop_num; ++j) {
-                log::info << "testing logger " << i << " round" << log::endl;
-                std::this_thread::sleep_for(std::chrono::microseconds(1));
-                log::error << "testing logger " << i << " round" << log::endl;
+                log::info
+                    << "Slept for "
+                    << x1 << " "
+                    << x2 << " "
+                    << x3 << " "
+                    << x4 << " "
+                << log::endl;
+                log::error
+                    << "Slept for "
+                    << x1 << " "
+                    << x2 << " "
+                    << x3 << " "
+                    << x4 << " "
+                << log::endl;
             }
         };
         std::vector<std::thread> thrs;
