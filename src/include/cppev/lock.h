@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <exception>
 #include <unordered_set>
+#include <mutex>
+#include <condition_variable>
 
 namespace cppev {
 
@@ -95,13 +97,13 @@ public:
 
 private:
     // mutex protect: count_ / rd_waiters / wr_waiters / wr_owner / rd_owners
-    pthread_mutex_t lock_;
+    std::mutex lock_;
 
     // cv for threads waiting for read lock
-    pthread_cond_t rd_cond_;
+    std::condition_variable rd_cond_;
 
     // cv for threads waiting for write lock 
-    pthread_cond_t wr_cond_;
+    std::condition_variable wr_cond_;
 
     // reference count value
     int count_;
