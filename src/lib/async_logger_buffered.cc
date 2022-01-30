@@ -58,7 +58,4 @@ void async_logger::run_impl() {
 
 }// namespace cppev
 
-
-
-
 #endif  // !defined(__CPPEV_USE_HASHED_LOGGER__)

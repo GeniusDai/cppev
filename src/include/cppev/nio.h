@@ -292,7 +292,7 @@ private:
     fs_handler handler_;
 };
 
-#endif
+#endif  // nwatcher for linux
 
 class nio_factory {
 public:
@@ -302,9 +302,9 @@ public:
 
 #ifdef __linux__
     static std::shared_ptr<nwatcher> get_nwatcher();
-#endif
+#endif  // nwatcher for linux
 };
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // nio.h

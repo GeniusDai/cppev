@@ -76,6 +76,6 @@ public:
     }
 };
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // buffer.h

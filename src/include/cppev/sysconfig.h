@@ -23,9 +23,8 @@ extern int buffer_outdate;
 // batch size for IO
 extern int buffer_io_step;
 
-};
+}   // namespace sysconfig
 
-}
+}   // namespace cppev
 
-
-#endif
+#endif  // sysconfig.h

@@ -146,10 +146,10 @@ public:
     }
 };
 
-}
+}   // namespace tpq
 
 using thread_pool_queue = tpq::thread_pool_queue;
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // thread_pool.h

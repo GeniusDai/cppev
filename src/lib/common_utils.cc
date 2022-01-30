@@ -12,7 +12,6 @@
 #include <pthread.h>
 #endif
 
-
 namespace cppev {
 
 void throw_system_error(const char *str) {
@@ -63,4 +62,4 @@ tid gettid() {
     return thr_id;
 }
 
-}
+}   // namespace cppev

@@ -1,6 +1,8 @@
 #include "cppev/async_logger.h"
 #include <sstream>
 
+// Common function for both implementation
+
 namespace cppev {
 
 std::mutex async_logger::global_lock_;
@@ -46,6 +48,6 @@ namespace log {
     async_logger info(1);
     async_logger error(2);
     async_logger endl(-1);
-}
+}   // namespace log
 
-}
+}   // namespace cppev

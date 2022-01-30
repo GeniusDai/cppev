@@ -188,4 +188,4 @@ void tcp_client::run() {
     cont_->join();
 }
 
-}
+}   // namespace cppev

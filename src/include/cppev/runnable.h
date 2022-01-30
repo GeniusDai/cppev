@@ -70,6 +70,6 @@ private:
     std::future<bool> fut_;
 };
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // runnable.h

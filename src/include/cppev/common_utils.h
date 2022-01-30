@@ -44,6 +44,6 @@ typedef uint64_t tid;
 
 tid gettid();
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // common_utils.h

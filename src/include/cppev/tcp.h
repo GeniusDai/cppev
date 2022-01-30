@@ -16,16 +16,18 @@
 
 namespace cppev {
 
+// Idle function for callback
+auto idle_handler = [] (std::shared_ptr<nio> iop) -> void {};
+
+using fd_handler = fd_event_cb;
+
+namespace tcp {
+
 class acceptor;
 class connector;
 class iohandler;
 class tcp_server;
 class tcp_client;
-
-// Idle function for callback
-auto idle_handler = [] (std::shared_ptr<nio> iop) -> void {};
-
-using fd_handler = fd_event_cb;
 
 struct host_hash
 {
@@ -234,8 +236,12 @@ private:
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
 
+}   // namespace tcp
+
+using namespace tcp;
+
 constexpr auto async_write = iohandler::async_write;
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // tcp.h

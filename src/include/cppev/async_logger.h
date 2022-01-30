@@ -3,6 +3,8 @@
 
 #include <cstdio>
 
+// Only use hashed async logger in linux with higher version
+// glibc, lower version or macOS got bug in rwlock
 #if defined(__linux__)
 # if __GNUC_PREREQ(2, 25)
 # define __CPPEV_USE_HASHED_LOGGER__
@@ -22,7 +24,7 @@ namespace log
     extern async_logger info;
     extern async_logger error;
     extern async_logger endl;
-}
+}   // namespace log
 
 }   // namespace cppev
 

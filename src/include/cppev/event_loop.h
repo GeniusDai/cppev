@@ -93,6 +93,6 @@ private:
     std::unordered_map<int, fd_event> fd_events_;
 };
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // event_loop.h

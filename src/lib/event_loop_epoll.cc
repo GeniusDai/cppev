@@ -116,6 +116,6 @@ void event_loop::loop_once(int timeout) {
 
 }
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // event loop for linux

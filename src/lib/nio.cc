@@ -454,7 +454,6 @@ std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f) {
 }
 
 
-// inotify for linux
 #if defined(__linux__)
 
 void nwatcher::add_watch(std::string path, uint32_t events) {
@@ -486,6 +485,6 @@ std::shared_ptr<nwatcher> nio_factory::get_nwatcher() {
     return std::shared_ptr<nwatcher>(new nwatcher(fd));
 }
 
-#endif
+#endif  // inotify for linux
 
-}
+}   // namespace cppev

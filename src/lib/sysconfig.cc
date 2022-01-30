@@ -22,6 +22,6 @@ int buffer_outdate = 30;
 // batch size for IO
 int buffer_io_step = 1024;
 
-};
+}   // namespace sysconfig
 
-}
+}   // namespace cppev
