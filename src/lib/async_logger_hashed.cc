@@ -1,3 +1,7 @@
+#include "cppev/async_logger.h"
+
+#if defined(__CPPEV_USE_HASHED_LOGGER__)
+
 #include <tuple>
 #include <mutex>
 #include <ctime>
@@ -9,19 +13,17 @@
 #include <cassert>
 #include <ios>
 #include "cppev/lock.h"
-#include "cppev/async_logger.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 
 namespace cppev {
 
-namespace log {
-    async_logger info(1);
-    async_logger error(2);
-    async_logger endl(-1);
+async_logger::async_logger(int level)
+: level_(level), stop_(false)
+{
+    if (level_ < 0) { return; }
+    run();
 }
-
-std::mutex async_logger::global_lock_;
 
 async_logger &async_logger::operator<<(const char *str) {
     tid thr_id = gettid();
@@ -29,7 +31,8 @@ async_logger &async_logger::operator<<(const char *str) {
         rdlockguard rdlock(lock_);
         if (logs_.count(thr_id) != 0) {
             std::get<1>(logs_[thr_id])->lock();
-            if (++std::get<2>(logs_[thr_id]) == 1) { write_debug(); }
+            if (++std::get<2>(logs_[thr_id]) == 1)
+            { write_debug(std::get<0>(logs_[thr_id]).get()); }
             std::get<0>(logs_[thr_id])->put(str);
             return *this;
         }
@@ -37,30 +40,10 @@ async_logger &async_logger::operator<<(const char *str) {
     wrlockguard wrlock(lock_);
     logs_[thr_id] = std::make_tuple<>(std::shared_ptr<buffer>(new buffer),
         std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, sc_time());
-    write_debug();
+    write_debug(std::get<0>(logs_[thr_id]).get());
     std::get<1>(logs_[thr_id])->lock();
     std::get<0>(logs_[thr_id])->put(str);
     return *this;
-}
-
-async_logger &async_logger::operator<<(const std::string &str) {
-    return (*this) << str.c_str();
-}
-
-async_logger &async_logger::operator<<(const long x) {
-    return (*this) << std::to_string(x).c_str();
-}
-
-async_logger &async_logger::operator<<(const int x) {
-    return (*this) << std::to_string(x).c_str();
-}
-
-async_logger &async_logger::operator<<(const double x) {
-    return (*this) << std::to_string(x).c_str();
-}
-
-async_logger &async_logger::operator<<(const float x) {
-    return (*this) << std::to_string(x).c_str();
 }
 
 async_logger &async_logger::operator<<(const async_logger &) {
@@ -75,22 +58,6 @@ async_logger &async_logger::operator<<(const async_logger &) {
     }
     cond_.notify_one();
     return *this;
-}
-
-void async_logger::write_debug() {
-    std::stringstream ss;
-    tid thr_id = gettid();
-    ss << "- [";
-    if (level_ == 1) { ss << "INFO] ["; }
-    else { ss << "ERROR] ["; }
-    ss << timestamp();
-#ifdef __linux__
-    ss << "] [LWP " << thr_id << "] ";
-#elif defined(__APPLE__)
-    ss << "] [TID 0x" << std::hex << thr_id << "] ";
-#endif
-    std::get<0>(logs_[thr_id])->put(ss.str());
-
 }
 
 void async_logger::run_impl() {
@@ -140,3 +107,5 @@ void async_logger::run_impl() {
 }
 
 }
+
+#endif  // __CPPEV_USE_HASHED_LOGGER__

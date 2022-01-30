@@ -45,9 +45,7 @@ private:
     pthread_spinlock_t lock_;
 };
 
-#endif
-#define __CPPEV_USE_POSIX_RWLOCK__
-#if defined(__CPPEV_USE_POSIX_RWLOCK__)
+#endif  // spinlock
 
 class rwlock final : public uncopyable {
 public:
@@ -81,48 +79,6 @@ private:
     pthread_rwlock_t lock_;
 };
 
-#else
-
-class rwlock final : public uncopyable {
-public:
-    rwlock();
-
-    ~rwlock();
-
-    void unlock();
-
-    void rdlock();
-
-    void wrlock();
-
-private:
-    // mutex protect: count_ / rd_waiters / wr_waiters / wr_owner / rd_owners
-    std::mutex lock_;
-
-    // cv for threads waiting for read lock
-    std::condition_variable rd_cond_;
-
-    // cv for threads waiting for write lock 
-    std::condition_variable wr_cond_;
-
-    // reference count value
-    int count_;
-
-    // number of threads waiting for read lock
-    int rd_waiters_;
-
-    // number of threads waiting for write lock
-    int wr_waiters_;
-
-    // for debug: write lock owner
-    tid wr_owner_;
-
-    // for debug: read lock owners
-    std::unordered_set<tid> rd_owners_;
-};
-
-#endif
-
 class rdlockguard final : public uncopyable {
 public:
     rdlockguard(rwlock &lock) { rwlock_ = &lock; rwlock_->rdlock(); }
@@ -151,6 +107,6 @@ private:
     rwlock *rwlock_;
 };
 
-}
+}   // namespace cppev
 
-#endif
+#endif  // lock.h

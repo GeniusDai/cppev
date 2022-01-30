@@ -44,7 +44,7 @@ Five callbacks could be registered:
 
 ### Others
 
-* Async Logger: Support multi-thread concurrent write, buffer outdate, backend-thread sleep, elegant destruction.
+* Async Logger: Two kinds of logger both using backend thread.
 
 * Thread and Synchronization: Encapsulation of pthread, rwlock and its RAII.
 
@@ -69,7 +69,3 @@ Five callbacks could be registered:
 * Due to rapid development, regression issue may occur intermittently in the dev branch. Try git pull when you're blocked by compile/runtime issue.
 
 * Repo will be long-term maintained, author will keep working on the todo-list. If you found any shortage or any new feature nice to have, feel free to raise an issue.
-
-# OS Bugs
-
-* Confirmed centos-7 and macOS-12.1 got rwlock deadlock bug, please try centos-8.
