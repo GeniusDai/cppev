@@ -3,8 +3,10 @@
 
 #include <cstdio>
 
-#if defined(__linux__) && __GNUC_PREREQ(2, 25)
+#if defined(__linux__)
+# if __GNUC_PREREQ(2, 25)
 # define __CPPEV_USE_HASHED_LOGGER__
+# endif
 #endif
 
 #if defined(__CPPEV_USE_HASHED_LOGGER__)
