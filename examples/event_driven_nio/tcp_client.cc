@@ -9,9 +9,11 @@ const char *tcp_unix_path = "./tcp_unix";
 
 const char *str = "Cppev is a C++ event driven library";
 
-cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
-    if (!iopt->check_connect()) {
+    if (!iopt->check_connect())
+    {
         cppev::log::error << "fd" << iop->fd() << "failed to connect" << cppev::log::endl;
         return;
     }
@@ -19,7 +21,8 @@ cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
     iopt->write_all();
 };
 
-void connect_to_servers() {
+void connect_to_servers()
+{
     cppev::event_loop evlp;
 
     auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
@@ -42,7 +45,8 @@ void connect_to_servers() {
     evlp.loop_once();
 }
 
-int main() {
+int main()
+{
     connect_to_servers();
     return 0;
 }

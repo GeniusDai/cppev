@@ -9,7 +9,8 @@ const char *udp_unix_path = "./udp_unix";
 
 const char *str = "Cppev is a C++ event driven library";
 
-void connect_to_servers() {
+void connect_to_servers()
+{
     cppev::event_loop evlp;
 
     auto udp_ipv4 = cppev::nio_factory::get_nsockudp(cppev::family::ipv4);
@@ -30,7 +31,8 @@ void connect_to_servers() {
 
 }
 
-int main() {
+int main()
+{
     connect_to_servers();
     return 0;
 }

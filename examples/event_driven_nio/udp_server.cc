@@ -8,23 +8,28 @@ int udp_ipv6_port = 9000;
 
 const char *udp_unix_path = "./udp_unix";
 
-cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     cppev::nsockudp *ioup = dynamic_cast<cppev::nsockudp *>(iop.get());
     cppev::log::info << "udp --> fd " << iop->fd() << " --> ";
-    switch (ioup->sockfamily()) {
-    case cppev::family::ipv4 : {
+    switch (ioup->sockfamily())
+    {
+    case cppev::family::ipv4 :
+    {
         auto cli = ioup->recv();
         cppev::log::info << "[" << std::get<0>(cli) << " " << std::get<1>(cli)
             << " ipv4] --> ";
         break;
     }
-    case cppev::family::ipv6 : {
+    case cppev::family::ipv6 :
+    {
         auto cli = ioup->recv();
         cppev::log::info << "[" << std::get<0>(cli) << " " << std::get<1>(cli)
             << " ipv6] --> ";
         break;
     }
-    case cppev::family::local : {
+    case cppev::family::local :
+    {
         ioup->recv_unix();
         cppev::log::info << "[\tunix-domain\t] --> ";
         break;
@@ -33,7 +38,8 @@ cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void {
     cppev::log::info << ioup->rbuf()->buf() << cppev::log::endl;
 };
 
-void start_event_loop() {
+void start_event_loop()
+{
     remove(udp_unix_path);
     cppev::event_loop evlp;
 
@@ -53,7 +59,8 @@ void start_event_loop() {
 }
 
 
-int main() {
+int main()
+{
     start_event_loop();
     return 0;
 }

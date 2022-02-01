@@ -13,13 +13,15 @@ On the socket accepted, put the message to the write buffer, then trying to send
 On the socket sys-buffer read completed, retrieve the message from read buffer, then put to the write buffer and trying to send it.
 
 ```
-cppev::fd_event_cb on_accept = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_accept = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     iop->wbuf()->put("Cppev is a C++ event driven library");
     cppev::async_write(iop);
     cppev::log::info << "write message to " << iop->fd() << cppev::log::endl;
 };
 
-cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     iop->wbuf()->put(iop->rbuf()->get());
     cppev::async_write(iop);
 };
@@ -30,7 +32,8 @@ cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> voi
 Use 32 io-threads to perform the handler, also implicitly there will one thread perform the accept operation. Set handlers to the server, start to listen in port with ipv6 network layer protocol.
 
 ```
-int main() {
+int main()
+{
     cppev::tcp_server server(32);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
@@ -49,14 +52,16 @@ The simple client just echo any message back to the server.
 Handler is similiar with the server, just we prompt a message to show our (may be) asynchrous write completed.
 
 ```
-cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_read_complete = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     cppev::log::info << "receive message --> " << iop->rbuf()->buf() << cppev::log::endl;
     iop->wbuf()->put(iop->rbuf()->get());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     cppev::async_write(iop);
 };
 
-cppev::fd_event_cb on_write_complete = [](std::shared_ptr<cppev::nio> iop) -> void {
+cppev::fd_event_cb on_write_complete = [](std::shared_ptr<cppev::nio> iop) -> void
+{
     cppev::log::info << "write message complete" << cppev::log::endl;
 };
 ```
@@ -66,7 +71,8 @@ cppev::fd_event_cb on_write_complete = [](std::shared_ptr<cppev::nio> iop) -> vo
 Use 32 io-threads to perform the handler, also implicitly there will one thread perform the connect operation. Set handlers to the client, then use ipv4/ipv6 tcp sockets to perform the pressure test.
 
 ```
-int main() {
+int main()
+{
     cppev::tcp_client client(32);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
