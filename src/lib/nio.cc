@@ -156,7 +156,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port)
 {
     switch (addr.ss_family)
     {
-    case AF_INET:
+    case AF_INET :
     {
         sockaddr_in *ap = (sockaddr_in *)(&addr);
         ap->sin_port = htons(port);
@@ -178,7 +178,7 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port)
         }
         break;
     }
-    case AF_INET6:
+    case AF_INET6 :
     {
         sockaddr_in6 *ap6 = (sockaddr_in6 *)(&addr);
         ap6->sin6_port = htons(port);
@@ -222,7 +222,7 @@ query_ip_port_family(sockaddr_storage &addr)
     family f;
     switch(addr.ss_family)
     {
-    case AF_INET:
+    case AF_INET :
     {
         f = family::ipv4;
         sockaddr_in *ap = (sockaddr_in *)(&addr);
@@ -233,7 +233,7 @@ query_ip_port_family(sockaddr_storage &addr)
         }
         break;
     }
-    case AF_INET6:
+    case AF_INET6 :
     {
         f = family::ipv6;
         sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);

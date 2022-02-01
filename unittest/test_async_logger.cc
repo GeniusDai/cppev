@@ -19,7 +19,9 @@ class TestAsyncLogger
 {
 protected:
     void SetUp() override
-    {}
+    {
+        sysconfig::buffer_outdate = 1;
+    }
 
     void TearDown() override
     {}
@@ -42,7 +44,6 @@ TEST_F(TestAsyncLogger, test_output)
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
 
-    sysconfig::buffer_outdate = 1;
     auto output = [this](int i) -> void
     {
         for (int j = 0; j < this->loop_num; ++j)
