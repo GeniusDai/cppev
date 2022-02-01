@@ -52,15 +52,19 @@ public:
 
     bool trylock()
     {
+        bool ret = false;
         if (pthread_spin_trylock(&lock_) == 0)
         {
-            return true;
+            ret = true;
         }
-        if (errno == EBUSY)
+        else
         {
-            return false;
+            if (errno != EBUSY)
+            {
+                throw_system_error("pthread_spin_trylock error");
+            }
         }
-        throw_system_error("pthread_spin_trylock error");
+        return ret;
     }
 
 private:
@@ -111,6 +115,40 @@ public:
         {
             throw_system_error("pthread_rwlock_wrlock error");
         }
+    }
+
+    bool try_rdlock()
+    {
+        bool ret = false;
+        if (::pthread_rwlock_tryrdlock(&lock_) == 0)
+        {
+            ret = true;
+        }
+        else
+        {
+            if (errno != EBUSY)
+            {
+                throw_system_error("pthread_rwlock_tryrdlock error");
+            }
+        }
+        return ret;
+    }
+
+    bool try_wrlock()
+    {
+        bool ret = false;
+        if (::pthread_rwlock_trywrlock(&lock_) == 0)
+        {
+            ret = true;
+        }
+        else
+        {
+            if (errno != EBUSY)
+            {
+                throw_system_error("pthread_rwlock_trywrlock error");
+            }
+        }
+        return ret;
     }
 
 private:

@@ -39,7 +39,8 @@ void iohandler::async_write(std::shared_ptr<nio> iop)
     if (0 == iopt->wbuf()->size())
     {
         dp->on_write_complete(iop);
-    } else
+    }
+    else
     {
         iop->evlp()->fd_remove(iop, false);
         iop->evlp()->fd_register(iop, fd_event::fd_writable);
@@ -224,8 +225,8 @@ tcp_server::tcp_server(int thr_num)
     acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
 }
 
- void tcp_server::run()
- {
+void tcp_server::run()
+{
     ignore_signal(SIGPIPE);
     tp_->run();
     acpt_->run();
