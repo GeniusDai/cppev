@@ -2,18 +2,26 @@
 #include "cppev/nio.h"
 #include <fcntl.h>
 
-namespace cppev {
+namespace cppev
+{
 
 const char *file = "./test_temp_file";
+
 const char *str = "Cppev is a C++ event driven library";
 
-class TestNio : public testing::Test {
+class TestNio
+: public testing::Test
+{
 protected:
-    void SetUp() override {}
-    void TearDown() override {}
+    void SetUp() override
+    {}
+
+    void TearDown() override
+    {}
 };
 
-TEST_F(TestNio, test_diskfile) {
+TEST_F(TestNio, test_diskfile)
+{
     int fd;
 
     fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
@@ -31,18 +39,21 @@ TEST_F(TestNio, test_diskfile) {
     unlink(file);
 }
 
-TEST_F(TestNio, test_pipe) {
+TEST_F(TestNio, test_pipe)
+{
     // int pfds[2];
     // pipe();
 }
 
-TEST_F(TestNio, test_fifo) {
+TEST_F(TestNio, test_fifo)
+{
 
 }
 
-}
+}   // namespace cppev
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }

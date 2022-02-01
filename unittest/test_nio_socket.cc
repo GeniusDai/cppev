@@ -8,11 +8,15 @@ class TestNioSocket
 : public testing::TestWithParam<std::tuple<family, bool, int, int> >
 {
 protected:
-    void SetUp() override {}
-    void TearDown() override {}
+    void SetUp() override
+    {}
+
+    void TearDown() override
+    {}
 };
 
-TEST_P(TestNioSocket, test_tcp_socket) {
+TEST_P(TestNioSocket, test_tcp_socket)
+{
     auto p = GetParam();
     std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(std::get<0>(p));
     sock->set_so_reuseaddr(std::get<1>(p));
@@ -39,7 +43,8 @@ TEST_P(TestNioSocket, test_tcp_socket) {
     EXPECT_EQ(sock->get_so_error(), 0);
 }
 
-TEST_P(TestNioSocket, test_udp_socket) {
+TEST_P(TestNioSocket, test_udp_socket)
+{
     auto p = GetParam();
     std::shared_ptr<nsockudp> sock = nio_factory::get_nsockudp(std::get<0>(p));
     sock->set_so_reuseaddr(std::get<1>(p));
@@ -67,9 +72,10 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestNioSocket,
     )
 );
 
-}
+}   // namespace cppev
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }
