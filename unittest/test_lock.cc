@@ -62,7 +62,7 @@ TEST_F(TestLock, test_rwlock_rdlocked)
 
         ASSERT_TRUE(rwlck.try_rdlock());
         rwlck.unlock();
-        // ASSERT_FALSE(rwlck.try_wrlock());
+        ASSERT_FALSE(rwlck.try_wrlock());
 
         ready_exit_ = true;
         cond_exit_.notify_one();
@@ -101,20 +101,13 @@ TEST_F(TestLock, test_rwlock_wrlocked)
                 }
             );
         }
-
-        // ASSERT_FALSE(rwlck.try_rdlock());
-        // rwlck.unlock();
-        // ASSERT_FALSE(rwlck.try_wrlock());
-
+        ASSERT_FALSE(rwlck.try_rdlock());
+        ASSERT_FALSE(rwlck.try_wrlock());
         ready_exit_ = true;
         cond_exit_.notify_one();
     }
-    // std::this_thread::sleep_for(std::chrono::seconds(2));
     thr.join();
 }
-
-
-
 
 }   // namespace cppev
 
