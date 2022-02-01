@@ -11,7 +11,6 @@
 namespace cppev
 {
 
-// spinlock for linux
 #if _POSIX_C_SOURCE >= 200112L
 
 class spinlock final
@@ -52,7 +51,7 @@ public:
 
     bool trylock()
     {
-        bool ret = pthread_spin_trylock(&lock_);
+        int ret = pthread_spin_trylock(&lock_);
         if (ret == 0)
         {
             return true;
