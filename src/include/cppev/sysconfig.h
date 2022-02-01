@@ -1,9 +1,11 @@
 #ifndef _sysconfig_h_6C0224787A17_
 #define _sysconfig_h_6C0224787A17_
 
-namespace cppev {
+namespace cppev
+{
 
-namespace sysconfig {
+namespace sysconfig
+{
 
 // buffer size for reading inotify fd
 extern int inotify_step;

@@ -8,36 +8,58 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace cppev {
+namespace cppev
+{
 
 // spinlock for linux
 #if _POSIX_C_SOURCE >= 200112L
 
-class spinlock final : public uncopyable {
+class spinlock final
+: public uncopyable
+{
 public:
-    spinlock() {
+    spinlock()
+    {
         if (pthread_spin_init(&lock_, PTHREAD_PROCESS_PRIVATE) != 0)
-        { throw_system_error("pthread_spin_init error"); }
+        {
+            throw_system_error("pthread_spin_init error");
+        }
     }
 
-    ~spinlock() {
+    ~spinlock()
+    {
         if (pthread_spin_destroy(&lock_) != 0)
-        { throw_system_error("pthread_spin_destroy error"); }
+        {
+            throw_system_error("pthread_spin_destroy error");
+        }
     }
 
-    void lock() {
+    void lock()
+    {
         if (pthread_spin_lock(&lock_) != 0)
-        { throw_system_error("pthread_spin_lock error"); }
+        {
+            throw_system_error("pthread_spin_lock error");
+        }
     }
 
-    void unlock() {
+    void unlock()
+    {
         if (pthread_spin_unlock(&lock_) != 0)
-        { throw_system_error("pthread_spin_unlock error"); }
+        {
+            throw_system_error("pthread_spin_unlock error");
+        }
     }
 
-    bool trylock() {
-        if (pthread_spin_trylock(&lock_) == 0) { return true; }
-        if (errno == EBUSY) { return false; }
+    bool trylock()
+    {
+        if (pthread_spin_trylock(&lock_) == 0)
+        {
+            return true;
+        }
+        if (errno == EBUSY)
+        {
+            return false;
+        }
         throw_system_error("pthread_spin_trylock error");
     }
 
@@ -47,61 +69,107 @@ private:
 
 #endif  // spinlock
 
-class rwlock final : public uncopyable {
+class rwlock final
+: public uncopyable
+{
 public:
-    rwlock() {
+    rwlock()
+    {
         if (pthread_rwlock_init(&lock_, nullptr) != 0)
-        { throw_system_error("pthread_rwlock_init error"); }
+        {
+            throw_system_error("pthread_rwlock_init error");
+        }
     }
 
-    ~rwlock() {
+    ~rwlock()
+    {
         if (pthread_rwlock_destroy(&lock_) != 0)
-        { throw_system_error("pthread_rwlock_destroy error"); }
+        {
+            throw_system_error("pthread_rwlock_destroy error");
+        }
     }
 
-    void unlock() {
+    void unlock()
+    {
         if (::pthread_rwlock_unlock(&lock_) != 0)
-        { throw_system_error("pthread_rwlock_destroy error"); }
+        {
+            throw_system_error("pthread_rwlock_destroy error");
+        }
     }
 
-    void rdlock() {
+    void rdlock()
+    {
         if (::pthread_rwlock_rdlock(&lock_) != 0)
-        { throw_system_error("pthread_rwlock_rdlock error"); }
-
+        {
+            throw_system_error("pthread_rwlock_rdlock error");
+        }
     }
-    void wrlock() {
-        if (::pthread_rwlock_wrlock(&lock_) != 0)
-        { throw_system_error("pthread_rwlock_wrlock error"); }
 
+    void wrlock()
+    {
+        if (::pthread_rwlock_wrlock(&lock_) != 0)
+        {
+            throw_system_error("pthread_rwlock_wrlock error");
+        }
     }
 
 private:
     pthread_rwlock_t lock_;
 };
 
-class rdlockguard final : public uncopyable {
+class rdlockguard final
+: public uncopyable
+{
 public:
-    rdlockguard(rwlock &lock) { rwlock_ = &lock; rwlock_->rdlock(); }
+    rdlockguard(rwlock &lock)
+    {
+        rwlock_ = &lock;
+        rwlock_->rdlock();
+    }
 
-    ~rdlockguard() { rwlock_->unlock(); }
+    ~rdlockguard()
+    {
+        rwlock_->unlock();
+    }
 
-    void lock() { rwlock_->rdlock(); }
+    void lock()
+    {
+        rwlock_->rdlock();
+    }
 
-    void unlock() { rwlock_->unlock(); }
+    void unlock()
+    {
+        rwlock_->unlock();
+    }
 
 private:
     rwlock *rwlock_;
 };
 
-class wrlockguard final : public uncopyable {
+class wrlockguard final
+: public uncopyable
+{
 public:
-    wrlockguard(rwlock &lock) { rwlock_ = &lock; rwlock_->wrlock(); }
+    wrlockguard(rwlock &lock)
+    {
+        rwlock_ = &lock;
+        rwlock_->wrlock();
+    }
 
-    ~wrlockguard() { rwlock_->unlock(); }
+    ~wrlockguard()
+    {
+        rwlock_->unlock();
+    }
 
-    void lock() { rwlock_->wrlock(); }
+    void lock()
+    {
+        rwlock_->wrlock();
+    }
 
-    void unlock() { rwlock_->unlock(); }
+    void unlock()
+    {
+        rwlock_->unlock();
+    }
 
 private:
     rwlock *rwlock_;

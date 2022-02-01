@@ -12,14 +12,17 @@
 #include "cppev/common_utils.h"
 #include "cppev/runnable.h"
 
-
-namespace cppev {
+namespace cppev
+{
 
 template<typename Runnable, typename... Args>
-class thread_pool : public uncopyable {
+class thread_pool
+: public uncopyable
+{
     static_assert(std::is_base_of<runnable, Runnable>::value, "template error");
 public:
-    thread_pool(int thr_num, Args... args) {
+    thread_pool(int thr_num, Args... args)
+    {
         for (int i = 0; i < thr_num; ++i)
         {
             thrs_.push_back(std::shared_ptr<Runnable>
@@ -27,22 +30,47 @@ public:
         }
     }
 
-    virtual ~thread_pool() {}
+    virtual ~thread_pool()
+    {}
 
     // Run all threads
-    void run() { for (auto thr: thrs_) { thr->run(); } }
+    void run()
+    {
+        for (auto thr: thrs_)
+        {
+            thr->run();
+        }
+    }
 
     // Wait for all threads
-    void join() { for (auto thr : thrs_) { thr->join(); } }
+    void join()
+    {
+        for (auto thr : thrs_)
+        {
+            thr->join();
+        }
+    }
 
     // Cancel all threads
-    virtual void cancel() { for (auto thr : thrs_) { thr->cancel(); } }
+    virtual void cancel()
+    {
+        for (auto thr : thrs_)
+        {
+            thr->cancel();
+        }
+    }
 
     // Specific one of the threads
-    Runnable *operator[](int i) {  return thrs_[i].get(); }
+    Runnable *operator[](int i)
+    {
+        return thrs_[i].get();
+    }
 
     // Thread pool size
-    int size() { return thrs_.size(); }
+    int size()
+    {
+        return thrs_.size();
+    }
 
 protected:
     std::vector<std::shared_ptr<Runnable> > thrs_;
@@ -51,7 +79,8 @@ protected:
 
 typedef void(*task_func)(void *);
 
-struct tp_task final {
+struct tp_task final
+{
 
     // Function pointer
     task_func func;
@@ -59,21 +88,29 @@ struct tp_task final {
     // Function arguments
     void *args;
 
-    tp_task(task_func f, void *a) : func(f), args(a) {}
+    tp_task(task_func f, void *a)
+    : func(f), args(a)
+    {}
 };
 
-namespace tpq {
+namespace tpq
+{
 
 class default_runnable;
 
-class tp_task_queue {
+class tp_task_queue
+{
     friend class default_runnable;
 public:
-    tp_task_queue() : stop_(false) {}
+    tp_task_queue()
+    : stop_(false)
+    {}
 
-    virtual ~tp_task_queue() {}
+    virtual ~tp_task_queue()
+    {}
 
-    void add_task(std::shared_ptr<tp_task> t) {
+    void add_task(std::shared_ptr<tp_task> t)
+    {
         {
             std::unique_lock<std::mutex> lock(lock_);
             tq_.push(t);
@@ -81,10 +118,14 @@ public:
         cond_.notify_one();
     }
 
-    void add_task(std::vector<std::shared_ptr<tp_task> > &vt) {
+    void add_task(std::vector<std::shared_ptr<tp_task> > &vt)
+    {
         {
             std::unique_lock<std::mutex> lock(lock_);
-            for (auto &t : vt) { tq_.push(t); }
+            for (auto &t : vt)
+            {
+                tq_.push(t);
+            }
         }
         cond_.notify_all();
     }
@@ -99,21 +140,35 @@ protected:
     bool stop_;
 };
 
-class default_runnable final : public runnable {
+class default_runnable final
+: public runnable
+{
 public:
-    default_runnable(tp_task_queue *tq) : tq_(tq){}
+    default_runnable(tp_task_queue *tq)
+    : tq_(tq)
+    {}
 
-    void run_impl() override {
-        while(true) {
+    void run_impl() override
+    {
+        while(true)
+        {
             std::shared_ptr<tp_task> task;
             {
                 std::unique_lock<std::mutex> lock(tq_->lock_);
-                if (tq_->tq_.empty()) {
-                    if (tq_->stop_) { break; }
-                    tq_->cond_.wait(lock, [this]()->bool {
+                if (tq_->tq_.empty())
+                {
+                    if (tq_->stop_)
+                    {
+                        break;
+                    }
+                    tq_->cond_.wait(lock, [this]()->bool
+                    {
                         return tq_->tq_.size() || tq_->stop_;
                     });
-                    if (tq_->tq_.empty() && tq_->stop_) { break; }
+                    if (tq_->tq_.empty() && tq_->stop_)
+                    {
+                        break;
+                    }
                 }
                 task = tq_->tq_.front();
                 tq_->tq_.pop();
@@ -136,7 +191,8 @@ public:
         thread_pool<default_runnable, tp_task_queue *>(thr_num, this)
     {}
 
-    void stop() {
+    void stop()
+    {
         {
             std::unique_lock<std::mutex> lock(lock_);
             stop_ = true;

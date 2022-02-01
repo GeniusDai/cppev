@@ -7,47 +7,66 @@
 #include <chrono>
 #include "cppev/common_utils.h"
 
-namespace cppev {
+namespace cppev
+{
 
-class runnable : public uncopyable {
+class runnable
+: public uncopyable
+{
 public:
-    runnable() { fut_ = prom_.get_future(); }
+    runnable()
+    {
+        fut_ = prom_.get_future();
+    }
 
-    virtual ~runnable() {};
+    virtual ~runnable()
+    {}
 
     // Derived class should override
     virtual void run_impl() = 0;
 
     // Create and run thread
-    void run() {
-        auto thr_func = [](void *arg) -> void *{
+    void run()
+    {
+        auto thr_func = [](void *arg) -> void *
+        {
             static_cast<runnable *>(arg)->run_impl();
             static_cast<runnable *>(arg)->prom_.set_value(true);
             return nullptr;
         };
         if (pthread_create(&thr_, nullptr, thr_func, this) != 0)
-        { throw_system_error("pthread_create error"); }
+        {
+            throw_system_error("pthread_create error");
+        }
     }
 
     // Wait until thread finish
-    void join() {
+    void join()
+    {
         if (pthread_join(thr_, nullptr) != 0)
-        { throw_system_error("pthread_join error"); }
+        {
+            throw_system_error("pthread_join error");
+        }
     }
 
     // Cancel thread
-    void cancel() {
+    void cancel()
+    {
         if (pthread_cancel(thr_) != 0)
-        { throw_system_error("pthread_cancel error"); }
+        {
+            throw_system_error("pthread_cancel error");
+        }
         join();
     }
 
     // Wait for thread
     // @Ret: whether thread finishes
-    bool wait_for(std::chrono::milliseconds span) {
+    bool wait_for(std::chrono::milliseconds span)
+    {
         std::future_status stat = fut_.wait_for(span);
         bool ret = false;
-        switch (stat) {
+        switch (stat)
+        {
         case std::future_status::ready :
             join();
             ret = true;

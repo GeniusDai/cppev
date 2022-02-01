@@ -18,7 +18,8 @@
 #include <sys/inotify.h>
 #endif
 
-namespace cppev {
+namespace cppev
+{
 
 class nio;
 class nstream;
@@ -28,34 +29,56 @@ class nsocktcp;
 class nwatcher;
 class event_loop;
 
-enum class family {
+enum class family
+{
     ipv4,
     ipv6,
     local
 };
 
-class nio : public uncopyable {
+class nio
+: public uncopyable
+{
 public:
-    explicit nio(int fd) : fd_(fd)
+    explicit nio(int fd)
+    : fd_(fd)
     {
         set_nonblock();
         rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
         wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
     }
 
-    virtual ~nio() { close(fd_); }
+    virtual ~nio()
+    {
+        close(fd_);
+    }
 
-    int fd() const { return fd_; }
+    int fd() const
+    {
+        return fd_;
+    }
 
     // read buffer
-    buffer *rbuf() { return rbuffer_.get(); }
+    buffer *rbuf()
+    {
+        return rbuffer_.get();
+    }
 
     // write buffer
-    buffer *wbuf() { return wbuffer_.get(); }
+    buffer *wbuf()
+    {
+        return wbuffer_.get();
+    }
 
-    event_loop *evlp() { return evlp_; }
+    event_loop *evlp()
+    {
+        return evlp_;
+    }
 
-    void set_evlp(event_loop *evlp) { evlp_ = evlp; }
+    void set_evlp(event_loop *evlp)
+    {
+        evlp_ = evlp;
+    }
 
 protected:
     // File descriptor
@@ -75,18 +98,31 @@ private:
 };
 
 
-class nstream : public virtual nio {
+class nstream
+: public virtual nio
+{
 public:
     explicit nstream(int fd)
-    : nio(fd), reset_(false), eof_(false), eop_(false) {}
+    : nio(fd), reset_(false), eof_(false), eop_(false)
+    {}
 
-    virtual ~nstream() {}
+    virtual ~nstream()
+    {}
 
-    bool is_reset() { return reset_; }
+    bool is_reset()
+    {
+        return reset_;
+    }
 
-    bool eof() { return eof_; }
+    bool eof()
+    {
+        return eof_;
+    }
 
-    bool eop() { return eop_; }
+    bool eop()
+    {
+        return eop_;
+    }
 
     // read until block or unreadable, at most len
     int read_chunk(int len);
@@ -113,14 +149,22 @@ protected:
 };
 
 
-class nsock : public virtual nio {
+class nsock
+: public virtual nio
+{
     friend class nio_factory;
 public:
-    nsock(int fd, family f) : nio(fd), family_(f) {}
+    nsock(int fd, family f)
+    : nio(fd), family_(f)
+    {}
 
-    virtual ~nsock() {}
+    virtual ~nsock()
+    {}
 
-    family sockfamily() { return family_; }
+    family sockfamily()
+    {
+        return family_;
+    }
 
     // setsockopt SO_REUSEADDR
     void set_so_reuseaddr(bool enable=true);
@@ -167,34 +211,53 @@ protected:
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
-enum class shut_howto {
+enum class shut_howto
+{
     shut_rd,
     shut_wr,
     shut_rdwr
 };
 
-class nsocktcp final : public nsock, public nstream  {
+class nsocktcp final
+: public nsock, public nstream
+{
 public:
     nsocktcp(int sockfd, family f)
-    : nio(sockfd), nsock(sockfd, f), nstream(sockfd) {}
+    : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
+    {}
 
     void listen(const int port, const char *ip = nullptr);
 
-    void listen(const int port, const std::string &ip) { listen(port, ip.c_str()); }
+    void listen(const int port, const std::string &ip)
+    {
+        listen(port, ip.c_str());
+    }
 
     void connect(const char *ip, const int port);
 
-    void connect(const std::string &ip, const int port) { connect(ip.c_str(), port); }
+    void connect(const std::string &ip, const int port)
+    {
+        connect(ip.c_str(), port);
+    }
 
     void listen_unix(const char *path);
 
-    void listen_unix(const std::string &path) { listen_unix(path.c_str()); }
+    void listen_unix(const std::string &path)
+    {
+        listen_unix(path.c_str());
+    }
 
     void connect_unix(const char *path);
 
-    void connect_unix(const std::string &path) { connect_unix(path.c_str()); }
+    void connect_unix(const std::string &path)
+    {
+        connect_unix(path.c_str());
+    }
 
-    bool check_connect()  { return get_so_error() == 0; }
+    bool check_connect()
+    {
+        return get_so_error() == 0;
+    }
 
     std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
 
@@ -202,7 +265,8 @@ public:
 
     std::tuple<std::string, int, family> peername();
 
-    std::tuple<std::string, int, family> connpeer() {
+    std::tuple<std::string, int, family> connpeer()
+    {
         return std::make_tuple<>(peer_.first, peer_.second, family_);
     }
 
@@ -235,28 +299,43 @@ private:
 };
 
 
-class nsockudp final : public nsock {
+class nsockudp final
+: public nsock
+{
 public:
     nsockudp(int sockfd, family f)
-    : nio(sockfd), nsock(sockfd, f) {}
+    : nio(sockfd), nsock(sockfd, f)
+    {}
 
     void bind(const int port, const char *ip = nullptr);
 
-    void bind(const int port, const std::string &ip) { bind(port, ip.c_str()); }
+    void bind(const int port, const std::string &ip)
+    {
+        bind(port, ip.c_str());
+    }
 
     void send(const char *ip, const int port);
 
-    void send(const std::string &ip, const int port) { send(ip.c_str(), port); }
+    void send(const std::string &ip, const int port)
+    {
+        send(ip.c_str(), port);
+    }
 
     std::tuple<std::string, int, family> recv();
 
     void bind_unix(const char *path);
 
-    void bind_unix(const std::string &path) { bind_unix(path.c_str()); }
+    void bind_unix(const std::string &path)
+    {
+        bind_unix(path.c_str());
+    }
 
     void send_unix(const char *path);
 
-    void send_unix(const std::string &path) { send_unix(path.c_str()); }
+    void send_unix(const std::string &path)
+    {
+        send_unix(path.c_str());
+    }
 
     void recv_unix();
 
@@ -271,12 +350,18 @@ public:
 
 typedef void(*fs_handler)(inotify_event *, const char *path);
 
-class nwatcher final : public nstream {
+class nwatcher final
+: public nstream
+{
 public:
     explicit nwatcher(int fd, fs_handler handler = nullptr)
-    : nio(fd), nstream(fd), handler_(handler) {}
+    : nio(fd), nstream(fd), handler_(handler)
+    {}
 
-    void set_handler(fs_handler handler) { handler_ = handler; }
+    void set_handler(fs_handler handler)
+    {
+        handler_ = handler;
+    }
 
     void add_watch(std::string path, uint32_t events);
 
@@ -294,7 +379,8 @@ private:
 
 #endif  // nwatcher for linux
 
-class nio_factory {
+class nio_factory
+{
 public:
     static std::shared_ptr<nsocktcp> get_nsocktcp(family f);
 

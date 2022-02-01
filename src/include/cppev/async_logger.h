@@ -17,7 +17,8 @@
 # include "cppev/async_logger_buffered.h"
 #endif
 
-namespace cppev {
+namespace cppev
+{
 
 namespace log
 {

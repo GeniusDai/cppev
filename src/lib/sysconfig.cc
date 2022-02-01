@@ -1,8 +1,10 @@
 #include "cppev/sysconfig.h"
 
-namespace cppev {
+namespace cppev
+{
 
-namespace sysconfig {
+namespace sysconfig
+{
 
 // buffer size for reading inotify fd
 int inotify_step = 1024;

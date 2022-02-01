@@ -6,16 +6,20 @@
 #include <string>
 #include <thread>
 
-namespace cppev {
+namespace cppev
+{
 
-struct enum_hash {
+struct enum_hash
+{
     template <typename T>
-    std::size_t operator()(const T &t) const {
+    std::size_t operator()(const T &t) const
+    {
         return std::hash<int>()((int)t);
     }
 };
 
-class uncopyable {
+class uncopyable
+{
 public:
     uncopyable() {}
     virtual ~uncopyable() noexcept {}

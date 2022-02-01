@@ -11,9 +11,11 @@
 #include "cppev/runnable.h"
 #include "cppev/lock.h"
 
-namespace cppev {
+namespace cppev
+{
 
-class async_logger final : public runnable
+class async_logger final
+: public runnable
 {
 public:
     explicit async_logger(int level);
