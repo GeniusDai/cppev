@@ -31,7 +31,7 @@ protected:
 
 TEST_F(TestAsyncLogger, test_output)
 {
-    int fd = open(file, O_TRUNC | O_CREAT | O_WRONLY, S_IRWXU);
+    int fd = open(file, O_TRUNC | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
         throw_system_error("open error");
