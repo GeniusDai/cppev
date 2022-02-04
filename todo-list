@@ -1,9 +1,13 @@
-1. Socket
+-- Socket
     Support udp multicast and broadcast.
-    Support more socket options.
-2. Eventloop
+
+-- Eventloop
     Support event_loop_group and load balance algorithms.
-3. Examples
-    Implement big file transfer server
-4. Unittest
-    Implement ut for nio
+
+-- Examples
+    Implement big file transfer server.
+
+-- Subprocess Related API
+    Execute executable file
+    Daemon process
+    Timer

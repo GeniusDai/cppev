@@ -86,6 +86,7 @@ public:
     void close()
     {
         ::close(fd_);
+        closed_ = true;
     }
 
 protected:
