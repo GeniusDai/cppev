@@ -11,6 +11,8 @@
 #include <climits>
 #include <netinet/tcp.h>
 #include <tuple>
+#include <sys/stat.h>
+#include <vector>
 
 namespace cppev
 {
@@ -674,6 +676,41 @@ std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f)
     return sock;
 }
 
+std::vector<std::shared_ptr<nstream> > nio_factory::get_pipes()
+{
+    int pfds[2];
+    if (pipe(pfds) != 0)
+    {
+        throw_system_error("pipe error");
+    }
+    std::vector<std::shared_ptr<nstream> > pipes;
+    pipes.emplace_back(new nstream(pfds[0]));
+    pipes.emplace_back(new nstream(pfds[1]));
+    return pipes;
+}
+
+std::vector<std::shared_ptr<nstream> > nio_factory::get_fifos(const char *path)
+{
+    if (mkfifo(path, S_IRWXU) == -1 && errno != EEXIST)
+    {
+        throw_system_error("mkfifo error");
+    }
+
+    int fdr = open(path, O_RDONLY | O_NONBLOCK);
+    if (fdr == -1)
+    {
+        throw_system_error("open error");
+    }
+    int fdw = open(path, O_WRONLY | O_NONBLOCK);
+    if (fdw == -1)
+    {
+        throw_system_error("open error");
+    }
+    std::vector<std::shared_ptr<nstream> > fifos;
+    fifos.emplace_back(new nstream(fdr));
+    fifos.emplace_back(new nstream(fdw));
+    return fifos;
+}
 
 #if defined(__linux__)
 

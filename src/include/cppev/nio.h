@@ -41,7 +41,7 @@ class nio
 {
 public:
     explicit nio(int fd)
-    : fd_(fd)
+    : fd_(fd), closed_(false)
     {
         set_nonblock();
         rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
@@ -50,7 +50,10 @@ public:
 
     virtual ~nio()
     {
-        close(fd_);
+        if (!closed_)
+        {
+             close();
+        }
     }
 
     int fd() const
@@ -80,9 +83,17 @@ public:
         evlp_ = evlp;
     }
 
+    void close()
+    {
+        ::close(fd_);
+    }
+
 protected:
     // File descriptor
     int fd_;
+
+    // whether closed
+    bool closed_;
 
     // read buffer, should be initialized
     std::unique_ptr<buffer> rbuffer_;
@@ -90,6 +101,7 @@ protected:
     // write buffer, should be initialized
     std::unique_ptr<buffer> wbuffer_;
 
+    // one nio belongs to one event loop
     event_loop *evlp_;
 
 private:
@@ -385,6 +397,15 @@ public:
     static std::shared_ptr<nsocktcp> get_nsocktcp(family f);
 
     static std::shared_ptr<nsockudp> get_nsockudp(family f);
+
+    static std::vector<std::shared_ptr<nstream> > get_pipes();
+
+    static std::vector<std::shared_ptr<nstream> > get_fifos(const char *str);
+
+    static std::vector<std::shared_ptr<nstream> > get_fifos(std::string &str)
+    {
+        return get_fifos(str.c_str());
+    }
 
 #ifdef __linux__
     static std::shared_ptr<nwatcher> get_nwatcher();

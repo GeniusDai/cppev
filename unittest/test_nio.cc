@@ -5,7 +5,9 @@
 namespace cppev
 {
 
-const char *file = "./test_temp_file";
+const char *file = "./cppev_test_file";
+
+const char *fifo = "./cppev_test_fifo";
 
 const char *str = "Cppev is a C++ event driven library";
 
@@ -25,28 +27,42 @@ TEST_F(TestNio, test_diskfile)
     int fd;
 
     fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
-    nstream *iofw = new nstream(fd);
+    std::shared_ptr<nstream> iofw(new nstream(fd));
+    fd = open(file, O_RDONLY);
+    std::shared_ptr<nstream> iofr(new nstream(fd));
+
     iofw->wbuf()->put(str);
     iofw->write_all();
-    delete iofw;
-
-    fd = open(file, O_RDONLY);
-    nstream *iofr = new nstream(fd);
+    iofw->close();
     iofr->read_all();
-    EXPECT_TRUE(strcmp(iofr->rbuf()->buf(), str) == 0);
-    delete iofr;
+    EXPECT_TRUE(0 == strcmp(iofr->rbuf()->buf(), str));
 
     unlink(file);
 }
 
 TEST_F(TestNio, test_pipe)
 {
-    // int pfds[2];
-    // pipe();
+    auto pipes = nio_factory::get_pipes();
+    auto iopr = pipes[0];
+    auto iopw = pipes[1];
+
+    iopw->wbuf()->put(str);
+    iopw->write_all();
+    iopr->read_all();
+    EXPECT_TRUE(0 == strcmp(str, iopr->rbuf()->buf()));
 }
 
 TEST_F(TestNio, test_fifo)
 {
+    auto fifos = nio_factory::get_fifos(fifo);
+    auto iofr = fifos[0];
+    auto iofw = fifos[1];
+    iofw->wbuf()->put(str);
+    iofw->write_all();
+    iofr->read_all();
+    EXPECT_TRUE(0 == strcmp(iofr->rbuf()->buf(), str));
+
+    unlink(fifo);
 
 }
 
