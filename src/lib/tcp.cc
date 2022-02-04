@@ -3,6 +3,9 @@
 namespace cppev
 {
 
+namespace tcp
+{
+
 event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;
@@ -27,48 +30,48 @@ event_loop *tp_shared_data::minloads_get_evlp()
     return minloads_evp;
 }
 
-void iohandler::async_write(std::shared_ptr<nio> iop)
+void async_write(std::shared_ptr<nsocktcp> iopt)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr)
-    {
-        throw_logic_error("dynamic_cast error");
-    }
-    tp_shared_data *dp = static_cast<tp_shared_data *>(iop->evlp()->data());
+    tp_shared_data *dp = static_cast<tp_shared_data *>(iopt->evlp()->data());
     iopt->write_all(sysconfig::buffer_io_step);
     if (0 == iopt->wbuf()->size())
     {
-        dp->on_write_complete(iop);
+        dp->on_write_complete(iopt);
     }
     else
     {
-        iop->evlp()->fd_remove(iop, false);
-        iop->evlp()->fd_register(iop, fd_event::fd_writable);
+        std::shared_ptr<nio> iop = std::dynamic_pointer_cast<nio>(iopt);
+        if (iop == nullptr)
+        {
+            throw_logic_error("dynamic_cast error");
+        }
+        iopt->evlp()->fd_remove(iop, false);
+        iopt->evlp()->fd_register(iop, fd_event::fd_writable);
     }
 }
 
 void iohandler::on_readable(std::shared_ptr<nio> iop)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
+    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_cast error");
     }
     tp_shared_data *dp = static_cast<tp_shared_data *>(iop->evlp()->data());
     iopt->read_all(sysconfig::buffer_io_step);
-    dp->on_read_complete(iop);
+    dp->on_read_complete(iopt);
     iopt->rbuf()->clear();
     if (iopt->eof() || iopt->is_reset())
     {
-        dp->on_closed(iop);
+        dp->on_closed(iopt);
         iop->evlp()->fd_remove(iop, true);
     }
 }
 
 void iohandler::on_writable(std::shared_ptr<nio> iop)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr)
+    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    if (iopt.get() == nullptr)
     {
         throw_logic_error("dynamic_cast error");
     }
@@ -77,12 +80,12 @@ void iohandler::on_writable(std::shared_ptr<nio> iop)
     if (0 == iopt->wbuf()->size())
     {
         iop->evlp()->fd_remove(iop, false);
-        dp->on_write_complete(iop);
+        dp->on_write_complete(iopt);
         iop->evlp()->fd_register(iop, fd_event::fd_readable);
     }
     if (iopt->eop() || iopt->is_reset())
     {
-        dp->on_closed(iop);
+        dp->on_closed(iopt);
         iop->evlp()->fd_remove(iop, true);
     }
 }
@@ -95,8 +98,8 @@ void acceptor::listen(int port, family f, const char *ip)
 
 void acceptor::on_readable(std::shared_ptr<nio> iop)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr)
+    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    if (iopt.get() == nullptr)
     {
         throw_logic_error("dynamic_cast error");
     }
@@ -114,8 +117,8 @@ void acceptor::on_readable(std::shared_ptr<nio> iop)
 
 void acceptor::on_writable(std::shared_ptr<nio> iop)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr)
+    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    if (iopt.get() == nullptr)
     {
         throw_logic_error("dynamic_cast error");
     }
@@ -123,7 +126,7 @@ void acceptor::on_writable(std::shared_ptr<nio> iop)
     iop->evlp()->fd_remove(iop, true);
     // The sequence CANNOT be changed, since on_accept may call async_write
     iop->evlp()->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_accept(iop);
+    d->on_accept(iopt);
     iop->evlp()->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
@@ -178,10 +181,10 @@ void connector::on_readable(std::shared_ptr<nio> iop)
 
 void connector::on_writable(std::shared_ptr<nio> iop)
 {
-    nsocktcp *iopt = dynamic_cast<nsocktcp *>(iop.get());
-    if (iopt == nullptr)
+    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    if (iopt.get() == nullptr)
     {
-        throw_logic_error("dynamic error");
+        throw_logic_error("dynamic_cast error");
     }
     tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     iop->evlp()->fd_remove(iop, true);      // remove previous callback
@@ -202,7 +205,7 @@ void connector::on_writable(std::shared_ptr<nio> iop)
     }
     // The sequence CANNOT be changed since on_connect may call aysnc_write
     iop->evlp()->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
-    d->on_connect(iop);
+    d->on_connect(iopt);
     iop->evlp()->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
@@ -254,5 +257,7 @@ void tcp_client::run()
     tp_->join();
     cont_->join();
 }
+
+}   // namespace tcp
 
 }   // namespace cppev

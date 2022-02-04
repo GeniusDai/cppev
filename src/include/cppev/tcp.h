@@ -17,13 +17,15 @@
 namespace cppev
 {
 
-// Idle function for callback
-auto idle_handler = [] (std::shared_ptr<nio> iop) -> void {};
-
-using fd_handler = fd_event_cb;
-
 namespace tcp
 {
+
+// Idle function for callback
+auto idle_handler = [] (std::shared_ptr<nsocktcp>) -> void {};
+
+typedef void(*fd_handler)(std::shared_ptr<nsocktcp>);
+
+void async_write(std::shared_ptr<nsocktcp> iopt);
 
 class acceptor;
 class connector;
@@ -109,8 +111,6 @@ public:
 
     virtual ~iohandler()
     {}
-
-    static void async_write(std::shared_ptr<nio> iop);
 
     static void on_readable(std::shared_ptr<nio> iop);
 
@@ -285,8 +285,6 @@ private:
 }   // namespace tcp
 
 using namespace tcp;
-
-constexpr auto async_write = iohandler::async_write;
 
 }   // namespace cppev
 
