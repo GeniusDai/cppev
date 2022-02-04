@@ -227,7 +227,7 @@ tcp_server::tcp_server(int thr_num)
 
 void tcp_server::run()
 {
-    ignore_signal(SIGPIPE);
+    utils::ignore_signal(SIGPIPE);
     tp_->run();
     acpt_->run();
     tp_->join();
@@ -248,7 +248,7 @@ tcp_client::tcp_client(int thr_num)
 
 void tcp_client::run()
 {
-    ignore_signal(SIGPIPE);
+    utils::ignore_signal(SIGPIPE);
     tp_->run();
     cont_->run();
     tp_->join();

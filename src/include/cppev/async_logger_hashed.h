@@ -41,7 +41,7 @@ public:
 private:
     void write_debug(buffer *buf);
 
-    // thread_id --> < buffer, recursive_mutex, recursive_level, timestamp >
+    // thread_id --> < buffer, recursive_mutex, recursive_level, utils::timestamp >
     std::unordered_map<tid, std::tuple<std::shared_ptr<buffer>,
         std::shared_ptr<std::recursive_mutex>, int, time_t> > logs_;
 

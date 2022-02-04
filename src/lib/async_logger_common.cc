@@ -47,7 +47,7 @@ async_logger &async_logger::operator<<(const float x)
 void async_logger::write_debug(buffer *buf)
 {
     std::stringstream ss;
-    tid thr_id = gettid();
+    tid thr_id = utils::gettid();
     ss << "- [";
     if (level_ == 1)
     {
@@ -57,7 +57,7 @@ void async_logger::write_debug(buffer *buf)
     {
         ss << "ERROR] [";
     }
-    ss << timestamp();
+    ss << utils::timestamp();
 #ifdef __linux__
     ss << "] [LWP " << thr_id << "] ";
 #elif defined(__APPLE__)

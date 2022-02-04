@@ -30,9 +30,36 @@ void throw_runtime_error(const char *str)
     throw std::runtime_error( str);
 }
 
-time_t sc_time()
+namespace utils {
+
+tid gettid()
 {
-    time_t t = time(NULL);
+#ifdef __linux__
+    static thread_local tid thr_id = syscall(SYS_gettid);
+#elif defined(__APPLE__)
+    static thread_local tid thr_id = 0;
+    if (thr_id == 0)
+    {
+        pthread_threadid_np(0, &thr_id);
+    }
+#endif
+    return thr_id;
+}
+
+void ignore_signal(int sig)
+{
+    struct sigaction sigact;
+    memset(&sigact, 0, sizeof(sigact));
+    sigact.sa_handler = SIG_IGN;
+    if (sigaction(sig, &sigact, nullptr) == -1)
+    {
+        throw_system_error("sigaction error");
+    }
+}
+
+time_t time()
+{
+    time_t t = ::time(nullptr);
     if (t == -1)
     {
         throw_system_error("time error");
@@ -44,7 +71,7 @@ std::string timestamp(time_t t, const char *format)
 {
     if (t == 0)
     {
-        t = sc_time();
+        t = time();
     }
     if (format == nullptr)
     {
@@ -61,29 +88,6 @@ std::string timestamp(time_t t, const char *format)
     return buf;
 }
 
-void ignore_signal(int sig)
-{
-    struct sigaction sigact;
-    memset(&sigact, 0, sizeof(sigact));
-    sigact.sa_handler = SIG_IGN;
-    if (sigaction(sig, &sigact, nullptr) == -1)
-    {
-        throw_system_error("sigaction error");
-    }
-}
-
-tid gettid()
-{
-#ifdef __linux__
-    static thread_local tid thr_id = syscall(SYS_gettid);
-#elif defined(__APPLE__)
-    static thread_local tid thr_id = 0;
-    if (thr_id == 0)
-    {
-        pthread_threadid_np(0, &thr_id);
-    }
-#endif
-    return thr_id;
-}
+}   // namespace utils
 
 }   // namespace cppev

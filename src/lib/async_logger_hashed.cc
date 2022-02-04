@@ -31,7 +31,7 @@ async_logger::async_logger(int level)
 
 async_logger &async_logger::operator<<(const char *str)
 {
-    tid thr_id = gettid();
+    tid thr_id = utils::gettid();
     {
         rdlockguard rdlock(lock_);
         if (logs_.count(thr_id) != 0)
@@ -47,7 +47,7 @@ async_logger &async_logger::operator<<(const char *str)
     }
     wrlockguard wrlock(lock_);
     logs_[thr_id] = std::make_tuple<>(std::shared_ptr<buffer>(new buffer),
-        std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, sc_time());
+        std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, utils::time());
     write_debug(std::get<0>(logs_[thr_id]).get());
     std::get<1>(logs_[thr_id])->lock();
     std::get<0>(logs_[thr_id])->put(str);
@@ -57,12 +57,12 @@ async_logger &async_logger::operator<<(const char *str)
 async_logger &async_logger::operator<<(const async_logger &)
 {
     (*this) << "\n";
-    tid thr_id = gettid();
+    tid thr_id = utils::gettid();
     {
         rdlockguard rdlock(lock_);
         int lock_count = std::get<2>(logs_[thr_id]);
         std::get<2>(logs_[thr_id]) = 0;
-        std::get<3>(logs_[thr_id]) = sc_time();
+        std::get<3>(logs_[thr_id]) = utils::time();
         while(lock_count--)
         {
             std::get<1>(logs_[thr_id])->unlock();
@@ -92,7 +92,7 @@ void async_logger::run_impl()
                     buf->clear();
                     delay = false;
                 } else {
-                    if (sc_time() - std::get<3>(iter->second) > sysconfig::buffer_outdate)
+                    if (utils::time() - std::get<3>(iter->second) > sysconfig::buffer_outdate)
                     {
                         outdate_list.insert(iter->first);
                     }
