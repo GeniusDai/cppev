@@ -23,7 +23,7 @@ namespace tcp
 // Idle function for callback
 auto idle_handler = [] (std::shared_ptr<nsocktcp>) -> void {};
 
-typedef void(*fd_handler)(std::shared_ptr<nsocktcp>);
+typedef void(*tcp_event_cb)(std::shared_ptr<nsocktcp>);
 
 void async_write(std::shared_ptr<nsocktcp> iopt);
 
@@ -61,19 +61,19 @@ public:
     {}
 
     // Used by acceptor when new connection arrived
-    fd_handler on_accept;
+    tcp_event_cb on_accept;
 
     // Used by connector when connection established
-    fd_handler on_connect;
+    tcp_event_cb on_connect;
 
     // Used by iohandler when read complete
-    fd_handler on_read_complete;
+    tcp_event_cb on_read_complete;
 
     // Used by iohandler when write complete
-    fd_handler on_write_complete;
+    tcp_event_cb on_write_complete;
 
     // Used by iohandler when socket closed
-    fd_handler on_closed;
+    tcp_event_cb on_closed;
 
     event_loop *random_get_evlp();
 
@@ -159,6 +159,7 @@ private:
 };
 
 class tcp_server final
+: public uncopyable
 {
 public:
     tcp_server(int thr_num);
@@ -168,22 +169,22 @@ public:
         acpt_->listen(port, f, ip);
     }
 
-    void set_on_accept(fd_handler handler)
+    void set_on_accept(tcp_event_cb handler)
     {
         data_->on_accept = handler;
     }
 
-    void set_on_read_complete(fd_handler handler)
+    void set_on_read_complete(tcp_event_cb handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(fd_handler handler)
+    void set_on_write_complete(tcp_event_cb handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(fd_handler handler)
+    void set_on_closed(tcp_event_cb handler)
     {
         data_->on_closed = handler;
     }
@@ -243,6 +244,7 @@ private:
 };
 
 class tcp_client final
+: public uncopyable
 {
 public:
     tcp_client(int thr_num);
@@ -252,22 +254,22 @@ public:
         cont_->add(ip, port, f, t);
     }
 
-    void set_on_connect(fd_handler handler)
+    void set_on_connect(tcp_event_cb handler)
     {
         data_->on_connect = handler;
     }
 
-    void set_on_read_complete(fd_handler handler)
+    void set_on_read_complete(tcp_event_cb handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(fd_handler handler)
+    void set_on_write_complete(tcp_event_cb handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(fd_handler handler)
+    void set_on_closed(tcp_event_cb handler)
     {
         data_->on_closed = handler;
     }

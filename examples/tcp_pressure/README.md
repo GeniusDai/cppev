@@ -13,14 +13,14 @@ On the socket accepted, put the message to the write buffer, then trying to send
 On the socket sys-buffer read completed, retrieve the message from read buffer, then put to the write buffer and trying to send it.
 
 ```
-cppev::fd_handler on_accept = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_cb on_accept = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     iopt->wbuf()->put("Cppev is a C++ event driven library");
     cppev::async_write(iopt);
     cppev::log::info << "write message to " << iopt->fd() << cppev::log::endl;
 };
 
-cppev::fd_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     iopt->wbuf()->put(iopt->rbuf()->get());
     cppev::async_write(iopt);
@@ -52,7 +52,7 @@ The simple client just echo any message back to the server.
 Handler is similiar with the server, just we prompt a message to show our (may be) asynchrous write completed.
 
 ```
-cppev::fd_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "receive message --> " << iopt->rbuf()->buf() << cppev::log::endl;
     iopt->wbuf()->put(iopt->rbuf()->get());
@@ -60,7 +60,7 @@ cppev::fd_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -
     cppev::async_write(iopt);
 };
 
-cppev::fd_handler on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "write message complete" << cppev::log::endl;
 };
