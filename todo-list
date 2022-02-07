@@ -7,7 +7,8 @@
 -- Examples
     Implement big file transfer server.
 
--- Subprocess Related API
-    Execute executable file
-    Daemon process
+-- Core
+    Subprocess API: Execute cmd / Daemon process
     Timer
+    DNS Resolution
+    Application layer protocol
