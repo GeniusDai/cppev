@@ -15,6 +15,8 @@ namespace subprocess
 
 std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp = nullptr);
 
+}   // namespace subprocess
+
 class popen
 : public uncopyable
 {
@@ -62,9 +64,6 @@ private:
 
     int returncode_;
 };
-
-
-}   // namespace subprocess
 
 }   // namespace cppev
 

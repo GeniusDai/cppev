@@ -20,6 +20,8 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
     return std::make_tuple<>(subp.returncode(), subp.stdout(), subp.stderr());
 }
 
+}   // namespace subprocess
+
 popen::popen(const char *cmd, char *const *envp)
 : cmd_(cmd), envp_(envp)
 {
@@ -106,7 +108,5 @@ void popen::wait()
     }
     commumicate();
 }
-
-}   // namespace subprocess
 
 }   // namespace cppev
