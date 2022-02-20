@@ -11,7 +11,7 @@ namespace cppev
 namespace subprocess
 {
 
-std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp = {nullptr});
+std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp = nullptr);
 
 
 
