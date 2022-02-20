@@ -48,6 +48,8 @@ Five callbacks could be registered:
 
 * Thread and Synchronization: Encapsulation of pthread, rwlock and its RAII.
 
+* Subprocess: Encapsulation of fork + execve + waitpid.
+
 * Linux Peculiar: Support inotify and spinlock.
 
 # Prerequirement

@@ -13,7 +13,6 @@ protected:
 
     void TearDown() override
     {}
-
 };
 
 TEST_F(TestSubprocess, test_exec_cmd)
