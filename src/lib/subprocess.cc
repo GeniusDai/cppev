@@ -5,6 +5,7 @@
 #include <set>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <thread>
 
 namespace cppev
 {
@@ -14,8 +15,37 @@ namespace subprocess
 
 std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp)
 {
-    std::vector<std::shared_ptr<nstream> > out = nio_factory::get_pipes();
-    std::vector<std::shared_ptr<nstream> > err = nio_factory::get_pipes();
+    popen subp(cmd, envp);
+    subp.wait();
+    return std::make_tuple<>(subp.returncode(), subp.stdout(), subp.stderr());
+}
+
+popen::popen(const char *cmd, char *const *envp)
+: cmd_(cmd), envp_(envp)
+{
+    int fds[2];
+    int zero, one, two;
+
+    if (pipe(fds) < 0)
+    {
+        throw_system_error("pipe error");
+    }
+    zero = fds[0];
+    stdin_ = std::shared_ptr<nstream>(new nstream(fds[1]));
+
+    if (pipe(fds) < 0)
+    {
+        throw_system_error("pipe error");
+    }
+    one = fds[1];
+    stdout_ = std::shared_ptr<nstream>(new nstream(fds[0]));;
+
+    if (pipe(fds) < 0)
+    {
+        throw_system_error("pipe error");
+    }
+    two = fds[1];
+    stderr_ = std::shared_ptr<nstream>(new nstream(fds[0]));
 
     pid_t pid = fork();
 
@@ -24,13 +54,12 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
         _exit(-1);
     }
 
-    // child process
     if (pid == 0)
     {
-        dup2(out[1]->fd(), STDOUT_FILENO);
-        dup2(err[1]->fd(), STDERR_FILENO);
-
-        std::vector<std::string> subs = utils::split(cmd, " ");
+        dup2(zero, STDIN_FILENO);
+        dup2(one, STDOUT_FILENO);
+        dup2(two, STDERR_FILENO);
+        std::vector<std::string> subs = utils::split(cmd_, " ");
         std::vector<std::string> subs1 = utils::split(subs[0].c_str(), "/");
         char *argv[subs.size()+1];
         argv[subs.size()] = nullptr;
@@ -39,21 +68,44 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
         {
             argv[i] = const_cast<char *>(subs[i].c_str());
         }
-        execve(subs[0].c_str(), argv, envp);
+        execve(subs[0].c_str(), argv, envp_);
         _exit(127);
     }
 
-    // father process
-    int status = -1;
-    waitpid(pid, &status, 0);
-    out[0]->read_all();
-    err[0]->read_all();
-
-    return std::make_tuple<>(status, out[0]->rbuf()->get(), err[0]->rbuf()->get());
+    pid_ = pid;
 }
 
+bool popen::poll()
+{
+    int ret = waitpid(pid_, &returncode_, WNOHANG);
+    if (ret == -1)
+    {
+        _exit(-1);
+    }
+    return ret != 0;
+}
 
+void popen::commumicate(const char *str)
+{
+    stdout_->read_all();
+    stderr_->read_all();
 
+    if (str != nullptr)
+    {
+        stdin_->wbuf()->put(str);
+        stdin_->write_all();
+    }
+}
+
+void popen::wait()
+{
+    while (!poll())
+    {
+        commumicate();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    commumicate();
+}
 
 }   // namespace subprocess
 
