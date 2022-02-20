@@ -88,6 +88,65 @@ std::string timestamp(time_t t, const char *format)
     return buf;
 }
 
+std::vector<std::string> split(std::string &str, std::string &sep)
+{
+    return split(str.c_str(), sep.c_str());
+}
+
+std::vector<std::string> split(const char *str, const char *sep)
+{
+    int str_len = strlen(str);
+    int sep_len = strlen(sep);
+    std::vector<int> sep_index;
+
+    for (int i = 0; i <= str_len - sep_len; )
+    {
+        bool is_sep = true;
+        for (int j = i; j < i + sep_len; ++j)
+        {
+            if (str[j] != sep[j-i])
+            {
+                is_sep = false;
+                break;
+            }
+        }
+        if (is_sep)
+        {
+            sep_index.push_back(i);
+            i += sep_len;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    if (sep_index.empty())
+    {
+        return { str };
+    }
+    std::vector<std::string> subs;
+    for (int i = 0; i < static_cast<int>(sep_index.size()); ++i)
+    {
+        int begin, end = sep_index[i];
+        if (i == 0)
+        {
+            begin = 0;
+        }
+        else
+        {
+            begin = sep_index[i-1] + sep_len;
+        }
+        subs.push_back(std::string(str, begin, end - begin));
+        if (i == static_cast<int>(sep_index.size() - 1))
+        {
+            begin = sep_index[i] + sep_len;
+            end = str_len;
+            subs.push_back(std::string(str, begin, end - begin));
+        }
+    }
+    return subs;
+}
+
 }   // namespace utils
 
 }   // namespace cppev

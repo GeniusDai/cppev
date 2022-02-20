@@ -19,14 +19,14 @@ TEST_F(TestBuffer, test_put_get)
     buffer buf;
     std::string str = "Cppev is a C++ event driven library";
     buf.put(str);
-    ASSERT_EQ(str.size(), buf.size());
-    ASSERT_EQ(str[3], buf[3]);
+    EXPECT_EQ(str.size(), buf.size());
+    EXPECT_EQ(str[3], buf[3]);
     int offset = 3;
     buf.get(offset, false);
-    ASSERT_EQ(str.size(), buf.size());
+    EXPECT_EQ(str.size(), buf.size());
     buf.get(offset, true);
-    ASSERT_EQ(str.size() - offset, buf.size());
-    ASSERT_EQ(0, strcmp(str.substr(offset, str.size() - offset).c_str(), buf.buf()));
+    EXPECT_EQ(str.size() - offset, buf.size());
+    EXPECT_STREQ(str.substr(offset, str.size() - offset).c_str(), buf.buf());
 }
 
 }   // namespace cppev

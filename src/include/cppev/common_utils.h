@@ -5,6 +5,7 @@
 #include <ctime>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace cppev
 {
@@ -49,6 +50,10 @@ void ignore_signal(int sig);
 time_t time();
 
 std::string timestamp(time_t t = 0, const char *format = nullptr);
+
+std::vector<std::string> split(const char *str, const char *sep);
+
+std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 }   // namespace utils
 
