@@ -29,6 +29,12 @@ public:
 
     void commumicate(const char *str=nullptr);
 
+    void terminate();
+
+    void kill();
+
+    void send_signal(int sig);
+
     int returncode() const
     {
         return returncode_;

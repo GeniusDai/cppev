@@ -109,4 +109,22 @@ void popen::wait()
     commumicate();
 }
 
+void popen::send_signal(int sig)
+{
+    if (::kill(pid(), sig) < 0)
+    {
+        throw_system_error("kill error");
+    }
+}
+
+void popen::terminate()
+{
+    send_signal(SIGTERM);
+}
+
+void popen::kill()
+{
+    send_signal(SIGKILL);
+}
+
 }   // namespace cppev
