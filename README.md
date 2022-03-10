@@ -60,6 +60,12 @@ Five callbacks could be registered:
 
 * others: googletest / cmake / make.
 
+# Build and Run
+
+    $ mkdir build && cd build
+    $ cmake .. && make
+    $ cd unittest && ctest
+
 # Examples
 
 * Tcp Pressure: Perform cross socket family pressure test for ipv6 server.
