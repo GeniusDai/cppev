@@ -36,7 +36,7 @@ public:
     // Run all threads
     void run()
     {
-        for (auto thr: thrs_)
+        for (auto &thr : thrs_)
         {
             thr->run();
         }
@@ -45,7 +45,7 @@ public:
     // Wait for all threads
     void join()
     {
-        for (auto thr : thrs_)
+        for (auto &thr : thrs_)
         {
             thr->join();
         }
@@ -54,7 +54,7 @@ public:
     // Cancel all threads
     virtual void cancel()
     {
-        for (auto thr : thrs_)
+        for (auto &thr : thrs_)
         {
             thr->cancel();
         }
@@ -96,11 +96,11 @@ struct tp_task final
 namespace tpq
 {
 
-class default_runnable;
+class tp_task_queue_runnable;
 
 class tp_task_queue
 {
-    friend class default_runnable;
+    friend class tp_task_queue_runnable;
 public:
     tp_task_queue()
     : stop_(false)
@@ -140,11 +140,11 @@ protected:
     bool stop_;
 };
 
-class default_runnable final
+class tp_task_queue_runnable final
 : public runnable
 {
 public:
-    default_runnable(tp_task_queue *tq)
+    tp_task_queue_runnable(tp_task_queue *tq)
     : tq_(tq)
     {}
 
@@ -184,11 +184,11 @@ private:
 
 class thread_pool_queue final
 : public tp_task_queue,
-    public thread_pool<default_runnable, tp_task_queue *>
+    public thread_pool<tp_task_queue_runnable, tp_task_queue *>
 {
 public:
     thread_pool_queue(int thr_num) : tp_task_queue(),
-        thread_pool<default_runnable, tp_task_queue *>(thr_num, this)
+        thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
     {}
 
     void stop()
