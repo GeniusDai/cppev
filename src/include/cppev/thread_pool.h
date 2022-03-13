@@ -76,6 +76,8 @@ protected:
     std::vector<std::shared_ptr<Runnable> > thrs_;
 };
 
+namespace tpq
+{
 
 typedef void(*task_func)(void *);
 
@@ -92,9 +94,6 @@ struct tp_task final
     : func(f), args(a)
     {}
 };
-
-namespace tpq
-{
 
 class tp_task_queue_runnable;
 
@@ -113,7 +112,7 @@ public:
     {
         {
             std::unique_lock<std::mutex> lock(lock_);
-            tq_.push(t);
+            queue_.push(t);
         }
         cond_.notify_one();
     }
@@ -124,14 +123,14 @@ public:
             std::unique_lock<std::mutex> lock(lock_);
             for (auto &t : vt)
             {
-                tq_.push(t);
+                queue_.push(t);
             }
         }
         cond_.notify_all();
     }
 
 protected:
-    std::queue<std::shared_ptr<tp_task> > tq_;
+    std::queue<std::shared_ptr<tp_task> > queue_;
 
     std::mutex lock_;
 
@@ -155,7 +154,7 @@ public:
             std::shared_ptr<tp_task> task;
             {
                 std::unique_lock<std::mutex> lock(tq_->lock_);
-                if (tq_->tq_.empty())
+                if (tq_->queue_.empty())
                 {
                     if (tq_->stop_)
                     {
@@ -163,15 +162,15 @@ public:
                     }
                     tq_->cond_.wait(lock, [this]()->bool
                     {
-                        return tq_->tq_.size() || tq_->stop_;
+                        return tq_->queue_.size() || tq_->stop_;
                     });
-                    if (tq_->tq_.empty() && tq_->stop_)
+                    if (tq_->queue_.empty() && tq_->stop_)
                     {
                         break;
                     }
                 }
-                task = tq_->tq_.front();
-                tq_->tq_.pop();
+                task = tq_->queue_.front();
+                tq_->queue_.pop();
             }
             tq_->cond_.notify_all();
             task->func(task->args);
@@ -205,6 +204,10 @@ public:
 }   // namespace tpq
 
 using thread_pool_queue = tpq::thread_pool_queue;
+
+using task_func = tpq::task_func;
+
+using tp_task = tpq::tp_task;
 
 }   // namespace cppev
 
