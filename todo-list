@@ -11,3 +11,5 @@
     Timer
     DNS Resolution
     Application layer protocol
+    LRU Cache
+    Heap
