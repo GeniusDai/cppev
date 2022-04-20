@@ -38,15 +38,15 @@ enum priority
 
 class event_loop;
 
-typedef void (*ev_handler)(event_loop *);
-
 typedef void (*fd_event_cb)(std::shared_ptr<nio> iop);
+
+typedef void (*ev_handler)(event_loop *);
 
 class event_loop
 : public uncopyable
 {
 public:
-    event_loop(void *data = nullptr);
+    explicit event_loop(void *data = nullptr);
 
     virtual ~event_loop()
     {
@@ -63,27 +63,23 @@ public:
         return data_;
     }
 
-    // measure the loads of event loop
+    // Loads of event loop
     int fd_loads() const
     {
         return fds_.size();
     }
 
-    void set_on_loop(ev_handler h)
-    {
-        on_loop_ = h;
-    }
-
-    // register fd to event pollor, default activate callback
+    // Register fd to event pollor, default activate callback
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
         fd_event_cb ev_cb = nullptr, bool activate = true, priority prio = low);
 
-    // remove fd from event pollor, default clean callback
+    // Remove fd from event pollor, default clean callback
     void fd_remove(std::shared_ptr<nio> iop, bool clean = true);
 
-    // wait for events, only loop once, timeout unit is millisecond
+    // Wait for events, only loop once, timeout unit is millisecond
     void loop_once(int timeout = -1);
 
+    // Loop infinitely
     void loop(int timeout = -1)
     {
         while(true)
@@ -94,25 +90,25 @@ public:
     }
 
 private:
-    // when event loop starts;
+    // When event loop starts;
     ev_handler on_loop_;
 
-    // when register callback for event loop
+    // Used for registering callback for event loop
     std::mutex lock_;
 
-    // event watcher fd
+    // Event watcher fd
     int ev_fd_;
 
-    // thread pool shared data, may be used for callbacks
+    // Thread pool shared data
     void *data_;
 
-    // tuple : priority, nio, callback, event
+    // Tuple : priority, nio, callback, event
     std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
 
-    // tuple : priority, nio, callback
+    // Tuple : priority, nio, callback
     std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_cbs_;
 
-    // activate events
+    // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;
 };
 

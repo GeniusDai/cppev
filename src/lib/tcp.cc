@@ -6,6 +6,17 @@ namespace cppev
 namespace tcp
 {
 
+// Idle function for callback
+tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
+
+tp_shared_data::tp_shared_data() :
+    on_accept(idle_handler),
+    on_connect(idle_handler),
+    on_read_complete(idle_handler),
+    on_write_complete(idle_handler),
+    on_closed(idle_handler)
+{}
+
 event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;

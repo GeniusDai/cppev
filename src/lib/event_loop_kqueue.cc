@@ -16,6 +16,8 @@
 namespace cppev
 {
 
+ev_handler idle_ev_handler = [](event_loop *) -> void {};
+
 static uint32_t fd_map_to_sys(fd_event ev)
 {
     int flags = 0;
@@ -52,7 +54,7 @@ event_loop::event_loop(void *data)
     {
         throw_system_error("kqueue error");
     }
-    on_loop_ = [](event_loop *) -> void {};
+    on_loop_ = idle_ev_handler;
 }
 
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,

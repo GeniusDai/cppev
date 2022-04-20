@@ -23,9 +23,6 @@ namespace tcp
 // Callback function type
 typedef void(*tcp_event_cb)(std::shared_ptr<nsocktcp>);
 
-// Idle function for callback
-tcp_event_cb idle_handler = [] (std::shared_ptr<nsocktcp>) -> void {};
-
 // Async write data in write buffer
 void async_write(std::shared_ptr<nsocktcp> iopt);
 
@@ -48,18 +45,12 @@ struct host_hash
 };
 
 // Data used for event loop initialization
-struct tp_shared_data
+struct tp_shared_data final
 {
 public:
-    tp_shared_data() :
-        on_accept(idle_handler),
-        on_connect(idle_handler),
-        on_read_complete(idle_handler),
-        on_write_complete(idle_handler),
-        on_closed(idle_handler)
-    {}
+    tp_shared_data();
 
-    virtual ~tp_shared_data()
+    ~tp_shared_data()
     {}
 
     // Used by acceptor when new connection arrived
@@ -157,9 +148,11 @@ public:
     void run_impl() override;
 
 private:
-    std::shared_ptr<nsocktcp> sock_;
-
+    // Event loop
     std::shared_ptr<event_loop> evp_;
+
+    // Listening socket
+    std::shared_ptr<nsocktcp> sock_;
 };
 
 class tcp_server final
@@ -240,10 +233,13 @@ public:
     void run_impl() override;
 
 private:
+    // Event loop
     std::shared_ptr<event_loop> evp_;
 
+    // Pipe write end
     std::shared_ptr<nstream> wrp_;
 
+    // Pipe read end
     std::shared_ptr<nstream> rdp_;
 };
 
