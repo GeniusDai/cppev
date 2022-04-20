@@ -41,7 +41,8 @@ typedef pid_t tid;
 typedef uint64_t tid;
 #endif
 
-namespace utils {
+namespace utils
+{
 
 tid gettid();
 

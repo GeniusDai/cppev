@@ -46,6 +46,13 @@ class event_loop
 : public uncopyable
 {
 public:
+    event_loop(void *data = nullptr);
+
+    virtual ~event_loop()
+    {
+        close(ev_fd_);
+    }
+
     int ev_fd() const
     {
         return ev_fd_;
@@ -54,13 +61,6 @@ public:
     void *data()
     {
         return data_;
-    }
-
-    event_loop(void *data = nullptr);
-
-    virtual ~event_loop()
-    {
-        close(ev_fd_);
     }
 
     // measure the loads of event loop
@@ -106,10 +106,10 @@ private:
     // thread pool shared data, may be used for callbacks
     void *data_;
 
-    // <priority, nio, callback, event>
+    // tuple : priority, nio, callback, event
     std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
 
-    // <priority, nio, callback>
+    // tuple : priority, nio, callback
     std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_cbs_;
 
     // activate events
