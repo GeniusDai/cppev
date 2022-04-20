@@ -4,6 +4,7 @@
 #include <list>
 #include <unordered_map>
 #include <tuple>
+#include <climits>
 
 namespace cppev
 {
