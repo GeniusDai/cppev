@@ -1,6 +1,15 @@
+/*
+ * Simple Client
+ *
+ * The simple client just echo any message back to the server.
+ */
+
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 
+/*
+ * Define Handler
+ */
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "read message complete" << cppev::log::endl;
@@ -15,6 +24,13 @@ cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt
     cppev::log::info << "write message complete" << cppev::log::endl;
 };
 
+/*
+ * Start Client
+ *
+ * Use 32 io-threads to perform the handler, also implicitly there will one thread perform the
+ * connect operation. Set handlers to the client, then use ipv4/ipv6 tcp sockets to perform the
+ * pressure test.
+ */
 int main()
 {
     cppev::tcp_client client(32);
