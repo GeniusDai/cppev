@@ -10,10 +10,10 @@ namespace cppev
 {
 
 template<typename Key, typename Value>
-class lru_cache
+class lru_cache final
 {
 public:
-    lru_cache(Value miss, int cap = INT_MAX)
+    explicit lru_cache(Value miss, int cap = INT_MAX)
     : miss_(miss), cap_(cap)
     {}
 
