@@ -20,11 +20,13 @@ namespace cppev
 namespace tcp
 {
 
-// Idle function for callback
-auto idle_handler = [] (std::shared_ptr<nsocktcp>) -> void {};
-
+// Callback function type
 typedef void(*tcp_event_cb)(std::shared_ptr<nsocktcp>);
 
+// Idle function for callback
+tcp_event_cb idle_handler = [] (std::shared_ptr<nsocktcp>) -> void {};
+
+// Async write data in write buffer
 void async_write(std::shared_ptr<nsocktcp> iopt);
 
 class acceptor;
@@ -75,8 +77,10 @@ public:
     // Used by iohandler when socket closed
     tcp_event_cb on_closed;
 
+    // Load balance algorithm : choose worker randomly
     event_loop *random_get_evlp();
 
+    // Load balance algorithm : choose worker which has minimum loads
     event_loop *minloads_get_evlp();
 
 private:
@@ -87,11 +91,11 @@ private:
     // Event loops of thread pool, used for task assign
     std::vector<event_loop *> evls;
 
+    // Used only by connector : hosts waiting for connecting
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
 
+    // Used only by connector : hosts that failed to connect
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures;
-
-    std::mutex lock;
 };
 
 

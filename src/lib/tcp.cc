@@ -140,7 +140,6 @@ void acceptor::run_impl()
 void connector::add(std::string ip, int port, family f, int t)
 {
     tp_shared_data *d = static_cast<tp_shared_data *>(evp_->data());
-    std::unique_lock<std::mutex> lock(d->lock);
     auto h = std::make_tuple<>(ip, port, f);
     if (d->hosts.count(h))
     {
@@ -163,7 +162,6 @@ void connector::on_readable(std::shared_ptr<nio> iop)
     }
     tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     iops->read_all(1);
-    std::unique_lock<std::mutex> lock(d->lock);
     for (auto iter = d->hosts.begin(); iter != d->hosts.end(); )
     {
         for (int i = 0; i < iter->second; ++i)
