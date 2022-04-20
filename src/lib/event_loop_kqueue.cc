@@ -166,6 +166,7 @@ void event_loop::loop_once(int timeout)
             if (static_cast<bool>(std::get<3>(begin->second)
                 & fd_map_to_event(evs[i].flags)))
             {
+#ifdef CPPEV_DEBUG
                 log::info << "enqueue ";
                 if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))
                 {
@@ -176,7 +177,7 @@ void event_loop::loop_once(int timeout)
                     log::info << "writable event ";
                 }
                 log::info << "for fd " << fd << log::endl;
-
+#endif  //  CPPEV_DEBUG
                 fd_cbs_.emplace(
                     std::get<0>(begin->second),
                     std::get<1>(begin->second),
