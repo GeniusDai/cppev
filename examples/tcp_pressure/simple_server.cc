@@ -5,7 +5,7 @@ cppev::tcp_event_cb on_accept = [](std::shared_ptr<cppev::nsocktcp> iopt) -> voi
 {
     iopt->wbuf()->put("Cppev is a C++ event driven library");
     cppev::async_write(iopt);
-    cppev::log::info << "write message to " << iopt->fd() << cppev::log::endl;
+    cppev::log::info << "Connection " << iopt->fd() << " arrived" << cppev::log::endl;
 };
 
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void

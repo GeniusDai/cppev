@@ -3,7 +3,8 @@
 
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    cppev::log::info << "receive message --> " << iopt->rbuf()->buf() << cppev::log::endl;
+    cppev::log::info << "read message complete" << cppev::log::endl;
+    cppev::log::info << "message is : " << iopt->rbuf()->buf() << cppev::log::endl;
     iopt->wbuf()->put(iopt->rbuf()->get());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     cppev::async_write(iopt);
