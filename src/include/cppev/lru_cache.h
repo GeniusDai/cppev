@@ -52,7 +52,7 @@ void lru_cache<Key, Value>::put(Key key, Value value)
         cache_.erase(hash_[key]);
         --cap_;
     }
-    if (cache_.size() == cap_)
+    if (static_cast<int>(cache_.size()) == cap_)
     {
         hash_.erase(cache_.back().first);
         cache_.pop_back();
