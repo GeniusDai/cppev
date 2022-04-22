@@ -4,7 +4,7 @@
 
 int tcp_ipv4_port = 8889;
 
-int tcp_ipv6_port = 9000;
+int tcp_ipv6_port = 8890;
 
 const char *tcp_unix_path = "./tcp_unix";
 

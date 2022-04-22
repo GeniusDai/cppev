@@ -4,7 +4,7 @@
 
 int udp_ipv4_port = 8889;
 
-int udp_ipv6_port = 9000;
+int udp_ipv6_port = 8890;
 
 const char *udp_unix_path = "./udp_unix";
 
