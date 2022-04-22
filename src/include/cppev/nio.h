@@ -61,13 +61,13 @@ public:
         return fd_;
     }
 
-    // read buffer
+    // Read buffer
     buffer *rbuf()
     {
         return rbuffer_.get();
     }
 
-    // write buffer
+    // Write buffer
     buffer *wbuf()
     {
         return wbuffer_.get();
@@ -93,20 +93,20 @@ protected:
     // File descriptor
     int fd_;
 
-    // whether closed
+    // Whether closed
     bool closed_;
 
-    // read buffer, should be initialized
+    // Read buffer, should be initialized
     std::unique_ptr<buffer> rbuffer_;
 
-    // write buffer, should be initialized
+    // Write buffer, should be initialized
     std::unique_ptr<buffer> wbuffer_;
 
-    // one nio belongs to one event loop
+    // One nio belongs to one event loop
     event_loop *evlp_;
 
 private:
-    // set fd to nonblock
+    // Set fd to nonblock
     void set_nonblock();
 };
 
@@ -137,16 +137,24 @@ public:
         return eop_;
     }
 
-    // read until block or unreadable, at most len
+    // Read until block or unreadable
+    // @param len   Bytes to read, at most len
+    // @return      Exact bytes that have been read into rbuffer
     int read_chunk(int len);
 
-    // write until block or unwritable, at most len
+    // Write until block or unwritable
+    // @param len   Bytes to write, at most len
+    // @return      Exact bytes that have been writen from wbuffer
     int write_chunk(int len);
 
-    // read until block or unreadable
+    // Read until block or unreadable
+    // @param step  Bytes to read in each loop
+    // @return      Exact bytes that have been read into rbuffer
     int read_all(int step = 128);
 
-    // write until block or unwritable
+    // Write until block or unwritable
+    // @param len   Bytes to write in each loop
+    // @return      Exact bytes that have been writen from wbuffer
     int write_all(int step = 128);
 
 protected:
