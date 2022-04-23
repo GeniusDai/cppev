@@ -10,6 +10,7 @@
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/common_utils.h"
+#include "cppev/async_logger.h"
 
 namespace cppev
 {
@@ -85,6 +86,7 @@ public:
         while(true)
         {
             on_loop_(this);
+            log::info << "start event loop" << log::endl;
             loop_once();
         }
     }

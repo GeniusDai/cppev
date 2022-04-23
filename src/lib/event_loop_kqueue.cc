@@ -35,13 +35,13 @@ static uint32_t fd_map_to_sys(fd_event ev)
 static fd_event fd_map_to_event(uint32_t ev)
 {
     fd_event flags = static_cast<fd_event>(0);
-    if (ev & EVFILT_READ)
+    if (ev == EVFILT_READ)
     {
-        flags = flags | fd_event::fd_readable;
+        flags = fd_event::fd_readable;
     }
-    if (ev & EVFILT_WRITE)
+    if (ev == EVFILT_WRITE)
     {
-        flags = flags | fd_event::fd_writable;
+        flags = fd_event::fd_writable;
     }
     return flags;
 }
@@ -60,37 +60,34 @@ event_loop::event_loop(void *data)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
-    log::info << "[Action:register] ";
+    log::info << "Eventloop [Action:register] ";
     log::info << "[Fd:" << iop->fd() << "] ";
 
-    log::info << "[Event:";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << "readable] ";
+        log::info << "[Event:readable] ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << "writable] ";
+        log::info << "[Event:writable] ";
     }
 
-    log::info << "[Callback:";
     if (ev_cb)
     {
-        log::info << "not-null] ";
+        log::info << "[Callback:not-null] ";
     }
     else
     {
-        log::info << "null] ";
+        log::info << "[Callback:null] ";
     }
 
-    log::info << "[Activate:";
     if (activate)
     {
-        log::info << "true]";
+        log::info << "[Activate:true]";
     }
     else
     {
-        log::info << "false]";
+        log::info << "[Activate:false]";
     }
 
     log::info << log::endl;
@@ -153,13 +150,20 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
 
     // Remove event from kqueue
     struct kevent ev;
-    // EV_SET(&kev, ident, filter, flags, fflags, data, udata);
-    EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type), EV_DELETE, 0, 0, nullptr);
-    if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
+    std::vector<fd_event> all_events{ fd_event::fd_readable, fd_event::fd_writable };
+    for (int i = 0; i < all_events.size(); ++i)
     {
-        throw_system_error("kevent error");
+        if (!static_cast<bool>(ev_type & all_events[i]))
+        {
+            continue;
+        }
+        // EV_SET(&kev, ident, filter, flags, fflags, data, udata);
+        EV_SET(&ev, iop->fd(), fd_map_to_sys(all_events[i]), EV_DELETE, 0, 0, nullptr);
+        if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
+        {
+            throw_system_error("kevent error");
+        }
     }
-
     if (clean)
     {
         std::unique_lock<std::mutex> lock(lock_);
@@ -169,7 +173,6 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
 
 void event_loop::loop_once(int timeout)
 {
-    log::info << "start event loop" << log::endl;
     // 1. Add to priority queue
     int nums;
     struct kevent evs[sysconfig::event_number];
@@ -192,20 +195,19 @@ void event_loop::loop_once(int timeout)
         auto begin = range.first, end = range.second;
         while (begin != end)
         {
-            if (static_cast<bool>(std::get<3>(begin->second)
-                & fd_map_to_event(evs[i].filter)))
+            if (static_cast<bool>(std::get<3>(begin->second) & fd_map_to_event(evs[i].filter)))
             {
 #ifdef CPPEV_DEBUG
-                log::info << "enqueue ";
+                log::info << "Enqueue ";
                 if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))
                 {
-                    log::info << "readable event ";
+                    log::info << "[Event:readable] ";
                 }
                 if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_writable))
                 {
-                    log::info << "writable event ";
+                    log::info << "[Event:writable] ";
                 }
-                log::info << "for fd " << fd << log::endl;
+                log::info << "[Fd:" << fd << "]"<< log::endl;
 #endif  //  CPPEV_DEBUG
                 fd_cbs_.emplace(
                     std::get<0>(begin->second),

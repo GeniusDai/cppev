@@ -12,14 +12,14 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::log::info << "readable callback" << cppev::log::endl;
     std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
-    int num = iopt->read_all();
-    if (num == 0)
+    if (iopt->eof() || iopt->is_reset())
     {
         cppev::log::info << "receive file complete" << cppev::log::endl;
         iop->evlp()->fd_remove(iop, true);
         return;
     }
 
+    iopt->read_all();
     std::string file_copy = std::string(file) + ".copy";
     int fd = open(file_copy.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
     if (fd < 0)

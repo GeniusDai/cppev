@@ -9,7 +9,8 @@ namespace tcp
 // Idle function for callback
 tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
 
-tp_shared_data::tp_shared_data() :
+tp_shared_data::tp_shared_data()
+:
     on_accept(idle_handler),
     on_connect(idle_handler),
     on_read_complete(idle_handler),
@@ -61,6 +62,13 @@ void async_write(std::shared_ptr<nsocktcp> iopt)
     }
 }
 
+void safe_close(std::shared_ptr<nsocktcp> iopt)
+{
+    std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
+    iopt->evlp()->fd_remove(iop, true);
+    iopt->close();
+}
+
 void iohandler::on_readable(std::shared_ptr<nio> iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
@@ -92,7 +100,10 @@ void iohandler::on_writable(std::shared_ptr<nio> iop)
     {
         iop->evlp()->fd_remove(iop, false);
         dp->on_write_complete(iopt);
-        iop->evlp()->fd_register(iop, fd_event::fd_readable);
+        if (!iop->is_closed())
+        {
+            iop->evlp()->fd_register(iop, fd_event::fd_readable);
+        }
     }
     if (iopt->eop() || iopt->is_reset())
     {

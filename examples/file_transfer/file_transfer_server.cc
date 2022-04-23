@@ -9,6 +9,7 @@ const int port = 8891;
 
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
+    cppev::log::info << "callback : on_read_complete" << cppev::log::endl;
     std::string file = iopt->rbuf()->get(-1, false);
     if (file[file.size()-1] != '\n')
     {
@@ -28,7 +29,8 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
 
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    cppev::log::info << "write complete" << cppev::log::endl;
+    cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
+    cppev::safe_close(iopt);
 };
 
 int main()

@@ -59,37 +59,34 @@ event_loop::event_loop(void *data)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
-    log::info << "[Action:register] ";
+    log::info << "Eventloop [Action:register] ";
     log::info << "[Fd:" << iop->fd() << "] ";
 
-    log::info << "[Event:";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << "readable] ";
+        log::info << "[Event:readable] ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << "writable] ";
+        log::info << "[Event:writable] ";
     }
 
-    log::info << "[Callback:";
     if (ev_cb)
     {
-        log::info << "not-null] ";
+        log::info << "[Callback:not-null] ";
     }
     else
     {
-        log::info << "null] ";
+        log::info << "[Callback:null] ";
     }
 
-    log::info << "[Activate:";
     if (activate)
     {
-        log::info << "true]";
+        log::info << "[Activate:true]";
     }
     else
     {
-        log::info << "false]";
+        log::info << "[Activate:false]";
     }
 
     log::info << log::endl;
@@ -141,8 +138,6 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
 
 void event_loop::loop_once(int timeout)
 {
-    log::info << "start event loop" << log::endl;
-
     // 1. Add to priority queue
     epoll_event evs[sysconfig::event_number];
     int nums = epoll_wait(ev_fd_, evs, sysconfig::event_number, timeout);
@@ -158,21 +153,20 @@ void event_loop::loop_once(int timeout)
         auto begin = range.first, end = range.second;
         while (begin != end)
         {
-            if (static_cast<bool>(std::get<3>(begin->second)
-                & fd_map_to_event(evs[i].events)))
+            if (static_cast<bool>(std::get<3>(begin->second) & fd_map_to_event(evs[i].events)))
             {
 #ifdef CPPEV_DEBUG
-                log::info << "enqueue ";
+                log::info << "Enqueue ";
                 if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))
                 {
-                    log::info << "readable event ";
+                    log::info << "[Event:readable] ";
                 }
                 if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_writable))
                 {
-                    log::info << "writable event ";
+                    log::info << "[Event:writable] ";
                 }
-                log::info << "for fd " << fd << log::endl;
-#endif  // CPPEV_DEBUG
+                log::info << "[Fd:" << fd << "]"<< log::endl;
+#endif  //  CPPEV_DEBUG
                 fd_cbs_.emplace(
                     std::get<0>(begin->second),
                     std::get<1>(begin->second),

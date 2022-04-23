@@ -83,6 +83,11 @@ public:
         evlp_ = evlp;
     }
 
+    bool is_closed()
+    {
+        return closed_;
+    }
+
     void close()
     {
         ::close(fd_);
