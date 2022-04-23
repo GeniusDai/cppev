@@ -8,8 +8,6 @@ const int port = 8891;
 
 const char *file = "/tmp/test.file";
 
-int fd;
-
 cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::log::info << "readable callback" << cppev::log::endl;
@@ -23,7 +21,7 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     }
 
     std::string file_copy = std::string(file) + ".copy";
-    fd = open(file_copy.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+    int fd = open(file_copy.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
     if (fd < 0)
     {
         cppev::throw_system_error("open error");
@@ -32,7 +30,7 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::nstream ios(fd);
     ios.wbuf()->put(iopt->rbuf()->get());
     ios.write_all();
-    cppev::log::info << "write file chunk complete" << cppev::log::endl;
+    cppev::log::info << "write chunk to file complete" << cppev::log::endl;
 };
 
 cppev::fd_event_cb wr_callback = [](std::shared_ptr<cppev::nio> iop) -> void
@@ -46,8 +44,8 @@ cppev::fd_event_cb wr_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     iopt->wbuf()->put(file);
     iopt->wbuf()->put("\n");
     iopt->write_all();
-    iop->evlp()->fd_remove(iop);
-    iop->evlp()->fd_register(iop, cppev::fd_event::fd_readable, rd_callback, true);
+    iop->evlp()->fd_remove(iop, false);
+    iop->evlp()->fd_register(iop, cppev::fd_event::fd_readable);
 };
 
 void request_file()
@@ -56,6 +54,7 @@ void request_file()
     iopt->connect("127.0.0.1", port);
     cppev::event_loop evlp;
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
+    evlp.fd_register(iop, cppev::fd_event::fd_readable, rd_callback, false);
     evlp.fd_register(iop, cppev::fd_event::fd_writable, wr_callback, true);
     evlp.loop();
 }

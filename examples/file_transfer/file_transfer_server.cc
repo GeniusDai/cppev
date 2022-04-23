@@ -1,6 +1,7 @@
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 #include <fcntl.h>
+#include <thread>
 
 const int chunk_size = 10 * 1024 * 1024;    // 10Mb
 
@@ -16,6 +17,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     iopt->rbuf()->clear();
     file = file.substr(0, file.size()-1);
     cppev::log::info << "client request file : " << file << cppev::log::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     int fd = open(file.c_str(), O_RDONLY);
     std::shared_ptr<cppev::nstream> iops(new cppev::nstream(fd));
     iops->read_all(chunk_size);

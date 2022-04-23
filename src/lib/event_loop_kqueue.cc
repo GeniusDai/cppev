@@ -193,7 +193,7 @@ void event_loop::loop_once(int timeout)
         while (begin != end)
         {
             if (static_cast<bool>(std::get<3>(begin->second)
-                & fd_map_to_event(evs[i].flags)))
+                & fd_map_to_event(evs[i].filter)))
             {
 #ifdef CPPEV_DEBUG
                 log::info << "enqueue ";
