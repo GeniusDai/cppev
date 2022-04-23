@@ -1,3 +1,7 @@
+/*
+ * This demo still have bug in macOS and when transfering big file
+ */
+
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 #include <fcntl.h>

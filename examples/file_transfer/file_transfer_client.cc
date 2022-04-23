@@ -16,6 +16,7 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     if (num == 0)
     {
         cppev::log::info << "receive file complete" << cppev::log::endl;
+        iop->evlp()->fd_remove(iop, true);
         return;
     }
 
