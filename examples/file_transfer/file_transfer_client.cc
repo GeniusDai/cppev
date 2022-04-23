@@ -46,7 +46,7 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::nstream ios(fd);
     ios.wbuf()->put(iopt->rbuf()->get());
     ios.write_all();
-    cppev::log::info << "write file chunk xcomplete" << cppev::log::endl;
+    cppev::log::info << "write file chunk complete" << cppev::log::endl;
 };
 
 void request_file()
