@@ -59,38 +59,40 @@ event_loop::event_loop(void *data)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
-    log::info << "Action : " << "register" << "; ";
-    log::info << "Fd : " << iop->fd() << "; ";
+    log::info << "[Action:register] ";
+    log::info << "[Fd:" << iop->fd() << "] ";
 
-    log::info << "Event : ";
+    log::info << "[Event:";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << "readable; ";
+        log::info << "readable] ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << "writable; ";
+        log::info << "writable] ";
     }
 
-    log::info << "Callback : ";
+    log::info << "[Callback:";
     if (ev_cb)
     {
-        log::info << "not null; ";
+        log::info << "not-null] ";
     }
     else
     {
-        log::info << "null; ";
+        log::info << "null] ";
     }
 
-    log::info << "Activate : ";
+    log::info << "[Activate:";
     if (activate)
     {
-        log::info << "true;";
+        log::info << "true]";
     }
     else
     {
-        log::info << "false;";
+        log::info << "false]";
     }
+
+    log::info << log::endl;
 
     if (ev_cb)
     {
@@ -113,12 +115,18 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 
 void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
 {
-    log::info << "remove fd " << iop->fd() << " and ";
-    if (!clean)
+    log::info << "[Action:remove] ";
+    log::info << "[Fd:" << iop->fd() << "] ";
+    log::info << "[Clean:";
+    if (clean)
     {
-        log::info << "not ";
+        log::info << "true]";
     }
-    log::info << "clean callbacks" << log::endl;
+    else
+    {
+        log::info << "false]";
+    }
+    log::info << log::endl;
 
     if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
     {

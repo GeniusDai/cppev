@@ -60,38 +60,40 @@ event_loop::event_loop(void *data)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
-    log::info << "Action : " << "register" << "; ";
-    log::info << "Fd : " << iop->fd() << "; ";
+    log::info << "[Action:register] ";
+    log::info << "[Fd:" << iop->fd() << "] ";
 
-    log::info << "Event : ";
+    log::info << "[Event:";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << "readable; ";
+        log::info << "readable] ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << "writable; ";
+        log::info << "writable] ";
     }
 
-    log::info << "Callback : ";
+    log::info << "[Callback:";
     if (ev_cb)
     {
-        log::info << "not null; ";
+        log::info << "not-null] ";
     }
     else
     {
-        log::info << "null; ";
+        log::info << "null] ";
     }
 
-    log::info << "Activate : ";
+    log::info << "[Activate:";
     if (activate)
     {
-        log::info << "true;";
+        log::info << "true]";
     }
     else
     {
-        log::info << "false;";
+        log::info << "false]";
     }
+
+    log::info << log::endl;
 
     if (ev_cb)
     {
@@ -102,6 +104,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     }
     if (activate)
     {
+        // Record event that has been register to kqueue
         {
             std::unique_lock<std::mutex> lock(lock_);
             if (fd_events_.count(iop->fd()))
@@ -113,6 +116,8 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
                 fd_events_[iop->fd()] = ev_type;
             }
         }
+
+        // Register event to kqueue
         struct kevent ev;
         EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0, 0, nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
@@ -124,25 +129,35 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 
 void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
 {
-    log::info << "remove fd " << iop->fd() << " and ";
-    if (!clean)
+    log::info << "[Action:remove] ";
+    log::info << "[Fd:" << iop->fd() << "] ";
+    log::info << "[Clean:";
+    if (clean)
     {
-        log::info << "not ";
+        log::info << "true]";
     }
-    log::info << "clean callbacks" << log::endl;
+    else
+    {
+        log::info << "false]";
+    }
+    log::info << log::endl;
 
+    // Remove event records
     fd_event ev_type;
     {
         std::unique_lock<std::mutex> lock(lock_);
         ev_type = fd_events_[iop->fd()];
         fd_events_.erase(iop->fd());
     }
+
+    // Remove event from kqueue
     struct kevent ev;
     EV_SET(&ev, iop->fd(), fd_map_to_sys(ev_type), EV_DELETE, 0, 0, nullptr);
     if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
     {
         throw_system_error("kevent error");
     }
+
     if (clean)
     {
         std::unique_lock<std::mutex> lock(lock_);
