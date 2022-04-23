@@ -14,7 +14,7 @@ cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     if (!iopt->check_connect())
     {
-        cppev::log::error << "fd" << iop->fd() << "failed to connect" << cppev::log::endl;
+        cppev::log::error << "fd " << iop->fd() << "failed to connect" << cppev::log::endl;
         return;
     }
     iopt->wbuf()->put(str);

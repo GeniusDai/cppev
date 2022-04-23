@@ -60,26 +60,35 @@ event_loop::event_loop(void *data)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
-    log::info << "register fd " << iop->fd();
-    log::info << " for event";
+    log::info << "Action : " << "register" << "; ";
+    log::info << "Fd : " << iop->fd() << "; ";
+    log::info << "Event : ";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << " readable";
+        log::info << " readable; ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << " writable";
+        log::info << " writable; ";
     }
-    if (!ev_cb)
+    log::info << "Callback : ";
+    if (ev_cb)
     {
-        log::info << " not";
+        log::info << "not null; ";
     }
-    log::info << " with callback ";
-    if (!activate)
+    else
     {
-        log::info << "not ";
+        log::info << "null; ";
     }
-    log::info << "activate" << log::endl;
+    log::info << "Activate : ";
+    if (activate)
+    {
+        log::info << "true;";
+    }
+    else
+    {
+        log::info << "false;";
+    }
 
     if (ev_cb)
     {
