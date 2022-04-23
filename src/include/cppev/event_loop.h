@@ -74,14 +74,15 @@ public:
     // @param iop       nio smart pointer
     // @param ev_type   event type
     // @param ev_cb     callback
-    // @param activate  whether register to io-multiplexing api
+    // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
         fd_event_cb ev_cb = nullptr, bool activate = true, priority prio = low);
 
     // Remove fd event(s) from event pollor
-    // @param iop       nio smart pointer
-    // @param clean     whether clean callbacks stored in eventloop
+    // @param iop           nio smart pointer
+    // @param clean         whether clean callbacks stored in eventloop
+    // @param deactivate    whether remove from os io-multiplexing api
     void fd_remove(std::shared_ptr<nio> iop, bool clean = true, bool deactivate = true);
 
     // Wait for events, only loop once, timeout unit is millisecond
