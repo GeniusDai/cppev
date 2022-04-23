@@ -9,6 +9,17 @@ const char *file = "/tmp/test.file";
 
 int fd;
 
+cppev::fd_event_cb wr_callback = [](std::shared_ptr<cppev::nio> iop) -> void
+{
+    std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
+    if (!iopt->check_connect())
+    {
+        cppev::throw_system_error("connect error");
+    }
+    iop->evlp()->fd_remove(iop, false);
+    iop->evlp()->fd_register(iop, cppev::fd_event::fd_readable);
+};
+
 cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
@@ -36,17 +47,15 @@ void request_file()
 {
     std::shared_ptr<cppev::nsocktcp> iopt = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     iopt->connect("127.0.0.1", port);
-    if (!iopt->check_connect())
-    {
-        cppev::throw_system_error("connect error");
-    }
+
     iopt->wbuf()->put(file);
     iopt->wbuf()->put("\n");
     iopt->write_all();
-    
+
     cppev::event_loop evlp;
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
-    evlp.fd_register(iop, cppev::fd_event::fd_readable, rd_callback);
+    evlp.fd_register(iop, cppev::fd_event::fd_readable, rd_callback, false);
+    evlp.fd_register(iop, cppev::fd_event::fd_writable, wr_callback, true);
     evlp.loop();
 }
 
