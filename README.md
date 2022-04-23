@@ -72,6 +72,8 @@ Five callbacks could be registered:
 
 * Event Driven Nio: Demo how to use event loop for the nio classes.
 
+* File Transfer: Transfer file with large size by tcp/ip.
+
 # Issues and Maintenance
 
 * Due to rapid development, regression issue may occur intermittently in the dev branch. Try git pull when you're blocked by compile/runtime issue.
