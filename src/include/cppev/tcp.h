@@ -27,7 +27,7 @@ typedef void(*tcp_event_cb)(std::shared_ptr<nsocktcp>);
 void async_write(std::shared_ptr<nsocktcp> iopt);
 
 // Safely close tcp socket
-void safe_close(std::shared_ptr<nsocktcp> iopt);
+void safely_close(std::shared_ptr<nsocktcp> iopt);
 
 class acceptor;
 class connector;

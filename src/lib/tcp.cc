@@ -62,10 +62,15 @@ void async_write(std::shared_ptr<nsocktcp> iopt)
     }
 }
 
-void safe_close(std::shared_ptr<nsocktcp> iopt)
+void safely_close(std::shared_ptr<nsocktcp> iopt)
 {
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
-    iopt->evlp()->fd_remove(iop, true);
+    try
+    {
+        iopt->evlp()->fd_remove(iop, true);
+    }
+    catch(...) {}
+
     iopt->close();
 }
 

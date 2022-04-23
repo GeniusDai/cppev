@@ -30,7 +30,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
-    cppev::safe_close(iopt);
+    cppev::safely_close(iopt);
 };
 
 int main()
