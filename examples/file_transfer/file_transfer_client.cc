@@ -10,23 +10,9 @@ const char *file = "/tmp/test.file";
 
 int fd;
 
-cppev::fd_event_cb wr_callback = [](std::shared_ptr<cppev::nio> iop) -> void
-{
-    std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
-    if (!iopt->check_connect())
-    {
-        cppev::throw_system_error("connect error");
-    }
-    iopt->wbuf()->put(file);
-    iopt->wbuf()->put("\n");
-    iopt->write_all();
-
-    iop->evlp()->fd_remove(iop, false);
-    iop->evlp()->fd_register(iop, cppev::fd_event::fd_readable);
-};
-
 cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
 {
+    cppev::log::info << "readable callback" << cppev::log::endl;
     std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
     int num = iopt->read_all();
     if (num == 0)
@@ -49,13 +35,27 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::log::info << "write file chunk complete" << cppev::log::endl;
 };
 
+cppev::fd_event_cb wr_callback = [](std::shared_ptr<cppev::nio> iop) -> void
+{
+    cppev::log::info << "writable callback" << cppev::log::endl;
+    std::shared_ptr<cppev::nsocktcp> iopt = std::dynamic_pointer_cast<cppev::nsocktcp>(iop);
+    if (!iopt->check_connect())
+    {
+        cppev::throw_system_error("connect error");
+    }
+    iopt->wbuf()->put(file);
+    iopt->wbuf()->put("\n");
+    iopt->write_all();
+    iop->evlp()->fd_remove(iop);
+    iop->evlp()->fd_register(iop, cppev::fd_event::fd_readable, rd_callback, true);
+};
+
 void request_file()
 {
     std::shared_ptr<cppev::nsocktcp> iopt = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     iopt->connect("127.0.0.1", port);
     cppev::event_loop evlp;
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
-    evlp.fd_register(iop, cppev::fd_event::fd_readable, rd_callback, false);
     evlp.fd_register(iop, cppev::fd_event::fd_writable, wr_callback, true);
     evlp.loop();
 }

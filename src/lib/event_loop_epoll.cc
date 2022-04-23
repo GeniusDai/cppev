@@ -94,9 +94,9 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 
     log::info << log::endl;
 
+    iop->set_evlp(this);
     if (ev_cb)
     {
-        iop->set_evlp(this);
         std::unique_lock<std::mutex> lock(lock_);
         fds_.emplace(iop->fd(), std::tuple<int, std::shared_ptr<nio>,
             fd_event_cb, fd_event>(prio, iop, ev_cb, ev_type));
