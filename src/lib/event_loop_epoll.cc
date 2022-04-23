@@ -110,25 +110,36 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     }
 }
 
-void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
+void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate)
 {
     log::info << "[Action:remove] ";
     log::info << "[Fd:" << iop->fd() << "] ";
-    log::info << "[Clean:";
     if (clean)
     {
-        log::info << "true]";
+        log::info << "[Clean:true] ";
     }
     else
     {
-        log::info << "false]";
+        log::info << "[Clean:false] ";
+    }
+    if (deactivate)
+    {
+        log::info << "[Deactivate:true]";
+    }
+    else
+    {
+        log::info << "[Deactivate:false]";
     }
     log::info << log::endl;
 
-    if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
+    if (deactivate)
     {
-        throw_system_error("epoll_ctl error");
+        if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
+        {
+            throw_system_error("epoll_ctl error");
+        }
     }
+
     if (clean)
     {
         std::unique_lock<std::mutex> lock(lock_);

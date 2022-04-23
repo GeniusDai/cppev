@@ -70,12 +70,19 @@ public:
         return fds_.size();
     }
 
-    // Register fd to event pollor, default activate callback
+    // Register fd event to event pollor
+    // @param iop       nio smart pointer
+    // @param ev_type   event type
+    // @param ev_cb     callback
+    // @param activate  whether register to io-multiplexing api
+    // @param prio      event priority
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
         fd_event_cb ev_cb = nullptr, bool activate = true, priority prio = low);
 
-    // Remove fd from event pollor, default clean callback
-    void fd_remove(std::shared_ptr<nio> iop, bool clean = true);
+    // Remove fd event(s) from event pollor
+    // @param iop       nio smart pointer
+    // @param clean     whether clean callbacks stored in eventloop
+    void fd_remove(std::shared_ptr<nio> iop, bool clean = true, bool deactivate = true);
 
     // Wait for events, only loop once, timeout unit is millisecond
     void loop_once(int timeout = -1);

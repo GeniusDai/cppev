@@ -125,45 +125,56 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     }
 }
 
-void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean)
+void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate)
 {
     log::info << "[Action:remove] ";
     log::info << "[Fd:" << iop->fd() << "] ";
-    log::info << "[Clean:";
     if (clean)
     {
-        log::info << "true]";
+        log::info << "[Clean:true] ";
     }
     else
     {
-        log::info << "false]";
+        log::info << "[Clean:false] ";
+    }
+    if (deactivate)
+    {
+        log::info << "[Deactivate:true]";
+    }
+    else
+    {
+        log::info << "[Deactivate:false]";
     }
     log::info << log::endl;
 
-    // Remove event records
-    fd_event ev_type;
+    if (deactivate)
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        ev_type = fd_events_[iop->fd()];
-        fd_events_.erase(iop->fd());
+        // Remove event records
+        fd_event ev_type;
+        {
+            std::unique_lock<std::mutex> lock(lock_);
+            ev_type = fd_events_[iop->fd()];
+            fd_events_.erase(iop->fd());
+        }
+
+        // Remove event from kqueue
+        struct kevent ev;
+        std::vector<fd_event> all_events{ fd_event::fd_readable, fd_event::fd_writable };
+        for (int i = 0; i < all_events.size(); ++i)
+        {
+            if (!static_cast<bool>(ev_type & all_events[i]))
+            {
+                continue;
+            }
+            // EV_SET(&kev, ident, filter, flags, fflags, data, udata);
+            EV_SET(&ev, iop->fd(), fd_map_to_sys(all_events[i]), EV_DELETE, 0, 0, nullptr);
+            if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
+            {
+                throw_system_error("kevent error");
+            }
+        }
     }
 
-    // Remove event from kqueue
-    struct kevent ev;
-    std::vector<fd_event> all_events{ fd_event::fd_readable, fd_event::fd_writable };
-    for (int i = 0; i < all_events.size(); ++i)
-    {
-        if (!static_cast<bool>(ev_type & all_events[i]))
-        {
-            continue;
-        }
-        // EV_SET(&kev, ident, filter, flags, fflags, data, udata);
-        EV_SET(&ev, iop->fd(), fd_map_to_sys(all_events[i]), EV_DELETE, 0, 0, nullptr);
-        if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
-        {
-            throw_system_error("kevent error");
-        }
-    }
     if (clean)
     {
         std::unique_lock<std::mutex> lock(lock_);
