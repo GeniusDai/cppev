@@ -22,14 +22,10 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     cppev::log::info << "client request file : " << file << cppev::log::endl;
     int fd = open(file.c_str(), O_RDONLY);
     std::shared_ptr<cppev::nstream> iops(new cppev::nstream(fd));
-    while(iops->read_chunk(chunk_size))
-    {
-        iopt->wbuf()->put(iops->rbuf()->buf());
-        cppev::async_write(iopt);
-    }
-    cppev::log::info << "read complete" << cppev::log::endl;
-    iopt->close();
-    cppev::log::info << "close socket complete" << cppev::log::endl;
+    iops->read_all(chunk_size);
+    iopt->wbuf()->put(iops->rbuf()->buf());
+    cppev::async_write(iopt);
+    cppev::log::info << "transfer file complete" << cppev::log::endl;
 };
 
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void

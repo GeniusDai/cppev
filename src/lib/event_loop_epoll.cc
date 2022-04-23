@@ -63,17 +63,17 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     log::info << " for event";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << " readable";
+        log::info << " [readable]";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << " writable";
+        log::info << " [writable]";
     }
     if (!ev_cb)
     {
         log::info << " not";
     }
-    log::info << " with callback ";
+    log::info << " with callback and event ";
     if (!activate)
     {
         log::info << "not ";

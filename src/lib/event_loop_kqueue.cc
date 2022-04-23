@@ -74,7 +74,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     {
         log::info << " not";
     }
-    log::info << " with callback ";
+    log::info << " with callback and event ";
     if (!activate)
     {
         log::info << "not ";
