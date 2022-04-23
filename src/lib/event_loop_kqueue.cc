@@ -62,15 +62,17 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 {
     log::info << "Action : " << "register" << "; ";
     log::info << "Fd : " << iop->fd() << "; ";
+
     log::info << "Event : ";
     if (static_cast<bool>(ev_type & fd_event::fd_readable))
     {
-        log::info << " readable; ";
+        log::info << "readable; ";
     }
     if (static_cast<bool>(ev_type & fd_event::fd_writable))
     {
-        log::info << " writable; ";
+        log::info << "writable; ";
     }
+
     log::info << "Callback : ";
     if (ev_cb)
     {
@@ -80,6 +82,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     {
         log::info << "null; ";
     }
+
     log::info << "Activate : ";
     if (activate)
     {
