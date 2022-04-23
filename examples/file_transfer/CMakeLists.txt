@@ -1,0 +1,2 @@
+add_executable(file_transfer_server file_transfer_server.cc)
+add_executable(file_transfer_client file_transfer_client.cc)
