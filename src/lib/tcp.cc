@@ -65,6 +65,7 @@ void async_write(std::shared_ptr<nsocktcp> iopt)
 void safely_close(std::shared_ptr<nsocktcp> iopt)
 {
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
+    // epoll/kqueue will remove fd when it's closed
     iopt->evlp()->fd_remove(iop, true, false);
     iopt->close();
 }
