@@ -9,5 +9,7 @@
 
 -- Core
     Timer
+    Tcp server/client support unix domain socket
+    Tcp server support several listening socket 
     DNS Resolution
     Application layer protocol
