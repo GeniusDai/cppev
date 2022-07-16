@@ -154,7 +154,7 @@ const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ =
     {family::ipv6, sizeof(sockaddr_in6)}
 };
 
-static void set_ip_port(sockaddr_storage &addr, const char *ip, const int port)
+static void set_ip_port(sockaddr_storage &addr, const char *ip, int port)
 {
     switch (addr.ss_family)
     {
@@ -544,7 +544,7 @@ void nsocktcp::listen_unix(const char *path)
     }
 }
 
-void nsocktcp::connect(const char *ip, const int port)
+void nsocktcp::connect(const char *ip, int port)
 {
     peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
@@ -640,7 +640,7 @@ void nsockudp::recv_unix()
         rbuf()->cap_ - rbuf()->offset_, 0, nullptr, nullptr);
 }
 
-void nsockudp::send(const char *ip, const int port)
+void nsockudp::send(const char *ip, int port)
 {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);

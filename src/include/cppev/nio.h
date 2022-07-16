@@ -259,9 +259,9 @@ public:
         listen(port, ip.c_str());
     }
 
-    void connect(const char *ip, const int port);
+    void connect(const char *ip, int port);
 
-    void connect(const std::string &ip, const int port)
+    void connect(const std::string &ip, int port)
     {
         connect(ip.c_str(), port);
     }
@@ -340,9 +340,9 @@ public:
         bind(port, ip.c_str());
     }
 
-    void send(const char *ip, const int port);
+    void send(const char *ip, int port);
 
-    void send(const std::string &ip, const int port)
+    void send(const std::string &ip, int port)
     {
         send(ip.c_str(), port);
     }
