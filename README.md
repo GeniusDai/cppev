@@ -68,11 +68,11 @@ Five callbacks could be registered:
 
 # Examples
 
-* Tcp Pressure: Perform cross socket family pressure test for ipv6 server.
+* Tcp Pressure : Perform tcp/ip stress testing.
 
-* Event Driven Nio: Demo how to use event loop for the nio classes.
+* Event Driven Nio : Demo how to use event loop for the nio classes.
 
-* File Transfer: Transfer file with large size by tcp/ip.
+* File Transfer : Transfer file with large size by tcp/ip.
 
 # Issues and Maintenance
 
