@@ -144,11 +144,13 @@ public:
     // Specify unix domain listening socket's path
     void listen_unix(const std::string &path);
 
-    // Listen socket readable, this function will be executed by acceptor-thread
-    static void on_readable(std::shared_ptr<nio> iop);
+    // Listening socket is readable, indicating new client arrives, this cb will be executed
+    // by accept thread to accept connection and assign connection to thread pool
+    static void on_acpt_readable(std::shared_ptr<nio> iop);
 
-    // This function will be executed by io-thread
-    static void on_writable(std::shared_ptr<nio> iop);
+    // Connect socket is writable, this cb will be executed immediately
+    // by one thread of the pool to do init jobs
+    static void on_conn_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
@@ -239,11 +241,13 @@ public:
     // Add connection task (path, 0, family::local)
     void add_unix(const std::string &path, int t = 1);
 
-    // New connect target added, this function will be executed by connector-thread
-    static void on_readable(std::shared_ptr<nio> iop);
+    // Pipe fd is readable, indicating new task added, this cb will be executed by
+    // connect thread to init connection
+    static void on_pipe_readable(std::shared_ptr<nio> iop);
 
-    // This function will be executed by io-thread
-    static void on_writable(std::shared_ptr<nio> iop);
+    // Connect socket is writable, indicating connection is ready for check, this
+    // cb will be executed by one thread of the pool to do init jobs
+    static void on_conn_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;

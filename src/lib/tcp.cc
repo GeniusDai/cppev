@@ -125,7 +125,7 @@ void acceptor::listen_unix(const std::string &path)
     socks_.back()->listen_unix(path);
 }
 
-void acceptor::on_readable(std::shared_ptr<nio> iop)
+void acceptor::on_acpt_readable(std::shared_ptr<nio> iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt.get() == nullptr)
@@ -140,11 +140,11 @@ void acceptor::on_readable(std::shared_ptr<nio> iop)
         log::info << "new fd " << p->fd() << " accepted" << log::endl;
         event_loop *io_evlp = d->minloads_get_evlp();
         io_evlp->fd_register(std::dynamic_pointer_cast<nio>(p),
-            fd_event::fd_writable, acceptor::on_writable, true);
+            fd_event::fd_writable, acceptor::on_conn_writable, true);
     }
 }
 
-void acceptor::on_writable(std::shared_ptr<nio> iop)
+void acceptor::on_conn_writable(std::shared_ptr<nio> iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt.get() == nullptr)
@@ -163,7 +163,7 @@ void acceptor::run_impl()
 {
     for (auto &sock_ : socks_) {
         evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
-        fd_event::fd_readable, acceptor::on_readable, true);
+            fd_event::fd_readable, acceptor::on_acpt_readable, true);
     }
     evp_->loop();
 }
@@ -189,7 +189,7 @@ void connector::add_unix(const std::string &path, int t)
     add(path, 0, family::local, t);
 }
 
-void connector::on_readable(std::shared_ptr<nio> iop)
+void connector::on_pipe_readable(std::shared_ptr<nio> iop)
 {
     nstream *iops = dynamic_cast<nstream *>(iop.get());
     if (iops == nullptr)
@@ -214,13 +214,13 @@ void connector::on_readable(std::shared_ptr<nio> iop)
             }
             event_loop *io_evlp = d->minloads_get_evlp();
             io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
-                fd_event::fd_writable, connector::on_writable, true);
+                fd_event::fd_writable, connector::on_conn_writable, true);
         }
         iter = d->hosts.erase(iter);
     }
 }
 
-void connector::on_writable(std::shared_ptr<nio> iop)
+void connector::on_conn_writable(std::shared_ptr<nio> iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt.get() == nullptr)
@@ -253,7 +253,7 @@ void connector::on_writable(std::shared_ptr<nio> iop)
 void connector::run_impl()
 {
     evp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
-        fd_event::fd_readable, connector::on_readable, true);
+        fd_event::fd_readable, connector::on_pipe_readable, true);
     evp_->loop();
 }
 
