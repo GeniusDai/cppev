@@ -1,10 +1,5 @@
--- Socket
-    Support udp multicast and broadcast.
-
--- Eventloop
-    Support event_loop_group and load balance algorithms.
-
 -- Core
+    Support udp multicast and broadcast
     Timer
     DNS Resolution
     Application layer protocol
