@@ -4,9 +4,6 @@
 -- Eventloop
     Support event_loop_group and load balance algorithms.
 
--- Examples
-    Implement big file transfer server.
-
 -- Core
     Timer
     DNS Resolution
