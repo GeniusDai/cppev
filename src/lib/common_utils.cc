@@ -89,7 +89,7 @@ std::string timestamp(time_t t, const char *format)
     return buf;
 }
 
-std::vector<std::string> split(std::string &str, std::string &sep)
+std::vector<std::string> split(const std::string &str, const std::string &sep)
 {
     return split(str.c_str(), sep.c_str());
 }

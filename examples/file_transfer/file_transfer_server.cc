@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <thread>
 
-const int chunk_size = 10 * 1024 * 1024;    // 10Mb
+const int chunk_size = 10 * 1024 * 1024;    // 10MB
 
 const int port = 8891;
 
