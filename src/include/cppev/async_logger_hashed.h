@@ -32,7 +32,7 @@ public:
 
     async_logger &operator<<(const long x);
 
-    async_logger &operator<<(const int x);
+    async_logger &operator<<(int x);
 
     async_logger &operator<<(const double x);
 

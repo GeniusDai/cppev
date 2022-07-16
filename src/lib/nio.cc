@@ -600,7 +600,7 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)
     return sockfds;
 }
 
-void nsockudp::bind(const int port, const char *ip)
+void nsockudp::bind(int port, const char *ip)
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));

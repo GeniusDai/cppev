@@ -29,7 +29,7 @@ async_logger &async_logger::operator<<(const long x)
     return (*this) << std::to_string(x).c_str();
 }
 
-async_logger &async_logger::operator<<(const int x)
+async_logger &async_logger::operator<<(int x)
 {
     return (*this) << std::to_string(x).c_str();
 }

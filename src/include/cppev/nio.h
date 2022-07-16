@@ -333,9 +333,9 @@ public:
     : nio(sockfd), nsock(sockfd, f)
     {}
 
-    void bind(const int port, const char *ip = nullptr);
+    void bind(int port, const char *ip = nullptr);
 
-    void bind(const int port, const std::string &ip)
+    void bind(int port, const std::string &ip)
     {
         bind(port, ip.c_str());
     }
