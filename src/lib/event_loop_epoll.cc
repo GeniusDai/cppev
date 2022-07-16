@@ -105,7 +105,8 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
         ev.events = fd_map_to_sys(ev_type);
         if (epoll_ctl(ev_fd_, EPOLL_CTL_ADD, iop->fd(), &ev) < 0)
         {
-            throw_system_error("epoll_ctl error");
+            throw_system_error(std::string("epoll_ctl add error for fd ")
+                .append(std::to_string(iop->fd())));
         }
     }
 }
@@ -136,7 +137,8 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate
     {
         if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
         {
-            throw_system_error("epoll_ctl error");
+            throw_system_error(std::string("epoll_ctl del error for fd ")
+                .append(std::to_string(iop->fd())));
         }
     }
 

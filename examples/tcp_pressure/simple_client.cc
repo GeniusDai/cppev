@@ -36,8 +36,9 @@ int main()
     cppev::tcp_client client(32);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
-    client.add("127.0.0.1", 8888, cppev::family::ipv4, 10000);
-    client.add("::1", 8888, cppev::family::ipv6, 10000);
+    client.add("127.0.0.1", 8884, cppev::family::ipv4, 10000);
+    client.add("::1", 8886, cppev::family::ipv6, 10000);
+    client.add_unix("/tmp/cppev_test.sock", 100);
     client.run();
     return 0;
 }

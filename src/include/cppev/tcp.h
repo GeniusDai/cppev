@@ -141,6 +141,9 @@ public:
     // Specify listening socket's port and family
     void listen(int port, family f, const char *ip = nullptr);
 
+    // Specify unix domain listening socket's path
+    void listen_unix(const std::string &path);
+
     // Listen socket readable, this function will be executed by acceptor-thread
     static void on_readable(std::shared_ptr<nio> iop);
 
@@ -155,7 +158,7 @@ private:
     std::shared_ptr<event_loop> evp_;
 
     // Listening socket
-    std::shared_ptr<nsocktcp> sock_;
+    std::vector<std::shared_ptr<nsocktcp> > socks_;
 };
 
 class tcp_server final
@@ -164,9 +167,16 @@ class tcp_server final
 public:
     tcp_server(int thr_num);
 
-    void listen(const int port, family f, const char *ip = nullptr)
+    void listen(int port, family f, const char *ip = nullptr)
     {
-        acpt_->listen(port, f, ip);
+        acpts_.push_back(std::shared_ptr<acceptor>(new acceptor(data_.get())));
+        acpts_.back()->listen(port, f, ip);
+    }
+
+    void listen_unix(const std::string &path)
+    {
+        acpts_.push_back(std::shared_ptr<acceptor>(new acceptor(data_.get())));
+        acpts_.back()->listen_unix(path);
     }
 
     void set_on_accept(tcp_event_cb handler)
@@ -194,7 +204,7 @@ public:
 private:
     std::shared_ptr<tp_shared_data> data_;
 
-    std::shared_ptr<acceptor> acpt_;
+    std::vector<std::shared_ptr<acceptor> > acpts_;
 
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
@@ -224,7 +234,10 @@ public:
     {}
 
     // Add connection task (ip, port, family)
-    void add(std::string ip, int port, family f, int t = 1);
+    void add(const std::string &ip, int port, family f, int t = 1);
+
+    // Add connection task (path, 0, family::local)
+    void add_unix(const std::string &path, int t = 1);
 
     // New connect target added, this function will be executed by connector-thread
     static void on_readable(std::shared_ptr<nio> iop);
@@ -252,9 +265,14 @@ class tcp_client final
 public:
     tcp_client(int thr_num);
 
-    void add(const std::string ip, const int port, family f, int t = 1)
+    void add(const std::string &ip, int port, family f, int t = 1)
     {
         cont_->add(ip, port, f, t);
+    }
+
+    void add_unix(const std::string &path, int t = 1)
+    {
+        cont_->add_unix(path, t);
     }
 
     void set_on_connect(tcp_event_cb handler)

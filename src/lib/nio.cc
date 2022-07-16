@@ -510,7 +510,7 @@ std::tuple<std::string, int, family> nsocktcp::peername()
     return query_ip_port_family(addr);
 }
 
-void nsocktcp::listen(const int port, const char *ip)
+void nsocktcp::listen(int port, const char *ip)
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -519,7 +519,8 @@ void nsocktcp::listen(const int port, const char *ip)
     set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
-        throw_system_error("bind error");
+        throw_system_error(std::string("bind error : ").
+            append(std::to_string(port)));
     }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     {
@@ -535,7 +536,7 @@ void nsocktcp::listen_unix(const char *path)
     set_path(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     {
-        throw_system_error("bind error");
+        throw_system_error(std::string("bind error : ").append(path));
     }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     {
@@ -550,9 +551,11 @@ void nsocktcp::connect(const char *ip, const int port)
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0 && errno != EINPROGRESS)
+    if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0 &&
+        errno != EINPROGRESS && errno != EAGAIN)
     {
-        throw_system_error("connect error");
+        throw_system_error(std::string("connect error : ").
+            append(ip).append(" ").append(std::to_string(port)));
     }
 }
 
@@ -564,9 +567,11 @@ void nsocktcp::connect_unix(const char *path)
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
-    if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 && errno != EINPROGRESS)
+    if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 &&
+        errno != EINPROGRESS && errno != EAGAIN)
     {
-        throw_system_error("connect error");
+        throw_system_error(std::string("connect error : ").
+            append(path));
     }
 }
 

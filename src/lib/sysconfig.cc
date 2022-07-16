@@ -1,4 +1,5 @@
 #include "cppev/sysconfig.h"
+#include <sys/socket.h>
 
 namespace cppev
 {
@@ -13,7 +14,7 @@ int inotify_step = 1024;
 int udp_buffer_size = 2048;
 
 // param backlog for ::listen()
-int listen_number = 1024;
+int listen_number = SOMAXCONN;
 
 // param size for ::epoll_create() and ::epoll_wait()
 int event_number = 2048;

@@ -42,7 +42,9 @@ int main()
     cppev::tcp_server server(32);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
-    server.listen(8888, cppev::family::ipv6);
+    server.listen(8884, cppev::family::ipv4);
+    server.listen(8886, cppev::family::ipv6);
+    server.listen_unix("/tmp/cppev_test.sock");
     server.run();
     return 0;
 }

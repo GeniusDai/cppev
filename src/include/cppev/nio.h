@@ -252,9 +252,9 @@ public:
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
     {}
 
-    void listen(const int port, const char *ip = nullptr);
+    void listen(int port, const char *ip = nullptr);
 
-    void listen(const int port, const std::string &ip)
+    void listen(int port, const std::string &ip)
     {
         listen(port, ip.c_str());
     }

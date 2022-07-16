@@ -15,17 +15,18 @@
 namespace cppev
 {
 
-void throw_system_error(const char *str)
+void throw_system_error(const std::string &str)
 {
-    throw std::system_error(std::error_code(errno, std::system_category()) ,str);
+    throw std::system_error(std::error_code(errno, std::system_category()),
+        std::string(str).append(" : errno ").append(std::to_string(errno)).append(" "));
 }
 
-void throw_logic_error(const char *str)
+void throw_logic_error(const std::string &str)
 {
     throw std::logic_error(str);
 }
 
-void throw_runtime_error(const char *str)
+void throw_runtime_error(const std::string &str)
 {
     throw std::runtime_error( str);
 }

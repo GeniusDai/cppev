@@ -29,11 +29,11 @@ private:
     uncopyable(const uncopyable&) = delete;
 };
 
-void throw_logic_error(const char *str);
+void throw_logic_error(const std::string &str);
 
-void throw_system_error(const char *str);
+void throw_system_error(const std::string &str);
 
-void throw_runtime_error(const char *str);
+void throw_runtime_error(const std::string &str);
 
 #ifdef __linux__
 typedef pid_t tid;

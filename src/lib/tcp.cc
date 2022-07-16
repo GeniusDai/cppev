@@ -115,8 +115,14 @@ void iohandler::on_writable(std::shared_ptr<nio> iop)
 
 void acceptor::listen(int port, family f, const char *ip)
 {
-    sock_ = nio_factory::get_nsocktcp(f);
-    sock_->listen(port, ip);
+    socks_.push_back(nio_factory::get_nsocktcp(f));
+    socks_.back()->listen(port, ip);
+}
+
+void acceptor::listen_unix(const std::string &path)
+{
+    socks_.push_back(nio_factory::get_nsocktcp(family::local));
+    socks_.back()->listen_unix(path);
 }
 
 void acceptor::on_readable(std::shared_ptr<nio> iop)
@@ -155,12 +161,14 @@ void acceptor::on_writable(std::shared_ptr<nio> iop)
 
 void acceptor::run_impl()
 {
-    evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
+    for (auto &sock_ : socks_) {
+        evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_readable, true);
+    }
     evp_->loop();
 }
 
-void connector::add(std::string ip, int port, family f, int t)
+void connector::add(const std::string &ip, int port, family f, int t)
 {
     tp_shared_data *d = static_cast<tp_shared_data *>(evp_->data());
     auto h = std::make_tuple<>(ip, port, f);
@@ -174,6 +182,11 @@ void connector::add(std::string ip, int port, family f, int t)
     }
     wrp_->wbuf()->put("0");
     wrp_->write_all(1);
+}
+
+void connector::add_unix(const std::string &path, int t)
+{
+    add(path, 0, family::local, t);
 }
 
 void connector::on_readable(std::shared_ptr<nio> iop)
@@ -191,7 +204,14 @@ void connector::on_readable(std::shared_ptr<nio> iop)
         {
             std::shared_ptr<nsocktcp> sock =
                 nio_factory::get_nsocktcp(std::get<2>(iter->first));
-            sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
+            if (std::get<2>(iter->first) == family::local)
+            {
+                sock->connect_unix(std::get<0>(iter->first));
+            }
+            else
+            {
+                sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
+            }
             event_loop *io_evlp = d->minloads_get_evlp();
             io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
                 fd_event::fd_writable, connector::on_writable, true);
@@ -246,16 +266,21 @@ tcp_server::tcp_server(int thr_num)
     {
         data_->evls.push_back((*tp_)[i]->evp_.get());
     }
-    acpt_ = std::shared_ptr<acceptor>(new acceptor(data_.get()));
 }
 
 void tcp_server::run()
 {
     utils::ignore_signal(SIGPIPE);
     tp_->run();
-    acpt_->run();
+    for (auto &acpt : acpts_)
+    {
+        acpt->run();
+    }
     tp_->join();
-    acpt_->join();
+        for (auto &acpt : acpts_)
+    {
+        acpt->join();
+    }
 }
 
 tcp_client::tcp_client(int thr_num)
