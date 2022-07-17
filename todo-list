@@ -1,7 +1,9 @@
--- Core
-    Reconnect when connect is refused by server
-    Support udp multicast and broadcast
+P1:
+    Support retry for connect in reactor
     Timer
+    Shared memory
+
+P2:
+    Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
-    Shared memory
