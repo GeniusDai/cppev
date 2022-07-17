@@ -544,7 +544,7 @@ void nsocktcp::listen_unix(const char *path)
     }
 }
 
-void nsocktcp::connect(const char *ip, int port)
+bool nsocktcp::connect(const char *ip, int port)
 {
     peer_ = std::make_pair<>(ip, port);
     sockaddr_storage addr;
@@ -554,12 +554,12 @@ void nsocktcp::connect(const char *ip, int port)
     if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0 &&
         errno != EINPROGRESS && errno != EAGAIN)
     {
-        throw_system_error(std::string("connect error : ").
-            append(ip).append(" ").append(std::to_string(port)));
+        return false;
     }
+    return true;
 }
 
-void nsocktcp::connect_unix(const char *path)
+bool nsocktcp::connect_unix(const char *path)
 {
     peer_ = std::make_pair<>(path, -1);
     sockaddr_storage addr;
@@ -570,9 +570,9 @@ void nsocktcp::connect_unix(const char *path)
     if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 &&
         errno != EINPROGRESS && errno != EAGAIN)
     {
-        throw_system_error(std::string("connect error : ").
-            append(path));
+        return false;
     }
+    return true;
 }
 
 std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)

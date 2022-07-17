@@ -77,6 +77,16 @@ public:
     // Load balance algorithm : choose worker which has minimum loads
     event_loop *minloads_get_evlp();
 
+    tcp_server *server_ptr() const
+    {
+        return reinterpret_cast<tcp_server *>(ptr);
+    }
+
+    tcp_client *client_ptr() const
+    {
+        return reinterpret_cast<tcp_client *>(ptr);
+    }
+
 private:
     friend class tcp_server;
     friend class tcp_client;
@@ -85,11 +95,7 @@ private:
     // Event loops of thread pool, used for task assign
     std::vector<event_loop *> evls;
 
-    // Used only by connector : hosts waiting for connecting
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
-
-    // Used only by connector : hosts that failed to connect
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures;
+    void *ptr;
 };
 
 
@@ -160,7 +166,7 @@ private:
     std::shared_ptr<event_loop> evp_;
 
     // Listening socket
-    std::vector<std::shared_ptr<nsocktcp> > socks_;
+    std::shared_ptr<nsocktcp> sock_;
 };
 
 class tcp_server final
@@ -217,7 +223,7 @@ class connector
 {
 public:
     connector(tp_shared_data *data)
-    : connector(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
+    : connector(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data), static_cast<void *>(this))))
     {}
 
     connector(std::shared_ptr<event_loop> evp)
@@ -261,23 +267,23 @@ private:
 
     // Pipe read end
     std::shared_ptr<nstream> rdp_;
+
+    // hosts waiting for connecting
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts_;
+
+    // hosts that failed to connect
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
 class tcp_client final
 : public uncopyable
 {
 public:
-    tcp_client(int thr_num);
+    tcp_client(int thr_num, int cont_num = 1);
 
-    void add(const std::string &ip, int port, family f, int t = 1)
-    {
-        cont_->add(ip, port, f, t);
-    }
+    void add(const std::string &ip, int port, family f, int t = 1);
 
-    void add_unix(const std::string &path, int t = 1)
-    {
-        cont_->add_unix(path, t);
-    }
+    void add_unix(const std::string &path, int t = 1);
 
     void set_on_connect(tcp_event_cb handler)
     {
@@ -304,7 +310,7 @@ public:
 private:
     std::shared_ptr<tp_shared_data> data_;
 
-    std::shared_ptr<connector> cont_;
+    std::vector<std::shared_ptr<connector> > conts_;
 
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };

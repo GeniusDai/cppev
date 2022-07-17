@@ -115,14 +115,14 @@ void iohandler::on_writable(std::shared_ptr<nio> iop)
 
 void acceptor::listen(int port, family f, const char *ip)
 {
-    socks_.push_back(nio_factory::get_nsocktcp(f));
-    socks_.back()->listen(port, ip);
+    sock_ = nio_factory::get_nsocktcp(f);
+    sock_->listen(port, ip);
 }
 
 void acceptor::listen_unix(const std::string &path)
 {
-    socks_.push_back(nio_factory::get_nsocktcp(family::local));
-    socks_.back()->listen_unix(path);
+    sock_ = nio_factory::get_nsocktcp(family::local);
+    sock_->listen_unix(path);
 }
 
 void acceptor::on_acpt_readable(std::shared_ptr<nio> iop)
@@ -161,24 +161,25 @@ void acceptor::on_conn_writable(std::shared_ptr<nio> iop)
 
 void acceptor::run_impl()
 {
-    for (auto &sock_ : socks_) {
-        evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
-            fd_event::fd_readable, acceptor::on_acpt_readable, true);
-    }
+    evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
+        fd_event::fd_readable, acceptor::on_acpt_readable, true);
     evp_->loop();
 }
 
 void connector::add(const std::string &ip, int port, family f, int t)
 {
-    tp_shared_data *d = static_cast<tp_shared_data *>(evp_->data());
-    auto h = std::make_tuple<>(ip, port, f);
-    if (d->hosts.count(h))
+    if (t == 0)
     {
-        d->hosts[h] += t;
+        return;
+    }
+    auto h = std::make_tuple<>(ip, port, f);
+    if (hosts_.count(h))
+    {
+        hosts_[h] += t;
     }
     else
     {
-        d->hosts[h] = t;
+        hosts_[h] = t;
     }
     wrp_->wbuf()->put("0");
     wrp_->write_all(1);
@@ -198,25 +199,36 @@ void connector::on_pipe_readable(std::shared_ptr<nio> iop)
     }
     tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     iops->read_all(1);
-    for (auto iter = d->hosts.begin(); iter != d->hosts.end(); )
+    connector *pseudo_this = static_cast<connector *>(iop->evlp()->back());
+    for (auto iter = pseudo_this->hosts_.begin(); iter != pseudo_this->hosts_.end(); )
     {
         for (int i = 0; i < iter->second; ++i)
         {
             std::shared_ptr<nsocktcp> sock =
                 nio_factory::get_nsocktcp(std::get<2>(iter->first));
+            bool succeed;
             if (std::get<2>(iter->first) == family::local)
             {
-                sock->connect_unix(std::get<0>(iter->first));
+                succeed = sock->connect_unix(std::get<0>(iter->first));
             }
             else
             {
-                sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
+                succeed = sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
             }
-            event_loop *io_evlp = d->minloads_get_evlp();
-            io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
-                fd_event::fd_writable, connector::on_conn_writable, true);
+            if (succeed)
+            {
+                event_loop *io_evlp = d->minloads_get_evlp();
+                io_evlp->fd_register(std::dynamic_pointer_cast<nio>(sock),
+                    fd_event::fd_writable, connector::on_conn_writable, true);
+            }
+            else
+            {
+                log::error << "connect failed with " << std::get<0>(iter->first)
+                    << " " << std::get<1>(iter->first) << log::endl;
+                pseudo_this->failures_[iter->first] += 1;
+            }
         }
-        iter = d->hosts.erase(iter);
+        iter = pseudo_this->hosts_.erase(iter);
     }
 }
 
@@ -227,23 +239,17 @@ void connector::on_conn_writable(std::shared_ptr<nio> iop)
     {
         throw_logic_error("dynamic_cast error");
     }
-    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     iop->evlp()->fd_remove(iop, true);      // remove previous callback
+    connector *pseudo_this = static_cast<connector *>(iop->evlp()->back());
     if (!iopt->check_connect())
     {
         std::tuple<std::string, int, family> h = iopt->connpeer();
         log::error << "connect failed with " << std::get<0>(h)
             << " " << std::get<1>(h) << log::endl;
-        if (d->failures.count(h))
-        {
-            d->failures[h] += 1;
-        }
-        else
-        {
-            d->failures[h] = 1;
-        }
+        pseudo_this->failures_[h] += 1;
         return;
     }
+    tp_shared_data *d = static_cast<tp_shared_data *>(iop->evlp()->data());
     // The sequence CANNOT be changed since on_connect may call aysnc_write
     iop->evlp()->fd_register(iop, fd_event::fd_writable, iohandler::on_writable, false);
     d->on_connect(iopt);
@@ -266,6 +272,7 @@ tcp_server::tcp_server(int thr_num)
     {
         data_->evls.push_back((*tp_)[i]->evp_.get());
     }
+    data_->ptr = this;
 }
 
 void tcp_server::run()
@@ -277,13 +284,13 @@ void tcp_server::run()
         acpt->run();
     }
     tp_->join();
-        for (auto &acpt : acpts_)
+    for (auto &acpt : acpts_)
     {
         acpt->join();
     }
 }
 
-tcp_client::tcp_client(int thr_num)
+tcp_client::tcp_client(int thr_num, int cont_num)
 {
     data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
     tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
@@ -292,16 +299,62 @@ tcp_client::tcp_client(int thr_num)
     {
         data_->evls.push_back((*tp_)[i]->evp_.get());
     }
-    cont_ = std::shared_ptr<connector>(new connector(data_.get()));
+    for (int i = 0; i < cont_num; ++i)
+    {
+        conts_.push_back(std::shared_ptr<connector>(new connector(data_.get())));
+    }
+    data_->ptr = this;
+}
+
+void tcp_client::add(const std::string &ip, int port, family f, int t)
+{
+    if (conts_.size() == 1)
+    {
+        conts_[0]->add(ip, port, f, t);
+    }
+    else
+    {
+        int num = t / conts_.size();
+        int mod = t % conts_.size();
+        for (auto &cont : conts_)
+        {
+            cont->add(ip, port, f, num);
+        }
+        conts_[0]->add(ip, port, f, mod);
+    }
+}
+
+void tcp_client::add_unix(const std::string &path, int t)
+{
+    if (conts_.size() == 1)
+    {
+        conts_[0]->add_unix(path, t);
+    }
+    else
+    {
+        int num = t / conts_.size();
+        int mod = t % conts_.size();
+        for (auto &cont : conts_)
+        {
+            cont->add_unix(path, num);
+        }
+        conts_[0]->add_unix(path, mod);
+    }
 }
 
 void tcp_client::run()
 {
     utils::ignore_signal(SIGPIPE);
     tp_->run();
-    cont_->run();
+    for (auto &cont : conts_)
+    {
+        cont->run();
+    }
     tp_->join();
-    cont_->join();
+    for (auto &cont : conts_)
+    {
+        cont->join();
+    }
 }
 
 }   // namespace tcp

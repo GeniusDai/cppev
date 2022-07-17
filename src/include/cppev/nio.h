@@ -259,11 +259,11 @@ public:
         listen(port, ip.c_str());
     }
 
-    void connect(const char *ip, int port);
+    bool connect(const char *ip, int port);
 
-    void connect(const std::string &ip, int port)
+    bool connect(const std::string &ip, int port)
     {
-        connect(ip.c_str(), port);
+        return connect(ip.c_str(), port);
     }
 
     void listen_unix(const char *path);
@@ -273,11 +273,11 @@ public:
         listen_unix(path.c_str());
     }
 
-    void connect_unix(const char *path);
+    bool connect_unix(const char *path);
 
-    void connect_unix(const std::string &path)
+    bool connect_unix(const std::string &path)
     {
-        connect_unix(path.c_str());
+        return connect_unix(path.c_str());
     }
 
     bool check_connect()

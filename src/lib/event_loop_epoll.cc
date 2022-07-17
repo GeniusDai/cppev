@@ -45,8 +45,8 @@ static fd_event fd_map_to_event(uint32_t ev)
     return flags;
 }
 
-event_loop::event_loop(void *data)
-: data_(data)
+event_loop::event_loop(void *data, void *back)
+: data_(data), back_(back)
 {
     ev_fd_ = epoll_create(sysconfig::event_number);
     if (ev_fd_ < 0)

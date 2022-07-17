@@ -33,12 +33,18 @@ cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt
  */
 int main()
 {
-    cppev::tcp_client client(32);
+    cppev::tcp_client client(32, 3);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
-    client.add("127.0.0.1", 8884, cppev::family::ipv4, 10000);
-    client.add("::1", 8886, cppev::family::ipv6, 10000);
-    client.add_unix("/tmp/cppev_test.sock", 100);
+
+    // Please lower the concurrency number if server refused to connect
+    // in your OS, especially the unix domain socket. Actually I'd like to
+    // suggest using ipv4/ipv6 to substitute this protocol
+    client.add(     "127.0.0.1", 8884, cppev::family::ipv4, 10000);
+    client.add(     "::1",       8886, cppev::family::ipv6, 10000);
+    client.add_unix("/tmp/cppev_test.sock",                 100);
+
     client.run();
+
     return 0;
 }

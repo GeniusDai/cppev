@@ -47,7 +47,7 @@ class event_loop
 : public uncopyable
 {
 public:
-    explicit event_loop(void *data = nullptr);
+    explicit event_loop(void *data = nullptr, void *back = nullptr);
 
     virtual ~event_loop()
     {
@@ -62,6 +62,11 @@ public:
     void *data()
     {
         return data_;
+    }
+
+    void *back()
+    {
+        return back_;
     }
 
     // Loads of event loop
@@ -111,6 +116,9 @@ private:
 
     // Thread pool shared data
     void *data_;
+
+    // Class that contains this eventloop
+    void *back_;
 
     // Tuple : priority, nio, callback, event
     std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
