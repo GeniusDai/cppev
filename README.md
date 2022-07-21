@@ -18,7 +18,7 @@ Two kinds of thread pool provided:
 
 * Task queue for thread pool with stop function.
 
-### Tcp Socket Handle
+### Tens of Thousands Tcp Sockets Handling
 
 Reactor similiar to netty:
 
@@ -37,16 +37,6 @@ Five callbacks could be registered:
 * on_write_complete: data write from wbuffer complete.
 
 * on_closed: socket closed by opposite host.
-
-### Others
-
-* Async Logger: Two kinds of logger both using backend thread.
-
-* Thread and Synchronization: Encapsulation of pthread, rwlock and its RAII.
-
-* Subprocess: Encapsulation of fork + execve + waitpid.
-
-* Linux Peculiar: Support inotify and spinlock.
 
 # Prerequirement
 
