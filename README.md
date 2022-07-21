@@ -18,7 +18,7 @@ Two kinds of thread pool provided:
 
 * Task queue for thread pool with stop function.
 
-### Tens of Thousands Tcp Sockets Handling
+### Massive Tcp Connection Handling
 
 Reactor similiar to netty:
 
