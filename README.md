@@ -1,4 +1,4 @@
-**Cppev is a high performance C++ library for multithreading / multiprocessing / network / ipc programming.**
+**Cppev is a C++ multithreading / multiprocessing / network / ipc library with high performance.**
 
 # Architecture
 
