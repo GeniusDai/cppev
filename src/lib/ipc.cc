@@ -94,6 +94,10 @@ bool semaphore::acquire(int timeout)
     {
         ret = sem_trywait(sem_);
     }
+    else
+    {
+        throw_logic_error("invalid timeout for semaphore::acquire");
+    }
     if (ret == -1)
     {
         if (errno == EAGAIN || errno == EINTR)

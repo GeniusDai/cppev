@@ -46,7 +46,7 @@ static fd_event fd_map_to_event(uint32_t ev)
     return flags;
 }
 
-event_loop::event_loop(void *data)
+event_loop::event_loop(void *data, void *back)
 : data_(data), back_(back)
 {
     ev_fd_ = kqueue();
