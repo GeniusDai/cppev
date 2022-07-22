@@ -1,7 +1,6 @@
 P1:
     Support retry for connect in reactor
     Timer
-    POSIX Shared Memory and Semaphore
 
 P2:
     Support udp multicast and broadcast

@@ -9,6 +9,7 @@ set (LIB
     event_loop_kqueue.cc
     tcp.cc
     subprocess.cc
+    ipc.cc
 )
 
 add_library("cppev" SHARED ${LIB})
