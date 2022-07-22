@@ -10,17 +10,17 @@
 
 * Support readable / writable event listening by using io-multiplexing.
 
-### Thread Pool
+### Concurrency
 
-Two kinds of thread pool provided:
+* Two kinds of thread pool : task-queue / variadic-template
 
-* Custom type runnable by variadic template.
+* POSIX ipc : shared_memory / semaphore
 
-* Task queue for thread pool with stop function.
+* Subprocess similiar to Python
 
 ### Massive Tcp Connection Handling
 
-Reactor similiar to netty:
+Reactor similiar to Netty:
 
 * Server: multi-acceptor-thread and io-thread-pool.
 
