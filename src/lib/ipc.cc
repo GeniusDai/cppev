@@ -1,4 +1,5 @@
 #include "cppev/ipc.h"
+#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -27,6 +28,10 @@ shared_memory::shared_memory(const std::string &name, int size, bool create, mod
     if (ptr_ == MAP_FAILED)
     {
         throw_system_error("mmap error");
+    }
+    if (create)
+    {
+        memset(ptr_, 0, size_);
     }
 }
 
