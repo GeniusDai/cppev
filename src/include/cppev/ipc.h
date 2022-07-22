@@ -1,10 +1,9 @@
 #ifndef _ipc_h_6C0224787A17_
 #define _ipc_h_6C0224787A17_
 
+#include "cppev/common_utils.h"
 #include <string>
 #include <semaphore.h>
-
-#include "cppev/common_utils.h"
 
 namespace cppev
 {
@@ -13,7 +12,7 @@ class shared_memory
 : public uncopyable
 {
 public:
-    shared_memory(const std::string &name, int size, bool create);
+    shared_memory(const std::string &name, int size, bool create, mode_t mode = 0600);
 
     ~shared_memory();
 
@@ -44,7 +43,7 @@ class semaphore
 : public uncopyable
 {
 public:
-    semaphore(const std::string &name, int value = -1);
+    semaphore(const std::string &name, int value = -1, mode_t mode = 0600);
 
     ~semaphore();
 

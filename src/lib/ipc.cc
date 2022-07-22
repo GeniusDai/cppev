@@ -6,7 +6,7 @@
 namespace cppev
 {
 
-shared_memory::shared_memory(const std::string &name, int size, bool create)
+shared_memory::shared_memory(const std::string &name, int size, bool create, mode_t mode)
 : name_(name), size_(size)
 {
     int flag = O_RDWR;
@@ -14,7 +14,7 @@ shared_memory::shared_memory(const std::string &name, int size, bool create)
     {
         flag |= O_CREAT | O_EXCL;
     }
-    fd_ = shm_open(name_.c_str(), flag, 0777);
+    fd_ = shm_open(name_.c_str(), flag, mode);
     if (fd_ < 0)
     {
         throw_system_error("shm_open error");
@@ -45,12 +45,12 @@ void shared_memory::unlink()
 
 
 
-semaphore::semaphore(const std::string &name, int value)
+semaphore::semaphore(const std::string &name, int value, mode_t mode)
 : name_(name)
 {
     if (value != -1)
     {
-        sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, 0777, value);
+        sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, mode, value);
     }
     else
     {
