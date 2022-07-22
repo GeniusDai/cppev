@@ -62,33 +62,27 @@ TEST_F(TestIpc, test_sem)
 
     std::mutex lock;
     std::condition_variable cv;
-    bool ready1 = false;
-    bool ready2 = false;
+    bool ready = false;
 
     std::thread creater([&]() {
         std::unique_ptr<semaphore> psem;
         {
             std::unique_lock<std::mutex> lg(lock);
             psem = std::unique_ptr<semaphore>(new semaphore(sem_name, sem_value));
-            ready1 = true;
+            ready = true;
         }
         cv.notify_one();
-        {
-            std::unique_lock<std::mutex> lg(lock);
-            if (!ready2)
-            {
-                cv.wait(lg, [&ready2]() { return ready2; });
-            }
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ready = false;
         psem->release();
     });
 
     std::thread user([&]() {
         {
             std::unique_lock<std::mutex> lg(lock);
-            if (!ready1)
+            if (!ready)
             {
-                cv.wait(lg, [&ready1]() { return ready1; });
+                cv.wait(lg, [&ready]() { return ready; });
             }
         }
         semaphore sem(sem_name);
@@ -97,19 +91,15 @@ TEST_F(TestIpc, test_sem)
         {
             EXPECT_TRUE(sem.acquire());
         }
+        
         EXPECT_FALSE(sem.try_acquire());
         sem.release();
         EXPECT_TRUE(sem.acquire());
         sem.release();
         EXPECT_TRUE(sem.try_acquire());
 
-        {
-            std::unique_lock<std::mutex> lg(lock);
-            ready2 = true;
-        }
-        cv.notify_one();
-
         EXPECT_TRUE(sem.acquire());
+        EXPECT_FALSE(ready);
         sem.unlink();
     });
 
