@@ -85,7 +85,7 @@ void semaphore::unlink()
 
 bool semaphore::acquire(int timeout)
 {
-    int ret;
+    int ret = 0;
     if (timeout == -1)
     {
         ret = sem_wait(sem_);

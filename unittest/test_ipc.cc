@@ -117,8 +117,7 @@ TEST_F(TestIpc, test_sem)
     user.join();
 }
 
-
-}
+}   // namespace cppev
 
 int main(int argc, char **argv)
 {
