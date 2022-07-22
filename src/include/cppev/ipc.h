@@ -3,7 +3,7 @@
 
 #include <string>
 #include <semaphore.h>
-#include <sys/mman.h>
+
 #include "cppev/common_utils.h"
 
 namespace cppev
