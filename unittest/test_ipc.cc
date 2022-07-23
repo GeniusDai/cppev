@@ -105,7 +105,7 @@ TEST_F(TestIpc, test_sem)
         int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
         EXPECT_FALSE(ready);
-        EXPECT_GT(end - begin, delay);
+        EXPECT_GE(end - begin, delay);
         sem.unlink();
     });
 
