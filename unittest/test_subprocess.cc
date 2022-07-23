@@ -1,5 +1,5 @@
-#include "cppev/subprocess.h"
 #include <gtest/gtest.h>
+#include "cppev/subprocess.h"
 
 namespace cppev
 {

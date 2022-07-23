@@ -64,6 +64,8 @@ TEST_F(TestIpc, test_sem)
     std::condition_variable cv;
     bool ready = false;
     int delay = 200;
+    const int MAGIC = 666;
+    int magic_num = MAGIC - 1;
 
     std::thread creater([&]() {
         std::unique_ptr<semaphore> psem;
@@ -74,7 +76,7 @@ TEST_F(TestIpc, test_sem)
         }
         cv.notify_one();
         std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-        ready = false;
+        magic_num = MAGIC;
         psem->release();
     });
 
@@ -104,7 +106,7 @@ TEST_F(TestIpc, test_sem)
         EXPECT_TRUE(sem.acquire());
         int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count();
-        EXPECT_FALSE(ready);
+        EXPECT_EQ(magic_num, MAGIC);
         EXPECT_GE(end - begin, delay);
         sem.unlink();
     });

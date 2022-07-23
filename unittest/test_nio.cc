@@ -63,7 +63,6 @@ TEST_F(TestNio, test_fifo)
     EXPECT_STREQ(iofr->rbuf()->buf(), str);
 
     unlink(fifo);
-
 }
 
 }   // namespace cppev

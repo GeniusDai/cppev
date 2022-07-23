@@ -1,5 +1,5 @@
-#include "cppev/common_utils.h"
 #include <gtest/gtest.h>
+#include "cppev/common_utils.h"
 
 namespace cppev
 {
