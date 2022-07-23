@@ -63,6 +63,7 @@ TEST_F(TestIpc, test_sem)
     std::mutex lock;
     std::condition_variable cv;
     bool ready = false;
+    int delay = 200;
 
     std::thread creater([&]() {
         std::unique_ptr<semaphore> psem;
@@ -72,7 +73,7 @@ TEST_F(TestIpc, test_sem)
             ready = true;
         }
         cv.notify_one();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
         ready = false;
         psem->release();
     });
@@ -85,13 +86,15 @@ TEST_F(TestIpc, test_sem)
                 cv.wait(lg, [&ready]() { return ready; });
             }
         }
+        int64_t begin = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count();
         semaphore sem(sem_name);
 
         for (int i = 0; i < sem_value; ++i)
         {
             EXPECT_TRUE(sem.acquire());
         }
-        
+
         EXPECT_FALSE(sem.try_acquire());
         sem.release();
         EXPECT_TRUE(sem.acquire());
@@ -99,7 +102,10 @@ TEST_F(TestIpc, test_sem)
         EXPECT_TRUE(sem.try_acquire());
 
         EXPECT_TRUE(sem.acquire());
+        int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count();
         EXPECT_FALSE(ready);
+        EXPECT_GT(end - begin, delay);
         sem.unlink();
     });
 
