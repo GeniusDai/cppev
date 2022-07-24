@@ -54,7 +54,6 @@ TEST_F(TestIpc, test_shm)
     thr_reader.join();
 }
 
-
 TEST_F(TestIpc, test_sem)
 {
     std::string sem_name{"/cppev_test_sem"};
@@ -113,6 +112,40 @@ TEST_F(TestIpc, test_sem)
 
     creater.join();
     user.join();
+}
+
+TEST_F(TestIpc, test_by_fork)
+{
+    shared_memory shm("/cppev_test", 128, true);
+    semaphore sem("/cppev_test", 1);
+    memcpy(shm.ptr(), "cppev", 5);
+
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        throw_system_error("fork error");
+    }
+
+    if (pid == 0)
+    {
+        shared_memory sp_shm("/cppev_test", 128, false);
+        semaphore sp_sem("/cppev_test");
+
+        EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
+        EXPECT_TRUE(sp_sem.acquire());
+        EXPECT_FALSE(sp_sem.try_acquire());
+
+        sp_shm.unlink();
+        sp_sem.unlink();
+        std::cout << "end" << std::endl;
+        _exit(0);
+    }
+    else
+    {
+        int ret = -1;
+        waitpid(pid, &ret, 0);
+        EXPECT_EQ(ret, 0);
+    }
 }
 
 }   // namespace cppev
