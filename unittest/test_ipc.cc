@@ -62,7 +62,7 @@ TEST_F(TestIpc, test_sem)
     std::mutex lock;
     std::condition_variable cv;
     bool ready = false;
-    int delay = 200;
+    int delay = 100;
     const int MAGIC = 666;
     int magic_num = MAGIC - 1;
 
@@ -119,6 +119,7 @@ TEST_F(TestIpc, test_by_fork)
     shared_memory shm("/cppev_test", 128, true);
     semaphore sem("/cppev_test", 1);
     memcpy(shm.ptr(), "cppev", 5);
+    sem.release();
 
     pid_t pid = fork();
     if (pid < 0)
@@ -133,6 +134,8 @@ TEST_F(TestIpc, test_by_fork)
 
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
         EXPECT_TRUE(sp_sem.acquire());
+        EXPECT_TRUE(sp_sem.try_acquire());
+        EXPECT_TRUE(sp_sem.acquire());
         EXPECT_FALSE(sp_sem.try_acquire());
 
         sp_shm.unlink();
@@ -142,6 +145,8 @@ TEST_F(TestIpc, test_by_fork)
     }
     else
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        sem.release();
         int ret = -1;
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
