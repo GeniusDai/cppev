@@ -44,10 +44,14 @@ typedef void (*fd_event_cb)(std::shared_ptr<nio> iop);
 typedef void (*ev_handler)(event_loop *);
 
 class event_loop
-: public uncopyable
 {
 public:
     explicit event_loop(void *data = nullptr, void *back = nullptr);
+
+    event_loop(const event_loop &) = delete;
+    event_loop &operator=(const event_loop &) = delete;
+    event_loop(event_loop &&) = delete;
+    event_loop &operator=(event_loop &&) = delete;
 
     virtual ~event_loop()
     {

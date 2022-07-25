@@ -17,6 +17,13 @@ public:
     : miss_(miss), cap_(cap)
     {}
 
+    lru_cache(const lru_cache &) = delete;
+    lru_cache &operator=(const lru_cache &) = delete;
+    lru_cache(lru_cache &&) = delete;
+    lru_cache &operator=(lru_cache &&) = delete;
+
+    ~lru_cache() = default;
+
     Value get(Key key);
 
     void put(Key key, Value value);

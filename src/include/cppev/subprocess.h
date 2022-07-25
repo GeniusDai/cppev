@@ -18,10 +18,16 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
 }   // namespace subprocess
 
 class popen
-: public uncopyable
 {
 public:
     popen(const char *cmd, char *const *envp=nullptr);
+
+    popen(const popen &) = delete;
+    popen &operator=(const popen &) = delete;
+    popen(popen &&) = delete;
+    popen &operator=(popen &&) = delete;
+
+    ~popen() = default;
 
     bool poll();
 

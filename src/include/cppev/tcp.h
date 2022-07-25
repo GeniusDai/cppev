@@ -53,8 +53,12 @@ struct tp_shared_data final
 public:
     tp_shared_data();
 
-    ~tp_shared_data()
-    {}
+    tp_shared_data(const tp_shared_data &) = delete;
+    tp_shared_data &operator=(const tp_shared_data &) = delete;
+    tp_shared_data(tp_shared_data &&) = delete;
+    tp_shared_data &operator=(tp_shared_data &&) = delete;
+
+    ~tp_shared_data() = default;
 
     // Used by acceptor when new connection arrived
     tcp_event_cb on_accept;
@@ -105,16 +109,20 @@ class iohandler
     friend class tcp_server;
     friend class tcp_client;
 public:
-    iohandler(tp_shared_data *data)
+    explicit iohandler(tp_shared_data *data)
     : iohandler(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
     {}
 
-    iohandler(std::shared_ptr<event_loop> evp)
+    explicit iohandler(std::shared_ptr<event_loop> evp)
     : evp_(evp)
     {}
 
-    virtual ~iohandler()
-    {}
+    iohandler(const iohandler &) = delete;
+    iohandler &operator=(const iohandler &) = delete;
+    iohandler(iohandler &&) =delete;
+    iohandler &operator=(iohandler &&) = delete;
+
+    virtual ~iohandler() = default;
 
     static void on_readable(std::shared_ptr<nio> iop);
 
@@ -133,16 +141,20 @@ class acceptor
 : public runnable
 {
 public:
-    acceptor(tp_shared_data *data)
+    explicit acceptor(tp_shared_data *data)
     : acceptor(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
     {}
 
-    acceptor(std::shared_ptr<event_loop> evp)
+    explicit acceptor(std::shared_ptr<event_loop> evp)
     : evp_(evp)
     {}
 
-    virtual ~acceptor()
-    {}
+    acceptor(const acceptor &) = delete;
+    acceptor &operator=(const acceptor &) = delete;
+    acceptor(acceptor &&) = delete;
+    acceptor &operator=(acceptor &&) = delete;
+
+    virtual ~acceptor() = default;
 
     // Specify listening socket's port and family
     void listen(int port, family f, const char *ip = nullptr);
@@ -170,10 +182,16 @@ private:
 };
 
 class tcp_server final
-: public uncopyable
 {
 public:
-    tcp_server(int thr_num);
+    explicit tcp_server(int thr_num);
+
+    tcp_server(const tcp_server &) = delete;
+    tcp_server &operator=(const tcp_server &) = delete;
+    tcp_server(tcp_server &&) = delete;
+    tcp_server &operator=(tcp_server &&) = delete;
+
+    ~tcp_server() = default;
 
     void listen(int port, family f, const char *ip = nullptr)
     {
@@ -222,11 +240,11 @@ class connector
 : public runnable
 {
 public:
-    connector(tp_shared_data *data)
+    explicit connector(tp_shared_data *data)
     : connector(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data), static_cast<void *>(this))))
     {}
 
-    connector(std::shared_ptr<event_loop> evp)
+    explicit connector(std::shared_ptr<event_loop> evp)
     : evp_(evp)
     {
         int pipefd[2];
@@ -238,8 +256,12 @@ public:
         wrp_ = std::shared_ptr<nstream>(new nstream(pipefd[1]));
     }
 
-    virtual ~connector()
-    {}
+    connector(const connector &) = delete;
+    connector &operator=(const connector &) = delete;
+    connector(connector &&) = delete;
+    connector &operator=(connector &&) = delete;
+
+    virtual ~connector() = default;
 
     // Add connection task (ip, port, family)
     void add(const std::string &ip, int port, family f, int t = 1);
@@ -276,10 +298,16 @@ private:
 };
 
 class tcp_client final
-: public uncopyable
 {
 public:
-    tcp_client(int thr_num, int cont_num = 1);
+    explicit tcp_client(int thr_num, int cont_num = 1);
+
+    tcp_client(const tcp_client &) = delete;
+    tcp_client &operator=(const tcp_client &) = delete;
+    tcp_client(tcp_client &&) = delete;
+    tcp_client &operator=(tcp_client &&) = delete;
+
+    ~tcp_client() = default;
 
     void add(const std::string &ip, int port, family f, int t = 1);
 

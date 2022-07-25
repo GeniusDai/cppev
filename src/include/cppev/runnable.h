@@ -11,7 +11,6 @@ namespace cppev
 {
 
 class runnable
-: public uncopyable
 {
 public:
     runnable()
@@ -19,8 +18,12 @@ public:
         fut_ = prom_.get_future();
     }
 
-    virtual ~runnable()
-    {}
+    runnable(const runnable &) = delete;
+    runnable &operator=(const runnable &) = delete;
+    runnable(runnable &&) = delete;
+    runnable &operator=(runnable &&) = delete;
+
+    virtual ~runnable() = default;
 
     // Derived class should override
     virtual void run_impl() = 0;

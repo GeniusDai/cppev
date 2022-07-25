@@ -14,7 +14,6 @@ namespace cppev
 #if _POSIX_C_SOURCE >= 200112L
 
 class spinlock final
-: public uncopyable
 {
 public:
     spinlock()
@@ -24,6 +23,11 @@ public:
             throw_system_error("pthread_spin_init error");
         }
     }
+
+    spinlock(const spinlock &&) = delete;
+    spinlock &operator=(const spinlock &&) = delete;
+    spinlock(spinlock &&) = delete;
+    spinlock &operator=(spinlock &&) = delete;
 
     ~spinlock()
     {
@@ -71,7 +75,6 @@ private:
 #endif  // spinlock
 
 class rwlock final
-: public uncopyable
 {
 public:
     rwlock()
@@ -81,6 +84,11 @@ public:
             throw_system_error("pthread_rwlock_init error");
         }
     }
+
+    rwlock(const rwlock &) = delete;
+    rwlock &operator=(const rwlock &) = delete;
+    rwlock(rwlock &&) = delete;
+    rwlock &operator=(rwlock &&) = delete;
 
     ~rwlock()
     {
@@ -149,14 +157,18 @@ private:
 };
 
 class rdlockguard final
-: public uncopyable
 {
 public:
-    rdlockguard(rwlock &lock)
+    explicit rdlockguard(rwlock &lock)
     {
         rwlock_ = &lock;
         rwlock_->rdlock();
     }
+
+    rdlockguard(const rdlockguard &) = delete;
+    rdlockguard &operator=(const rdlockguard &) = delete;
+    rdlockguard(rdlockguard &&) = delete;
+    rdlockguard &operator=(rdlockguard &&) = delete;
 
     ~rdlockguard()
     {
@@ -178,14 +190,18 @@ private:
 };
 
 class wrlockguard final
-: public uncopyable
 {
 public:
-    wrlockguard(rwlock &lock)
+    explicit wrlockguard(rwlock &lock)
     {
         rwlock_ = &lock;
         rwlock_->wrlock();
     }
+
+    wrlockguard(const wrlockguard &) = delete;
+    wrlockguard &operator=(const wrlockguard &) = delete;
+    wrlockguard(wrlockguard &&) = delete;
+    wrlockguard &operator=(wrlockguard &&) = delete;
 
     ~wrlockguard()
     {

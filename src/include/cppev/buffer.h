@@ -1,6 +1,7 @@
 #ifndef _buffer_h_6C0224787A17_
 #define _buffer_h_6C0224787A17_
 
+#include <utility>
 #include <memory>
 #include <cstring>
 #include "cppev/common_utils.h"
@@ -9,23 +10,9 @@ namespace cppev
 {
 
 class buffer final
-: public uncopyable
 {
     friend class nstream;
     friend class nsockudp;
-private:
-    // Capacity, heap size
-    int cap_;
-
-    // Start of the buffer, this byte is included
-    int start_;
-
-    // End of the buffer, this byte is not included
-    int offset_;
-
-    // Heap buffer
-    std::unique_ptr<char[]> buffer_;
-
 public:
     buffer()
     : buffer(1)
@@ -40,6 +27,30 @@ public:
             memset(buffer_.get(), 0, cap_);
         }
     }
+
+    buffer(const buffer &other) noexcept
+    {
+        copy(other);
+    }
+
+    buffer &operator=(const buffer &other) noexcept
+    {
+        copy(other);
+        return *this;
+    }
+
+    buffer(buffer &&other) noexcept
+    {
+        move(std::forward<buffer>(other));
+    }
+
+    buffer &operator=(buffer &&other) noexcept
+    {
+        move(std::forward<buffer>(other));
+        return *this;
+    }
+
+    ~buffer() = default;
 
     char &operator[](int i)
     {
@@ -124,6 +135,44 @@ public:
             clear();
         }
         return str;
+    }
+
+private:
+    // Capacity, heap size
+    int cap_;
+
+    // Start of the buffer, this byte is included
+    int start_;
+
+    // End of the buffer, this byte is not included
+    int offset_;
+
+    // Heap buffer
+    std::unique_ptr<char[]> buffer_;
+
+    // Copy function for copy contructor and copy assignment
+    void copy(const buffer &other) noexcept
+    {
+        if (&other != this)
+        {
+            this->cap_ = other.cap_;
+            this->start_ = other.start_;
+            this->offset_ = other.offset_;
+            this->buffer_ = std::unique_ptr<char[]>(new char[cap_]);
+            memcpy(this->buffer_.get(), other.buffer_.get(), cap_);
+        }
+    }
+
+    // Swap function for move constructor and move assignment
+    void move(buffer &&other) noexcept
+    {
+        this->cap_ = other.cap_;
+        this->start_ = other.start_;
+        this->offset_ = other.offset_;
+        this->buffer_ = std::move(other.buffer_);
+        other.cap_ = 0;
+        other.start_ = 0;
+        other.offset_ = 0;
     }
 };
 

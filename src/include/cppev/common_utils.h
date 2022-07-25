@@ -19,16 +19,6 @@ struct enum_hash
     }
 };
 
-class uncopyable
-{
-public:
-    uncopyable() {}
-    virtual ~uncopyable() noexcept {}
-private:
-    uncopyable &operator=(const uncopyable &) = delete;
-    uncopyable(const uncopyable&) = delete;
-};
-
 void throw_logic_error(const std::string &str);
 
 void throw_system_error(const std::string &str);

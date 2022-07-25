@@ -37,7 +37,6 @@ enum class family
 };
 
 class nio
-: public uncopyable
 {
 public:
     explicit nio(int fd)
@@ -47,6 +46,11 @@ public:
         rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
         wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
     }
+
+    nio(const nio &) = delete;
+    nio &operator=(const nio &) = delete;
+    nio(nio &&) = delete;
+    nio &operator=(nio &&) = delete;
 
     virtual ~nio()
     {

@@ -17,7 +17,6 @@ namespace cppev
 
 template<typename Runnable, typename... Args>
 class thread_pool
-: public uncopyable
 {
     static_assert(std::is_base_of<runnable, Runnable>::value, "template error");
 public:
@@ -30,8 +29,12 @@ public:
         }
     }
 
-    virtual ~thread_pool()
-    {}
+    thread_pool(const thread_pool &) = delete;
+    thread_pool &operator=(const thread_pool &) = delete;
+    thread_pool(thread_pool &&) = delete;
+    thread_pool &operator=(thread_pool &&) = delete;
+
+    virtual ~thread_pool() = default;
 
     // Run all threads
     void run()
