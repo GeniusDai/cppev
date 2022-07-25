@@ -110,11 +110,8 @@ class iohandler
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : iohandler(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
-    {}
-
-    explicit iohandler(std::shared_ptr<event_loop> evp)
-    : evp_(evp)
+    : evp_(std::shared_ptr<event_loop>(new event_loop(
+        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
     {}
 
     iohandler(const iohandler &) = delete;
@@ -128,6 +125,14 @@ public:
 
     static void on_writable(std::shared_ptr<nio> iop);
 
+    // Connect socket is writable, this cb will be executed immediately
+    // by one thread of the pool to do init jobs
+    static void on_acpt_writable(std::shared_ptr<nio> iop);
+
+    // Connect socket is writable, indicating connection is ready for check, this
+    // cb will be executed by one thread of the pool to do init jobs
+    static void on_cont_writable(std::shared_ptr<nio> iop);
+
     void run_impl() override
     {
         evp_->loop();
@@ -135,6 +140,9 @@ public:
 
 private:
     std::shared_ptr<event_loop> evp_;
+
+    // hosts that failed to connect
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
 class acceptor
@@ -142,11 +150,8 @@ class acceptor
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : acceptor(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data))))
-    {}
-
-    explicit acceptor(std::shared_ptr<event_loop> evp)
-    : evp_(evp)
+    : evp_(std::shared_ptr<event_loop>(new event_loop(
+        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
     {}
 
     acceptor(const acceptor &) = delete;
@@ -165,10 +170,6 @@ public:
     // Listening socket is readable, indicating new client arrives, this cb will be executed
     // by accept thread to accept connection and assign connection to thread pool
     static void on_acpt_readable(std::shared_ptr<nio> iop);
-
-    // Connect socket is writable, this cb will be executed immediately
-    // by one thread of the pool to do init jobs
-    static void on_conn_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
@@ -241,11 +242,8 @@ class connector
 {
 public:
     explicit connector(tp_shared_data *data)
-    : connector(std::shared_ptr<event_loop>(new event_loop(static_cast<void *>(data), static_cast<void *>(this))))
-    {}
-
-    explicit connector(std::shared_ptr<event_loop> evp)
-    : evp_(evp)
+    : evp_(std::shared_ptr<event_loop>(new event_loop(
+        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
     {
         int pipefd[2];
         if (pipe(pipefd) == -1)
@@ -272,10 +270,6 @@ public:
     // Pipe fd is readable, indicating new task added, this cb will be executed by
     // connect thread to init connection
     static void on_pipe_readable(std::shared_ptr<nio> iop);
-
-    // Connect socket is writable, indicating connection is ready for check, this
-    // cb will be executed by one thread of the pool to do init jobs
-    static void on_conn_writable(std::shared_ptr<nio> iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
