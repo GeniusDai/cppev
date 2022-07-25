@@ -10,6 +10,11 @@
 /*
  * Define Handler
  */
+cppev::tcp_event_cb on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+{
+    cppev::log::info << "connect succeed with fd " << iopt->fd() << cppev::log::endl;
+};
+
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "read message complete" << cppev::log::endl;
@@ -34,6 +39,7 @@ cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt
 int main()
 {
     cppev::tcp_client client(32, 3);
+    client.set_on_connect(on_connect);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
 
