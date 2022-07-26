@@ -12,11 +12,11 @@
 
 ### Concurrency
 
-* Two kinds of thread pool : task-queue / variadic-template
+* POSIX IPC   : shared_memory / semaphore
 
-* POSIX ipc : shared_memory / semaphore
+* Subprocess  : communicated with child process through pipe
 
-* Subprocess similiar to Python
+* Thread Pool : task-queue / variadic-template
 
 ### Massive Tcp Connection Handling
 
