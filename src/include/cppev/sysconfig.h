@@ -1,6 +1,8 @@
 #ifndef _sysconfig_h_6C0224787A17_
 #define _sysconfig_h_6C0224787A17_
 
+#define CPPEV_DEBUG
+
 namespace cppev
 {
 
