@@ -32,9 +32,8 @@ cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt
 /*
  * Start Client
  *
- * Use 32 io-threads to perform the handler, also implicitly there will one thread perform the
- * connect operation. Set handlers to the client, then use ipv4/ipv6 tcp sockets to perform the
- * pressure test.
+ * Use 32 io-threads to perform the handler and 5 connector-thread to perform the connect operation.
+ * Set handlers to the client, then use ipv4/ipv6/unix tcp sockets to perform the stress test.
  */
 int main()
 {

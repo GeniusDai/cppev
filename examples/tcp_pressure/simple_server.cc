@@ -33,10 +33,9 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
 /*
  * Start Server
  *
- * Use 32 io-threads to perform the handler, also implicitly there will one thread perform
- * the accept operation. Set handlers to the server, start to listen in port with ipv6 network
- * layer protocol.
-*/
+ * Use 32 io-threads to perform the handler and 3 acceptor-thread perform the accept operation.
+ * Set handlers to the server, start to listen in port with ipv4/ipv6/unix network layer protocol.
+ */
 int main()
 {
     cppev::tcp_server server(32);
