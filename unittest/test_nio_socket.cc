@@ -72,6 +72,26 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestNioSocket,
     )
 );
 
+TEST_F(TestNioSocket, test_tcp_connect)
+{
+    std::vector<std::tuple<family, int, std::string > > vec = {
+        { family::ipv4, 8884, "127.0.0.1" },
+        { family::ipv6, 8886, "::1"       },
+    };
+    for (int i = 0; i < vec.size(); ++i)
+    {
+        auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
+        listensock->listen(std::get<1>(vec[i]));
+
+        std::thread thr_cont([&]() {
+            auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
+            EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
+        });
+
+        thr_cont.join();
+    }
+}
+
 }   // namespace cppev
 
 int main(int argc, char **argv)

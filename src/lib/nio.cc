@@ -551,9 +551,12 @@ bool nsocktcp::connect(const char *ip, int port)
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0 &&
-        errno != EINPROGRESS && errno != EAGAIN)
+    if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
+        if (errno == EINPROGRESS)
+        {
+            return true;
+        }
         return false;
     }
     return true;
@@ -567,9 +570,12 @@ bool nsocktcp::connect_unix(const char *path)
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
-    if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0 &&
-        errno != EINPROGRESS && errno != EAGAIN)
+    if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0)
     {
+        if (errno == EINPROGRESS)
+        {
+            return true;
+        }
         return false;
     }
     return true;
