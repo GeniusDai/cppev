@@ -20,6 +20,16 @@ public:
 
     ~shared_memory();
 
+    template <typename SharedClass, typename... Args>
+    void placement_new(Args... args)
+    {
+        SharedClass *object = new (ptr_) SharedClass(args...);
+        if (object == nullptr)
+        {
+            throw_runtime_error("placement new error");
+        }
+    }
+
     void unlink();
 
     void *ptr()

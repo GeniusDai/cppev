@@ -37,6 +37,10 @@ shared_memory::shared_memory(const std::string &name, int size, bool create, mod
 
 shared_memory::~shared_memory()
 {
+    if (munmap(ptr_, size_) == -1)
+    {
+        throw_system_error("munmap error");
+    }
     close(fd_);
 }
 

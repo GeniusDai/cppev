@@ -1,5 +1,8 @@
+#include <mutex>
+#include <condition_variable>
 #include <gtest/gtest.h>
 #include "cppev/lock.h"
+#include "cppev/ipc.h"
 
 namespace cppev
 {
@@ -152,6 +155,74 @@ TEST_F(TestLock, test_spinlock)
 }
 
 #endif  // spinlock
+
+#ifdef __linux__
+
+struct TestStruct
+{
+    TestStruct(int var1, double var2) : var1(var1), var2(var2) {}
+
+    rwlock lock;
+
+    int var1;
+
+    double var2;
+};
+
+TEST_F(TestLock, test_shm_locks)
+{
+    shared_memory shm("/cppev_test_shm_lock", sizeof(TestStruct), true);
+    shm.placement_new<TestStruct, int, double>(0, 6.6);
+    TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+    EXPECT_TRUE(f_ptr->lock.try_wrlock());
+    f_ptr->lock.unlock();
+
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        throw_system_error("fork error");
+    }
+    if (pid == 0)
+    {
+        shared_memory sp_shm("/cppev_test_shm_lock", sizeof(TestStruct), false);
+        TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sp_shm.ptr());
+
+        c_ptr->lock.wrlock();
+        c_ptr->var1 = 1;
+
+        // waiting for father judge
+        while (c_ptr->var1 != 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        c_ptr->lock.unlock();
+
+        _exit(0);
+
+    }
+    else
+    {
+        // waiting for child wrlock
+        while (f_ptr->var1 != 1)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        EXPECT_FALSE(f_ptr->lock.try_rdlock());
+        EXPECT_FALSE(f_ptr->lock.try_wrlock());
+
+        f_ptr->var1 = 0;
+
+        int ret = -1;
+        waitpid(pid, &ret, 0);
+        EXPECT_EQ(ret, 0);
+
+        shm.unlink();
+    }
+}
+
+#endif  // __linux__
 
 }   // namespace cppev
 

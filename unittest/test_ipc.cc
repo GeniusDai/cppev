@@ -133,6 +133,7 @@ TEST_F(TestIpc, test_by_fork)
         semaphore sp_sem("/cppev_test");
 
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
+        std::cout << "shared memory ptr : " << shm.ptr() << std::endl;
         EXPECT_TRUE(sp_sem.acquire());
         EXPECT_TRUE(sp_sem.try_acquire());
         EXPECT_TRUE(sp_sem.acquire());
@@ -140,7 +141,7 @@ TEST_F(TestIpc, test_by_fork)
 
         sp_shm.unlink();
         sp_sem.unlink();
-        std::cout << "end" << std::endl;
+        std::cout << "end of child process" << std::endl;
         _exit(0);
     }
     else

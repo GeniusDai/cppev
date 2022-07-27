@@ -3,10 +3,6 @@
 
 #include "cppev/common_utils.h"
 #include <pthread.h>
-#include <exception>
-#include <unordered_set>
-#include <mutex>
-#include <condition_variable>
 
 namespace cppev
 {
@@ -79,7 +75,20 @@ class rwlock final
 public:
     rwlock()
     {
+#ifdef __linux__
+        pthread_rwlockattr_t attr;
+        if (pthread_rwlockattr_init(&attr) != 0)
+        {
+            throw_system_error("pthread_rwlockattr_init error");
+        }
+        if (pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0)
+        {
+            throw_system_error("pthread_rwlockattr_setpshared error");
+        }
+        if (pthread_rwlock_init(&lock_, &attr) != 0)
+#else
         if (pthread_rwlock_init(&lock_, nullptr) != 0)
+#endif  // __linux__
         {
             throw_system_error("pthread_rwlock_init error");
         }
