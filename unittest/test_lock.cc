@@ -156,9 +156,7 @@ TEST_F(TestLock, test_spinlock)
 
 #endif  // spinlock
 
-#if defined(__linux__) || defined(__APPLE__)
-
-TEST_F(TestLock, test_shm_locks)
+TEST_F(TestLock, test_shm_rwlock)
 {
     struct TestStruct
     {
@@ -214,13 +212,9 @@ TEST_F(TestLock, test_shm_locks)
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
 
-
-
         shm.unlink();
     }
 }
-
-#endif  // __linux__
 
 }   // namespace cppev
 
