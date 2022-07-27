@@ -70,12 +70,50 @@ private:
 
 #endif  // spinlock
 
+class lock final
+{
+public:
+    lock()
+    {
+
+    }
+
+    lock(const lock &) = delete;
+    lock &operator=(const lock &) = delete;
+    lock(lock &&) = delete;
+    lock &operator=(lock &&) = delete;
+
+    ~lock()
+    {
+
+    }
+};
+
+class cond final
+{
+public:
+    cond()
+    {
+
+    }
+
+    cond(const cond &) = delete;
+    cond &operator=(const cond &) = delete;
+    cond(cond &&) = delete;
+    cond &operator=(cond &&) = delete;
+
+    ~cond()
+    {
+
+    }
+};
+
+
 class rwlock final
 {
 public:
     rwlock()
     {
-#ifdef __linux__
         pthread_rwlockattr_t attr;
         if (pthread_rwlockattr_init(&attr) != 0)
         {
@@ -86,9 +124,6 @@ public:
             throw_system_error("pthread_rwlockattr_setpshared error");
         }
         if (pthread_rwlock_init(&lock_, &attr) != 0)
-#else
-        if (pthread_rwlock_init(&lock_, nullptr) != 0)
-#endif  // __linux__
         {
             throw_system_error("pthread_rwlock_init error");
         }

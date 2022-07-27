@@ -116,8 +116,9 @@ TEST_F(TestIpc, test_sem)
 
 TEST_F(TestIpc, test_by_fork)
 {
-    shared_memory shm("/cppev_test", 128, true);
-    semaphore sem("/cppev_test", 1);
+    std::string name{"/cppev_test_name"};
+    shared_memory shm(name, 128, true);
+    semaphore sem(name, 1);
     memcpy(shm.ptr(), "cppev", 5);
     sem.release();
 
@@ -129,16 +130,21 @@ TEST_F(TestIpc, test_by_fork)
 
     if (pid == 0)
     {
-        shared_memory sp_shm("/cppev_test", 128, false);
-        semaphore sp_sem("/cppev_test");
+        shared_memory sp_shm(name, 128, false);
+        semaphore sp_sem(name);
 
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
         std::cout << "shared memory ptr : " << shm.ptr() << std::endl;
+#if defined(__linux__)
+        EXPECT_EQ(sp_sem.getvalue(), 2);
+#endif
         EXPECT_TRUE(sp_sem.acquire());
         EXPECT_TRUE(sp_sem.try_acquire());
         EXPECT_TRUE(sp_sem.acquire());
         EXPECT_FALSE(sp_sem.try_acquire());
-
+#if defined(__linux__)
+        EXPECT_EQ(sp_sem.getvalue(), 0);
+#endif
         sp_shm.unlink();
         sp_sem.unlink();
         std::cout << "end of child process" << std::endl;

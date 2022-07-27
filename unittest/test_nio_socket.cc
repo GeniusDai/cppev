@@ -78,7 +78,7 @@ TEST_F(TestNioSocket, test_tcp_connect)
         { family::ipv4, 8884, "127.0.0.1" },
         { family::ipv6, 8886, "::1"       },
     };
-    for (int i = 0; i < vec.size(); ++i)
+    for (size_t i = 0; i < vec.size(); ++i)
     {
         auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
         listensock->listen(std::get<1>(vec[i]));

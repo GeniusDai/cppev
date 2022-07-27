@@ -79,14 +79,6 @@ semaphore::~semaphore()
     }
 }
 
-void semaphore::unlink()
-{
-    if (sem_unlink(name_.c_str()) == -1)
-    {
-        throw_system_error("sem_unlink error");
-    }
-}
-
 bool semaphore::acquire(int timeout)
 {
     int ret = 0;
@@ -119,6 +111,26 @@ void semaphore::release()
     if (sem_post(sem_) == -1)
     {
         throw_system_error("sem_post error");
+    }
+}
+
+#if defined(__linux__)
+int semaphore::getvalue()
+{
+    int ret = -1;
+    if (sem_getvalue(sem_, &ret) == -1)
+    {
+        throw_system_error("sem_getvalue error");
+    }
+    return ret;
+}
+#endif
+
+void semaphore::unlink()
+{
+    if (sem_unlink(name_.c_str()) == -1)
+    {
+        throw_system_error("sem_unlink error");
     }
 }
 

@@ -156,21 +156,18 @@ TEST_F(TestLock, test_spinlock)
 
 #endif  // spinlock
 
-#ifdef __linux__
-
-struct TestStruct
-{
-    TestStruct(int var1, double var2) : var1(var1), var2(var2) {}
-
-    rwlock lock;
-
-    int var1;
-
-    double var2;
-};
+#if defined(__linux__) || defined(__APPLE__)
 
 TEST_F(TestLock, test_shm_locks)
 {
+    struct TestStruct
+    {
+        TestStruct(int var1, double var2) : var1(var1), var2(var2) {}
+        rwlock lock;
+        int var1;
+        double var2;
+    };
+
     shared_memory shm("/cppev_test_shm_lock", sizeof(TestStruct), true);
     shm.placement_new<TestStruct, int, double>(0, 6.6);
     TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
@@ -187,7 +184,7 @@ TEST_F(TestLock, test_shm_locks)
         shared_memory sp_shm("/cppev_test_shm_lock", sizeof(TestStruct), false);
         TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sp_shm.ptr());
 
-        c_ptr->lock.wrlock();
+        EXPECT_TRUE(c_ptr->lock.try_wrlock());
         c_ptr->var1 = 1;
 
         // waiting for father judge
@@ -199,7 +196,6 @@ TEST_F(TestLock, test_shm_locks)
         c_ptr->lock.unlock();
 
         _exit(0);
-
     }
     else
     {
@@ -217,6 +213,8 @@ TEST_F(TestLock, test_shm_locks)
         int ret = -1;
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
+
+
 
         shm.unlink();
     }

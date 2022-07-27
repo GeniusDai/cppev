@@ -64,9 +64,10 @@ public:
 
     ~semaphore();
 
-    void unlink();
-
-    bool acquire(int timeout = -1);
+    bool acquire()
+    {
+        return acquire(-1);
+    }
 
     bool try_acquire()
     {
@@ -75,7 +76,15 @@ public:
 
     void release();
 
+#if defined(__linux__)
+    int getvalue();
+#endif
+
+    void unlink();
+
 private:
+    bool acquire(int timeout);
+
     std::string name_;
 
     sem_t *sem_;
