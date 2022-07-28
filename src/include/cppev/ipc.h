@@ -8,7 +8,7 @@
 namespace cppev
 {
 
-class shared_memory
+class shared_memory final
 {
 public:
     shared_memory(const std::string &name, int size, bool create, mode_t mode = 0600);
@@ -57,7 +57,7 @@ private:
     void *ptr_;
 };
 
-class semaphore
+class semaphore final
 {
 public:
     semaphore(const std::string &name, int value = -1, mode_t mode = 0600);

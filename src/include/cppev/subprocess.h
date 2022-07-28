@@ -17,7 +17,7 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
 
 }   // namespace subprocess
 
-class popen
+class popen final
 {
 public:
     popen(const char *cmd, char *const *envp=nullptr);

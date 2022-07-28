@@ -108,8 +108,7 @@ public:
     : stop_(false)
     {}
 
-    virtual ~tp_task_queue()
-    {}
+    virtual ~tp_task_queue() = default;
 
     void add_task(std::shared_ptr<tp_task> t)
     {
@@ -192,6 +191,8 @@ public:
     thread_pool_queue(int thr_num) : tp_task_queue(),
         thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
     {}
+
+    ~thread_pool_queue() = default;
 
     void stop()
     {
