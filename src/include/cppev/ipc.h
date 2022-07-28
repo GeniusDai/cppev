@@ -21,13 +21,20 @@ public:
     ~shared_memory();
 
     template <typename SharedClass, typename... Args>
-    void placement_new(Args... args)
+    void constructor(Args... args)
     {
         SharedClass *object = new (ptr_) SharedClass(args...);
         if (object == nullptr)
         {
             throw_runtime_error("placement new error");
         }
+    }
+
+    template <typename SharedClass>
+    void destructor()
+    {
+        SharedClass *object = reinterpret_cast<SharedClass *>(ptr_);
+        object->~SharedClass();
     }
 
     void unlink();

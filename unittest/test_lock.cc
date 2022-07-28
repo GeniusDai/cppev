@@ -160,14 +160,21 @@ TEST_F(TestLock, test_shm_rwlock)
 {
     struct TestStruct
     {
-        TestStruct(int var1, double var2) : var1(var1), var2(var2) {}
+        TestStruct(int var1, double var2) : var1(var1), var2(var2)
+        {
+            std::cout << "constructor" << std::endl;
+        }
+        ~TestStruct()
+        {
+            std::cout << "destructor" << std::endl;
+        }
         rwlock lock;
         int var1;
         double var2;
     };
 
     shared_memory shm("/cppev_test_shm_lock", sizeof(TestStruct), true);
-    shm.placement_new<TestStruct, int, double>(0, 6.6);
+    shm.constructor<TestStruct, int, double>(0, 6.6);
     TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
     EXPECT_TRUE(f_ptr->lock.try_wrlock());
     f_ptr->lock.unlock();
@@ -212,6 +219,7 @@ TEST_F(TestLock, test_shm_rwlock)
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
 
+        shm.destructor<TestStruct>();
         shm.unlink();
     }
 }
