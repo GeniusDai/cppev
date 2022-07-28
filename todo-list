@@ -1,8 +1,10 @@
 P1:
     Support retry for connect in reactor
-    Timer
+    Support Timer
+    Unix domain socket auto delete
 
 P2:
     Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
+    Unittest for tcp stress test
