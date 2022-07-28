@@ -8,27 +8,28 @@ namespace cppev
 {
 
 shared_memory::shared_memory(const std::string &name, int size, bool create, mode_t mode)
-: name_(name), size_(size)
+: name_(name), size_(size), ptr_(nullptr)
 {
     int flag = O_RDWR;
     if (create)
     {
         flag |= O_CREAT | O_EXCL;
     }
-    fd_ = shm_open(name_.c_str(), flag, mode);
-    if (fd_ < 0)
+    int fd = shm_open(name_.c_str(), flag, mode);
+    if (fd < 0)
     {
         throw_system_error("shm_open error");
     }
     if (create)
     {
-        ftruncate(fd_, size_);
+        ftruncate(fd, size_);
     }
-    ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
+    ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (ptr_ == MAP_FAILED)
     {
         throw_system_error("mmap error");
     }
+    close(fd);
     if (create)
     {
         memset(ptr_, 0, size_);
@@ -41,7 +42,6 @@ shared_memory::~shared_memory()
     {
         throw_system_error("munmap error");
     }
-    close(fd_);
 }
 
 void shared_memory::unlink()

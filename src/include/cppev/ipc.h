@@ -54,8 +54,6 @@ private:
 
     int size_;
 
-    int fd_;
-
     void *ptr_;
 };
 
