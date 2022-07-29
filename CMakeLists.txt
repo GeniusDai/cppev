@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project("libcppev")
 
-set(CMAKE_CXX_FLAGS "-O0 -Wall -g -std=c++11 -pthread")
+set(CMAKE_CXX_FLAGS "-O0 -Wall -g -std=c++17 -pthread")
 
 include_directories("src/include")
 

@@ -43,7 +43,7 @@ Five callbacks could be registered:
 * Prerequirement
 
         OS           : Linux / macOS.
-        Compiler     : g++ support c++11.
+        Compiler     : g++ support c++17.
         Dependency   : googletest / cmake / make.
 
 * Build and Run Test
