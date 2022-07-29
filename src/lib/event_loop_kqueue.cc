@@ -116,7 +116,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 
         // Register event to kqueue
         struct kevent ev;
-        //     &kev, ident,     filter,                  flags,  fflags, data, udata);
+        //     &kev, ident,     filter,                  flags,             fflags, data, udata);
         EV_SET(&ev,  iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0,      0,    nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
         {
