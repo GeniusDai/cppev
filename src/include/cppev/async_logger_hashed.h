@@ -49,7 +49,7 @@ private:
 
     int level_;
 
-    rwlock lock_;
+    pshared_rwlock lock_;
 
     bool stop_;
 

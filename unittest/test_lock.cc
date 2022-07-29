@@ -33,7 +33,7 @@ protected:
 
 TEST_F(TestLock, test_rwlock_rdlocked)
 {
-    rwlock rwlck;
+    pshared_rwlock rwlck;
     auto func = [this, &rwlck]() -> void
     {
         std::unique_lock<std::mutex> lock(this->lock_);
@@ -75,7 +75,7 @@ TEST_F(TestLock, test_rwlock_rdlocked)
 
 TEST_F(TestLock, test_rwlock_wrlocked)
 {
-    rwlock rwlck;
+    pshared_rwlock rwlck;
     auto func = [this, &rwlck]() -> void
     {
         std::unique_lock<std::mutex> lock(this->lock_);
@@ -168,7 +168,7 @@ TEST_F(TestLock, test_shm_rwlock)
         {
             std::cout << "destructor" << std::endl;
         }
-        rwlock lock;
+        pshared_rwlock lock;
         int var1;
         double var2;
     };

@@ -70,49 +70,57 @@ private:
 
 #endif  // spinlock
 
-class lock final
+class pshared_lock final
 {
 public:
-    lock()
+    pshared_lock()
     {
-
+        pthread_mutexattr_t attr;
+        if (pthread_mutexattr_init(&attr) != 0)
+        {
+            throw_system_error("pthread_mutexattr_init error");
+        }
+        if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0)
+        {
+            throw_system_error("pthread_mutexattr_setpshared error");
+        }
     }
 
-    lock(const lock &) = delete;
-    lock &operator=(const lock &) = delete;
-    lock(lock &&) = delete;
-    lock &operator=(lock &&) = delete;
+    pshared_lock(const pshared_lock &) = delete;
+    pshared_lock &operator=(const pshared_lock &) = delete;
+    pshared_lock(pshared_lock &&) = delete;
+    pshared_lock &operator=(pshared_lock &&) = delete;
 
-    ~lock()
+    ~pshared_lock()
     {
 
     }
 };
 
-class cond final
+class pshared_cond final
 {
 public:
-    cond()
+    pshared_cond()
     {
 
     }
 
-    cond(const cond &) = delete;
-    cond &operator=(const cond &) = delete;
-    cond(cond &&) = delete;
-    cond &operator=(cond &&) = delete;
+    pshared_cond(const pshared_cond &) = delete;
+    pshared_cond &operator=(const pshared_cond &) = delete;
+    pshared_cond(pshared_cond &&) = delete;
+    pshared_cond &operator=(pshared_cond &&) = delete;
 
-    ~cond()
+    ~pshared_cond()
     {
 
     }
 };
 
 
-class rwlock final
+class pshared_rwlock final
 {
 public:
-    rwlock()
+    pshared_rwlock()
     {
         pthread_rwlockattr_t attr;
         if (pthread_rwlockattr_init(&attr) != 0)
@@ -129,12 +137,12 @@ public:
         }
     }
 
-    rwlock(const rwlock &) = delete;
-    rwlock &operator=(const rwlock &) = delete;
-    rwlock(rwlock &&) = delete;
-    rwlock &operator=(rwlock &&) = delete;
+    pshared_rwlock(const pshared_rwlock &) = delete;
+    pshared_rwlock &operator=(const pshared_rwlock &) = delete;
+    pshared_rwlock(pshared_rwlock &&) = delete;
+    pshared_rwlock &operator=(pshared_rwlock &&) = delete;
 
-    ~rwlock()
+    ~pshared_rwlock()
     {
         if (pthread_rwlock_destroy(&lock_) != 0)
         {
@@ -203,7 +211,7 @@ private:
 class rdlockguard final
 {
 public:
-    explicit rdlockguard(rwlock &lock)
+    explicit rdlockguard(pshared_rwlock &lock)
     {
         rwlock_ = &lock;
         rwlock_->rdlock();
@@ -230,13 +238,13 @@ public:
     }
 
 private:
-    rwlock *rwlock_;
+    pshared_rwlock *rwlock_;
 };
 
 class wrlockguard final
 {
 public:
-    explicit wrlockguard(rwlock &lock)
+    explicit wrlockguard(pshared_rwlock &lock)
     {
         rwlock_ = &lock;
         rwlock_->wrlock();
@@ -263,7 +271,7 @@ public:
     }
 
 private:
-    rwlock *rwlock_;
+    pshared_rwlock *rwlock_;
 };
 
 }   // namespace cppev

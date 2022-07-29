@@ -20,7 +20,7 @@ class thread_pool
 {
     static_assert(std::is_base_of<runnable, Runnable>::value, "template error");
 public:
-    thread_pool(int thr_num, Args... args)
+    thread_pool(int thr_num, Args&&... args)
     {
         for (int i = 0; i < thr_num; ++i)
         {
