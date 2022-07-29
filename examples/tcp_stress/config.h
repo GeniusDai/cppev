@@ -20,6 +20,6 @@ const int CONTOR_NUM = 3;
 
 const int   IPV4_PORT = 8884;
 const int   IPV6_PORT = 8886;
-const char* UNIX_PATH = "/tmp/cppev_test.sock";
+const char* UNIX_PATH = "/tmp/cppev_test_6C0224787A17.sock";
 
 #endif  // config.h

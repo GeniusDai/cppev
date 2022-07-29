@@ -4,6 +4,7 @@
  * The simple server just send a message to the client, then echo any message back to the client.
  */
 
+#include <cstdlib>
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
 #include "config.h"
@@ -46,6 +47,7 @@ int main()
     // Create listening thread
     server.listen(     IPV4_PORT, cppev::family::ipv4);
     server.listen(     IPV6_PORT, cppev::family::ipv6);
+    system(std::string("rm -f ").append(UNIX_PATH).c_str());
     server.listen_unix(UNIX_PATH);
 
     server.run();
