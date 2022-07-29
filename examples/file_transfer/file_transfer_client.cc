@@ -1,12 +1,10 @@
+#include <thread>
+#include <fcntl.h>
 #include "cppev/async_logger.h"
 #include "cppev/nio.h"
 #include "cppev/event_loop.h"
-#include <fcntl.h>
-#include <thread>
-
-const int port = 8891;
-
-const char *file = "/tmp/test.file";
+#include "cppev/common_utils.h"
+#include "config.h"
 
 cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
 {
@@ -16,17 +14,14 @@ cppev::fd_event_cb rd_callback = [](std::shared_ptr<cppev::nio> iop) -> void
     {
         cppev::log::info << "receive file complete" << cppev::log::endl;
         iop->evlp()->fd_remove(iop, true);
-        return;
     }
-
     iopt->read_all();
-    std::string file_copy = std::string(file) + ".copy";
-    int fd = open(file_copy.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+    std::string file_copy = std::string(file) + "." + std::to_string(cppev::utils::gettid()) + ".copy";
+    int fd = open(file_copy.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
     if (fd < 0)
     {
         cppev::throw_system_error("open error");
     }
-
     cppev::nstream ios(fd);
     ios.wbuf()->put(iopt->rbuf()->get());
     ios.write_all();
@@ -61,6 +56,14 @@ void request_file()
 
 int main(int argc, char **argv)
 {
-    request_file();
+    std::vector<std::thread> thrs;
+    for (int i = 0; i < client_concurrency_num; ++i)
+    {
+        thrs.emplace_back(request_file);
+    }
+    for (int i = 0; i < client_concurrency_num; ++i)
+    {
+        thrs[i].join();
+    }
     return 0;
 }
