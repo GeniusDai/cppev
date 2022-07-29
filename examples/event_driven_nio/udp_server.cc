@@ -1,12 +1,7 @@
+#include <cstdio>
 #include "cppev/nio.h"
 #include "cppev/event_loop.h"
-#include <cstdio>
-
-int udp_ipv4_port = 8889;
-
-int udp_ipv6_port = 8890;
-
-const char *udp_unix_path = "./udp_unix";
+#include "config.h"
 
 cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {

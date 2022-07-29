@@ -1,11 +1,6 @@
 #include "cppev/event_loop.h"
 #include "cppev/nio.h"
-
-int tcp_ipv4_port = 8889;
-
-int tcp_ipv6_port = 9000;
-
-const char *tcp_unix_path = "./tcp_unix";
+#include "config.h"
 
 const char *str = "Cppev is a C++ event driven library";
 
@@ -28,19 +23,20 @@ void connect_to_servers()
     auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
     auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
+    auto tcp_ipv4_to_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
 
     tcp_ipv4->connect("127.0.0.1", tcp_ipv4_port);
     tcp_ipv6->connect("::1", tcp_ipv6_port);
     tcp_unix->connect_unix(tcp_unix_path);
+    tcp_ipv4_to_ipv6->connect("127.0.0.1", tcp_ipv6_port);
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_writable, client_cb);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_writable, client_cb);
     evlp.fd_register(tcp_unix, cppev::fd_event::fd_writable, client_cb);
-
-    // Cross socket family
-    auto tcp_ipv4_to_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
-    tcp_ipv4_to_ipv6->connect("127.0.0.1", tcp_ipv6_port);
     evlp.fd_register(tcp_ipv4_to_ipv6, cppev::fd_event::fd_writable, client_cb);
+
+    // Connection is writable when second tcp shake hand is ok
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
 
     evlp.loop_once();
 }

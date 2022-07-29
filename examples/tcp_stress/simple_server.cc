@@ -47,7 +47,7 @@ int main()
     // Create listening thread
     server.listen(     IPV4_PORT, cppev::family::ipv4);
     server.listen(     IPV6_PORT, cppev::family::ipv6);
-    system(std::string("rm -f ").append(UNIX_PATH).c_str());
+    remove(UNIX_PATH);
     server.listen_unix(UNIX_PATH);
 
     server.run();

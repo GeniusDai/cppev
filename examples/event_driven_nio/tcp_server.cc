@@ -1,18 +1,13 @@
+#include <vector>
 #include "cppev/event_loop.h"
 #include "cppev/nio.h"
-#include <vector>
-
-int tcp_ipv4_port = 8889;
-
-int tcp_ipv6_port = 8890;
-
-const char *tcp_unix_path = "./tcp_unix";
+#include "config.h"
 
 cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
-    cppev::log::info << "tcp --> fd " << iops->fd() << " --> ";
+    cppev::log::info << "tcp connection readable --> fd " << iops->fd() << " --> ";
     if (iops->sockfamily() == cppev::family::local)
     {
         cppev::log::info << "[\tunixdomain\t] ";
@@ -31,9 +26,9 @@ cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 cppev::fd_event_cb listen_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
-    std::vector<std::shared_ptr<cppev::nsocktcp> > vts = iopt->accept(1);
-    std::shared_ptr<cppev::nio> conn = std::dynamic_pointer_cast<cppev::nio>(vts[0]);
-    iop->evlp()->fd_register(conn, cppev::fd_event::fd_readable, conn_cb, true);
+    std::shared_ptr<cppev::nsocktcp> conn = iopt->accept(1)[0];
+    iop->evlp()->fd_register(std::dynamic_pointer_cast<cppev::nio>(conn),
+        cppev::fd_event::fd_readable, conn_cb, true);
 };
 
 void start_server_loop()
