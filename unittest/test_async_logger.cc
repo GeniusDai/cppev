@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"
+#include "cppev/subprocess.h"
 
 namespace cppev
 {
@@ -89,15 +90,18 @@ TEST_F(TestAsyncLogger, test_output)
         thrs[i].join();
     }
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
     close(fd);
     dup2(save_stdout, STDOUT_FILENO);
     dup2(save_stderr, STDERR_FILENO);
 
-    std::string cmd = "grep ^- ";
-    cmd += file;
-    cmd += " | wc -l";
+    std::string cmd = std::string("/usr/bin/wc -l ") + file;
+    auto ret = subprocess::exec_cmd(cmd);
 
-    EXPECT_EQ(0, system(cmd.c_str()));
+    EXPECT_EQ(std::get<0>(ret), 0);
+    EXPECT_NE(std::string::npos, std::get<1>(ret).find(std::to_string(loop_num * thr_num * 2 * 2)));
+    EXPECT_EQ(std::get<2>(ret), "");
 }
 
 }   // namespace cppev
