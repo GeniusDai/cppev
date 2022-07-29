@@ -1,4 +1,4 @@
-# Tcp Pressure
+# Tcp Stress
 
 Build a simple server and client step by step, while the client performs a stress testing to the server.
 

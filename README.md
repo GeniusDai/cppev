@@ -12,11 +12,11 @@
 
 ### Concurrency
 
-* POSIX IPC   : shared_memory / semaphore
+* Support thread pool with variadic-template and task-queue.
 
-* Subprocess  : communicated with child process through pipe
+* Support posix ipc shared_memory and semaphore.
 
-* Thread Pool : task-queue / variadic-template
+* Support executing command by subprocess and communicate through pipe.
 
 ### Massive Tcp Connection Handling
 
@@ -38,27 +38,19 @@ Five callbacks could be registered:
 
 * on_closed: socket closed by opposite host.
 
-# Prerequirement
+# Usage
 
-* Unix: Linux / macOS.
+* Prerequirement
 
-* g++: Support C++11.
+        OS           : Linux / macOS.
+        Compiler     : g++ support c++11.
+        Dependency   : googletest / cmake / make.
 
-* others: googletest / cmake / make.
+* Build and Run Test
 
-# Build and Run
-
-    $ mkdir build && cd build
-    $ cmake .. && make
-    $ cd unittest && ctest
-
-# Examples
-
-* Tcp Pressure : Perform tcp/ip stress testing.
-
-* Event Driven Nio : Demo how to use event loop for the nio classes.
-
-* File Transfer : Transfer file with large size by tcp/ip.
+        $ mkdir build && cd build
+        $ cmake .. && make
+        $ cd unittest && ctest
 
 # Issues and Maintenance
 
