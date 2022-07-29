@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include "cppev/nio.h"
+#include "cppev/event_loop.h"
 
 namespace cppev
 {
@@ -66,24 +67,47 @@ TEST_F(TestNio, test_fifo)
     unlink(fifo);
 }
 
+
 TEST_F(TestNio, test_tcp_connect)
 {
     std::vector<std::tuple<family, int, std::string > > vec = {
         { family::ipv4, 8884, "127.0.0.1" },
         { family::ipv6, 8886, "::1"       },
     };
+
+    int acpt_count = 0;
+    int cont_count = 0;
+    event_loop acpt_evlp(&acpt_count);
+    event_loop cont_evlp(&cont_count);
+
+    fd_event_cb cb = [](std::shared_ptr<nio> iop) -> void {
+        (*reinterpret_cast<int *>(iop->evlp()->data()))++;
+    };
+
     for (size_t i = 0; i < vec.size(); ++i)
     {
         auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
         listensock->listen(std::get<1>(vec[i]));
+        acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock), 
+            fd_event::fd_readable, cb);
 
         std::thread thr_cont([&]() {
             auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
             EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
+            cont_evlp.fd_register(std::dynamic_pointer_cast<nio>(connsock), 
+                fd_event::fd_writable, cb);
         });
-
         thr_cont.join();
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    cont_evlp.loop_once();
+    std::cout << "connecting loop finish" << std::endl;
+    acpt_evlp.loop_once();
+    std::cout << "listening loop finish" << std::endl;
+    EXPECT_EQ(acpt_count, 2);
+    EXPECT_EQ(cont_count, 2);
 }
 
 
