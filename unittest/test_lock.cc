@@ -160,7 +160,8 @@ TEST_F(TestLock, test_shm_rwlock)
 {
     struct TestStruct
     {
-        TestStruct(int var1, double var2) : var1(var1), var2(var2)
+        TestStruct(int var1, double var2, std::string str)
+        : var1(var1), var2(var2), str(str)
         {
             std::cout << "constructor" << std::endl;
         }
@@ -171,12 +172,13 @@ TEST_F(TestLock, test_shm_rwlock)
         pshared_rwlock lock;
         int var1;
         double var2;
+        std::string str;
     };
 
     std::string name = "/cppev_test_shm_lock";
 
     shared_memory shm(name, sizeof(TestStruct), true);
-    shm.constructor<TestStruct, int, double>(0, 6.6);
+    shm.constructor<TestStruct, int, double, std::string>(0, 6.6, std::string("hi"));
     TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
     EXPECT_TRUE(f_ptr->lock.try_wrlock());
     f_ptr->lock.unlock();
@@ -188,17 +190,14 @@ TEST_F(TestLock, test_shm_rwlock)
     }
     if (pid == 0)
     {
-        shared_memory sp_shm(name, sizeof(TestStruct), false);
-        TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sp_shm.ptr());
+        shared_memory sub_shm(name, sizeof(TestStruct), false);
+        TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sub_shm.ptr());
 
         EXPECT_TRUE(c_ptr->lock.try_wrlock());
         c_ptr->var1 = 1;
 
-        // waiting for father judge
-        while (c_ptr->var1 != 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        // waiting for father assert
+        while (c_ptr->var1 != 0);
 
         c_ptr->lock.unlock();
 
@@ -207,10 +206,7 @@ TEST_F(TestLock, test_shm_rwlock)
     else
     {
         // waiting for child wrlock
-        while (f_ptr->var1 != 1)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        while (f_ptr->var1 != 1);
 
         EXPECT_FALSE(f_ptr->lock.try_rdlock());
         EXPECT_FALSE(f_ptr->lock.try_wrlock());
@@ -252,13 +248,16 @@ TEST_F(TestLock, test_shm_lock_cond)
     else if (pid == 0)
     {
         shared_memory sub_shm(name, sizeof(TestStruct), false);
+        TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sub_shm.ptr());
+        EXPECT_NE(shm.ptr(), sub_shm.ptr());
+        EXPECT_NE(f_ptr, c_ptr);
         for (int i = 0; i < num; ++i)
         {
-            while (!f_ptr->ready) ;
-            std::unique_lock<pshared_lock> lock(f_ptr->lock);
-            f_ptr->var = i;
-            f_ptr->ready = false;
-            f_ptr->cond.notify_one();
+            while (!c_ptr->ready);  // fence
+            std::unique_lock<pshared_lock> lock(c_ptr->lock);
+            c_ptr->var = i;
+            c_ptr->ready = false;
+            c_ptr->cond.notify_one();
         }
         _exit(0);
     }
