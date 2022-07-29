@@ -1,11 +1,19 @@
 #ifndef _lock_h_6C0224787A17_
 #define _lock_h_6C0224787A17_
 
-#include "cppev/common_utils.h"
+#include <mutex>
 #include <pthread.h>
+#include "cppev/common_utils.h"
 
 namespace cppev
 {
+
+class spinlock;
+class pshared_lock;
+class pshared_cond;
+class pshared_rwlock;
+class rdlockguard;
+class wrlockguard;
 
 #if _POSIX_C_SOURCE >= 200112L
 
@@ -72,6 +80,7 @@ private:
 
 class pshared_lock final
 {
+    friend class pshared_cond;
 public:
     pshared_lock()
     {
@@ -84,6 +93,14 @@ public:
         {
             throw_system_error("pthread_mutexattr_setpshared error");
         }
+        if (pthread_mutex_init(&lock_, &attr) != 0)
+        {
+            throw_system_error("pthread_mutex_init error");
+        }
+        if (pthread_mutexattr_destroy(&attr) != 0)
+        {
+            throw_system_error("pthread_mutexattr_destroy error");
+        }
     }
 
     pshared_lock(const pshared_lock &) = delete;
@@ -93,16 +110,69 @@ public:
 
     ~pshared_lock()
     {
-
+        if (pthread_mutex_destroy(&lock_) != 0)
+        {
+            throw_system_error("pthread_mutex_destroy error");
+        }
     }
+
+    void lock()
+    {
+        if (pthread_mutex_lock(&lock_) != 0)
+        {
+            throw_system_error("pthread_mutex_lock error");
+        }
+    }
+
+    bool try_lock()
+    {
+        if (pthread_mutex_trylock(&lock_) != 0)
+        {
+            if (errno == EBUSY)
+            {
+                return false;
+            }
+            throw_system_error("pthread_mutex_trylock error");
+        }
+        return true;
+    }
+
+    void unlock()
+    {
+        if (pthread_mutex_unlock(&lock_) != 0)
+        {
+            throw_system_error("pthread_mutex_unlock error");
+        }
+    }
+
+private:
+    pthread_mutex_t lock_;
 };
 
 class pshared_cond final
 {
 public:
+    typedef bool(*condition)();
+
     pshared_cond()
     {
-
+        pthread_condattr_t attr;
+        if (pthread_condattr_init(&attr) != 0)
+        {
+            throw_system_error("pthread_condattr_init error");
+        }
+        if (pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0)
+        {
+            throw_system_error("pthread_condattr_setpshared error");
+        }
+        if (pthread_cond_init(&cond_, &attr) != 0)
+        {
+            throw_system_error("pthread_cond_init error");
+        }
+        if (pthread_condattr_destroy(&attr) != 0)
+        {
+            throw_system_error("pthread_condattr_destroy error");
+        }
     }
 
     pshared_cond(const pshared_cond &) = delete;
@@ -112,10 +182,46 @@ public:
 
     ~pshared_cond()
     {
-
+        if (pthread_cond_destroy(&cond_) != 0)
+        {
+            throw_system_error("pthread_cond_destroy error");
+        }
     }
-};
 
+    void wait(std::unique_lock<pshared_lock> &lock, condition cond = []{ return true; })
+    {
+        while (true)
+        {
+            if (pthread_cond_wait(&cond_, &lock.mutex()->lock_) != 0)
+            {
+                throw_system_error("pthread_cond_wait error");
+            }
+            if (cond())
+            {
+                break;
+            }
+        }
+    }
+
+    void notify_one()
+    {
+        if (pthread_cond_signal(&cond_) != 0)
+        {
+            throw_system_error("pthread_cond_signal error");
+        }
+    }
+
+    void notify_all()
+    {
+        if (pthread_cond_broadcast(&cond_) != 0)
+        {
+            throw_system_error("pthread_cond_broadcast error");
+        }
+    }
+
+private:
+    pthread_cond_t cond_;
+};
 
 class pshared_rwlock final
 {
@@ -134,6 +240,10 @@ public:
         if (pthread_rwlock_init(&lock_, &attr) != 0)
         {
             throw_system_error("pthread_rwlock_init error");
+        }
+        if (pthread_rwlockattr_destroy(&attr) != 0)
+        {
+            throw_system_error("pthread_rwlockattr_destroy error");
         }
     }
 
