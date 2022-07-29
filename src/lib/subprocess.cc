@@ -21,9 +21,14 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
     return std::make_tuple<>(subp.returncode(), subp.stdout(), subp.stderr());
 }
 
+std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char *const *envp)
+{
+    return exec_cmd(cmd.c_str(), envp);
+}
+
 }   // namespace subprocess
 
-popen::popen(const char *cmd, char *const *envp)
+popen::popen(const std::string &cmd, char *const *envp)
 : cmd_(cmd), envp_(envp)
 {
     int fds[2];
@@ -88,12 +93,12 @@ bool popen::poll()
     return ret != 0;
 }
 
-void popen::commumicate(const char *str)
+void popen::communicate(const std::string &str)
 {
     stdout_->read_all();
     stderr_->read_all();
 
-    if (str != nullptr)
+    if (str.size())
     {
         stdin_->wbuf()->put(str);
         stdin_->write_all();
@@ -104,10 +109,10 @@ void popen::wait()
 {
     while (!poll())
     {
-        commumicate();
+        communicate();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-    commumicate();
+    communicate();
 }
 
 void popen::send_signal(int sig)

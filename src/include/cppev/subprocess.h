@@ -15,12 +15,14 @@ namespace subprocess
 
 std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp = nullptr);
 
+std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char *const *envp = nullptr);
+
 }   // namespace subprocess
 
 class popen final
 {
 public:
-    popen(const char *cmd, char *const *envp=nullptr);
+    popen(const std::string &cmd, char *const *envp=nullptr);
 
     popen(const popen &) = delete;
     popen &operator=(const popen &) = delete;
@@ -33,7 +35,7 @@ public:
 
     void wait();
 
-    void commumicate(const char *str=nullptr);
+    void communicate(const std::string &str="");
 
     void terminate();
 
@@ -62,7 +64,7 @@ public:
     }
 
 private:
-    const char *cmd_;
+    std::string cmd_;
 
     char *const *envp_;
 
