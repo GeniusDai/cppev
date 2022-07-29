@@ -173,7 +173,9 @@ TEST_F(TestLock, test_shm_rwlock)
         double var2;
     };
 
-    shared_memory shm("/cppev_test_shm_lock", sizeof(TestStruct), true);
+    std::string name = "/cppev_test_shm_lock";
+
+    shared_memory shm(name, sizeof(TestStruct), true);
     shm.constructor<TestStruct, int, double>(0, 6.6);
     TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
     EXPECT_TRUE(f_ptr->lock.try_wrlock());
@@ -186,7 +188,7 @@ TEST_F(TestLock, test_shm_rwlock)
     }
     if (pid == 0)
     {
-        shared_memory sp_shm("/cppev_test_shm_lock", sizeof(TestStruct), false);
+        shared_memory sp_shm(name, sizeof(TestStruct), false);
         TestStruct *c_ptr = reinterpret_cast<TestStruct *>(sp_shm.ptr());
 
         EXPECT_TRUE(c_ptr->lock.try_wrlock());
@@ -220,6 +222,62 @@ TEST_F(TestLock, test_shm_rwlock)
         EXPECT_EQ(ret, 0);
 
         shm.destructor<TestStruct>();
+        shm.unlink();
+    }
+}
+
+TEST_F(TestLock, test_shm_lock_cond)
+{
+    struct TestStruct
+    {
+        TestStruct() : var(0), ready(false) {}
+        pshared_lock lock;
+        pshared_cond cond;
+        int var;
+        bool ready;
+    };
+
+    std::string name = "/cppev_test_shm_lock";
+
+    shared_memory shm(name, sizeof(TestStruct), true);
+    shm.constructor<TestStruct>();
+    TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+    int num = 100;
+
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        throw_system_error("fork error");
+    }
+    else if (pid == 0)
+    {
+        shared_memory sub_shm(name, sizeof(TestStruct), false);
+        for (int i = 0; i < num; ++i)
+        {
+            while (!f_ptr->ready) ;
+            std::unique_lock<pshared_lock> lock(f_ptr->lock);
+            f_ptr->var = i;
+            f_ptr->ready = false;
+            f_ptr->cond.notify_one();
+        }
+        _exit(0);
+    }
+    else
+    {
+        int sum = 0;
+        for (int i = 0; i < num; ++i)
+        {
+            std::unique_lock<pshared_lock> lock(f_ptr->lock);
+            f_ptr->ready = true;
+            f_ptr->cond.wait(lock);
+            sum += f_ptr->var;
+        }
+        EXPECT_EQ(sum, (0 + num - 1) * num / 2);
+
+        int ret = -1;
+        waitpid(pid, &ret, 0);
+        EXPECT_EQ(ret, 0);
+
         shm.unlink();
     }
 }
