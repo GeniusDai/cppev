@@ -6,6 +6,7 @@
 
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
+#include "config.h"
 
 /*
  * Define Handler
@@ -30,37 +31,24 @@ cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt
 };
 
 /*
- * Concurrency Number
- */
-#ifdef __APPLE__
-    const int INET = 100;
-    const int UNIX = 100;
-#else
-    const int INET = 8000;
-    const int UNIX = 2000;
-#endif
-
-/*
  * Start Client
  *
- * Use 32 io-threads to perform the handler and 5 connector-thread to perform the connect operation.
+ * Use io-threads to perform the handler and connector-threads to perform the connect operation.
  * Set handlers to the client, then use ipv4/ipv6/unix tcp sockets to perform the stress test.
  */
 int main()
 {
-    cppev::tcp_client client(32, 3);
+    cppev::tcp_client client(CLIENT_WORKER_NUM, CONTOR_NUM);
     client.set_on_connect(on_connect);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
 
     // Please lower the concurrency number if server refused to connect
     // in your OS, especially the unix domain socket.
-
-    client.add(     "127.0.0.1", 8884, cppev::family::ipv4, INET);
-    client.add(     "::1",       8886, cppev::family::ipv6, INET);
-    client.add_unix("/tmp/cppev_test.sock",                 UNIX);
+    client.add(     "127.0.0.1", IPV4_PORT, cppev::family::ipv4, IPV4_CONCURRENCY);
+    client.add(     "::1",       IPV6_PORT, cppev::family::ipv6, IPV6_CONCURRENCY);
+    client.add_unix(             UNIX_PATH,                      UNIX_CONCURRENCY);
 
     client.run();
-
     return 0;
 }

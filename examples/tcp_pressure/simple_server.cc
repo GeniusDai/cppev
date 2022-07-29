@@ -6,6 +6,7 @@
 
 #include "cppev/async_logger.h"
 #include "cppev/tcp.h"
+#include "config.h"
 
 /*
  * Define handler
@@ -33,17 +34,20 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
 /*
  * Start Server
  *
- * Use 32 io-threads to perform the handler and 3 acceptor-thread perform the accept operation.
+ * Use io-threads to perform the handler and acceptor-threads perform the accept operation.
  * Set handlers to the server, start to listen in port with ipv4/ipv6/unix network layer protocol.
  */
 int main()
 {
-    cppev::tcp_server server(32);
+    cppev::tcp_server server(SERVER_WORKER_NUM);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
-    server.listen(8884, cppev::family::ipv4);
-    server.listen(8886, cppev::family::ipv6);
-    server.listen_unix("/tmp/cppev_test.sock");
+
+    // Create listening thread
+    server.listen(     IPV4_PORT, cppev::family::ipv4);
+    server.listen(     IPV6_PORT, cppev::family::ipv6);
+    server.listen_unix(UNIX_PATH);
+
     server.run();
     return 0;
 }

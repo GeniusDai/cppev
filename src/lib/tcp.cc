@@ -158,12 +158,14 @@ void acceptor::listen(int port, family f, const char *ip)
 {
     sock_ = nio_factory::get_nsocktcp(f);
     sock_->listen(port, ip);
+    log::info << "fd " << sock_->fd() << " listening in port " << port << log::endl;
 }
 
 void acceptor::listen_unix(const std::string &path)
 {
     sock_ = nio_factory::get_nsocktcp(family::local);
     sock_->listen_unix(path);
+    log::info << "fd " << sock_->fd() << " listening in path " << path << log::endl;
 }
 
 void acceptor::on_acpt_readable(std::shared_ptr<nio> iop)
@@ -178,7 +180,7 @@ void acceptor::on_acpt_readable(std::shared_ptr<nio> iop)
 
     for (auto &p : conns)
     {
-        log::info << "new fd " << p->fd() << " accepted" << log::endl;
+        log::info << "new fd " << p->fd() << " accepted by listening socket " << iop->fd() << log::endl;
         event_loop *io_evlp = dp->minloads_get_evlp();
         io_evlp->fd_register(std::dynamic_pointer_cast<nio>(p),
             fd_event::fd_writable, iohandler::on_acpt_writable, true);
