@@ -21,7 +21,7 @@ public:
     ~shared_memory();
 
     template <typename SharedClass, typename... Args>
-    void constructor(Args... args)
+    void constructor(Args&&... args)
     {
         SharedClass *object = new (ptr_) SharedClass(args...);
         if (object == nullptr)
