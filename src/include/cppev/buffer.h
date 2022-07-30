@@ -107,7 +107,7 @@ public:
     void put(const char *ptr, size_t len)
     {
         resize(offset_ + len);
-        for (int i = 0; i < len; ++i)
+        for (size_t i = 0; i < len; ++i)
         {
             buffer_[offset_++] = ptr[i];
         }
