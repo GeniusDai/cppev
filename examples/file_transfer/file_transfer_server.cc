@@ -5,10 +5,10 @@
 #include "cppev/tcp.h"
 #include "config.h"
 
-class filecache
+class filecache final
 {
 public:
-    cppev::buffer *lazyload(const std::string &filename)
+    cppev::buffer *lazyload(const std::string &filename) noexcept
     {
         std::unique_lock<std::mutex> lock;
         if (hash_.count(filename) != 0)
@@ -41,18 +41,18 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     filename = filename.substr(0, filename.size()-1);
     cppev::log::info << "client request file : " << filename << cppev::log::endl;
 
-    filecache *fc =reinterpret_cast<filecache *>(cppev::reactor_external_data(iopt));
+    filecache *fc =reinterpret_cast<filecache *>(cppev::tcp::reactor_external_data(iopt));
     cppev::buffer *bf = fc->lazyload(filename);
 
     iopt->wbuf()->put(bf->buf(), bf->size());
-    cppev::async_write(iopt);
+    cppev::tcp::async_write(iopt);
     cppev::log::info << "transfer file complete" << cppev::log::endl;
 };
 
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
-    cppev::safely_close(iopt);
+    cppev::tcp::safely_close(iopt);
 };
 
 int main()

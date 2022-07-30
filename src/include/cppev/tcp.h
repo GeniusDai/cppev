@@ -60,6 +60,7 @@ struct tp_shared_data final
     tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
 
 public:
+    // All the five callbacks will be executed by worker thread
     tp_shared_data(void *external_data_ptr = nullptr)
     :
         on_accept(idle_handler),
@@ -77,19 +78,19 @@ public:
 
     ~tp_shared_data() = default;
 
-    // Used by acceptor when new connection arrived
+    // When new connection arrived
     tcp_event_cb on_accept;
 
-    // Used by connector when connection established
+    // When connection established
     tcp_event_cb on_connect;
 
-    // Used by iohandler when read complete
+    // When read tcp connection complete
     tcp_event_cb on_read_complete;
 
-    // Used by iohandler when write complete
+    // When write tcp connection complete
     tcp_event_cb on_write_complete;
 
-    // Used by iohandler when socket closed
+    // When socket closed by opposite host
     tcp_event_cb on_closed;
 
     // Load balance algorithm : choose worker randomly
@@ -351,7 +352,9 @@ private:
 
 }   // namespace tcp
 
-using namespace tcp;
+using tcp::tcp_client;
+using tcp::tcp_server;
+using tcp::tcp_event_cb;
 
 }   // namespace cppev
 

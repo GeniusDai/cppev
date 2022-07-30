@@ -22,7 +22,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     cppev::log::info << "[fd] " << iopt->fd() <<  " | [message] " << iopt->rbuf()->buf() << cppev::log::endl;
     iopt->wbuf()->put(iopt->rbuf()->get());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    cppev::async_write(iopt);
+    cppev::tcp::async_write(iopt);
 };
 
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
