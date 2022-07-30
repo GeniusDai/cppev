@@ -2,8 +2,6 @@
 #include "cppev/nio.h"
 #include "config.h"
 
-const char *str = "Cppev is a C++ event driven library";
-
 cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
@@ -12,7 +10,7 @@ cppev::fd_event_cb client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
         cppev::log::error << "fd " << iop->fd() << "failed to connect" << cppev::log::endl;
         return;
     }
-    iopt->wbuf()->put(str);
+    iopt->wbuf()->put(str, len);
     iopt->write_all();
 };
 

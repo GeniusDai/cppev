@@ -13,4 +13,8 @@ const int udp_ipv6_port = 19006;
 
 const char *udp_unix_path = "/tmp/test_cppev_udp_unix_6C0224787A17.sock";
 
+const char *str = "Cppev\0Nice";
+
+const int len = 10;
+
 #endif  // config.h
