@@ -103,7 +103,9 @@ public:
         while(true)
         {
             on_loop_(this);
+#ifdef CPPEV_DEBUG
             log::info << "start event loop" << log::endl;
+#endif
             loop_once();
         }
     }
