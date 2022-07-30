@@ -30,7 +30,7 @@ cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void
         break;
     }
     }
-    cppev::log::info << ioup->rbuf()->buf() << cppev::log::endl;
+    cppev::log::info << ioup->rbuf()->rawbuf() << cppev::log::endl;
 };
 
 void start_event_loop()

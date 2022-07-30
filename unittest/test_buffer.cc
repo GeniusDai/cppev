@@ -27,7 +27,29 @@ TEST_F(TestBuffer, test_put_get)
     EXPECT_EQ(str.size(), buf.size());
     buf.get_string(offset, true);
     EXPECT_EQ(str.size() - offset, buf.size());
-    EXPECT_STREQ(str.substr(offset, str.size() - offset).c_str(), buf.buf());
+    EXPECT_STREQ(str.substr(offset, str.size() - offset).c_str(), buf.rawbuf());
+}
+
+TEST_F(TestBuffer, test_resize_tiny_null)
+{
+    const char *str = "cppev\0cppev000";
+    const int len = 11;
+
+    buffer buf;
+    buf.produce(str, len);
+    EXPECT_EQ(buf.size(), len);
+    EXPECT_EQ(std::string(buf.rawbuf()), "cppev");
+    EXPECT_EQ(buf.get_string(5), "cppev");
+    EXPECT_EQ(buf.get_string(), std::string(""));
+
+    buf.produce(str, len);
+    buf.get_string(3);
+    buf.tiny();
+    EXPECT_EQ(std::string(buf.rawbuf()), "ev");
+    buf.resize(16);
+    EXPECT_EQ(std::string(buf.rawbuf()), "ev");
+    buf.resize(1);
+    EXPECT_EQ(std::string(buf.rawbuf()), "ev");
 }
 
 TEST_F(TestBuffer, test_copy_move)
@@ -54,7 +76,7 @@ TEST_F(TestBuffer, test_copy_move)
     b.put_string(str);
     buffer a = std::move(b);    // move assignment
     EXPECT_EQ(a.get_string(-1, false), str);
-    EXPECT_EQ(b.buf(), nullptr);
+    EXPECT_EQ(b.rawbuf(), nullptr);
 }
 
 }   // namespace cppev

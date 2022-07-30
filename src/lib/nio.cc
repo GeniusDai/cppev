@@ -751,7 +751,7 @@ void nwatcher::del_watch(std::string path)
 void nwatcher::process_events()
 {
     int len = read_chunk(sysconfig::inotify_step);
-    char *p = rbuf()->buf();
+    char *p = rbuf()->rawbuf();
     for (char *s = p; s < p + len; ++s)
     {
         inotify_event *evp = (inotify_event *)s;

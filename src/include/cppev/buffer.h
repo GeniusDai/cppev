@@ -68,7 +68,7 @@ public:
         return cap_;
     }
 
-    char *buf()
+    char *rawbuf()
     {
         return buffer_.get() + start_;
     }
@@ -122,18 +122,33 @@ public:
         offset_ = 0;
     }
 
-    void put(const char *ptr, size_t len)
+    // produce chars to buffer
+    void produce(const char *ptr, int len)
     {
         resize(offset_ + len);
-        for (size_t i = 0; i < len; ++i)
+        for (int i = 0; i < len; ++i)
         {
             buffer_[offset_++] = ptr[i];
         }
     }
 
+    // consume chars from buffer
+    void consume(int len = -1)
+    {
+        if (len == -1)
+        {
+            len = size();
+        }
+        start_ += len;
+        if (start_ == offset_)
+        {
+            clear();
+        }
+    }
+
     void put_string(const std::string &str)
     {
-        put(str.c_str(), str.size());
+        produce(str.c_str(), str.size());
     }
 
     std::string get_string(int len = -1, bool consume = true)
@@ -142,7 +157,7 @@ public:
         {
             len = size();
         }
-        std::string str(buffer_.get() + start_, len);
+        std::string str(buffer_.get() + start_);
         if (consume)
         {
             start_ += len;

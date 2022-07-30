@@ -37,7 +37,7 @@ TEST_F(TestNio, test_diskfile)
     iofw->write_all();
     iofw->close();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuf()->buf(), str);
+    EXPECT_STREQ(iofr->rbuf()->rawbuf(), str);
 
     unlink(file);
 }
@@ -51,7 +51,7 @@ TEST_F(TestNio, test_pipe)
     iopw->wbuf()->put_string(str);
     iopw->write_all();
     iopr->read_all();
-    EXPECT_STREQ(str, iopr->rbuf()->buf());
+    EXPECT_STREQ(str, iopr->rbuf()->rawbuf());
 }
 
 TEST_F(TestNio, test_fifo)
@@ -62,7 +62,7 @@ TEST_F(TestNio, test_fifo)
     iofw->wbuf()->put_string(str);
     iofw->write_all();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuf()->buf(), str);
+    EXPECT_STREQ(iofr->rbuf()->rawbuf(), str);
 
     unlink(fifo);
 }

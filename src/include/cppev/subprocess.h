@@ -50,12 +50,12 @@ public:
 
     const char *stdout() const
     {
-        return stdout_->rbuf()->buf();
+        return stdout_->rbuf()->rawbuf();
     }
 
     const char *stderr() const
     {
-        return stderr_->rbuf()->buf();
+        return stderr_->rbuf()->rawbuf();
     }
 
     pid_t pid() const

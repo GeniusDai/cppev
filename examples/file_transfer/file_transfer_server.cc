@@ -44,7 +44,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     filecache *fc =reinterpret_cast<filecache *>(cppev::tcp::reactor_external_data(iopt));
     cppev::buffer *bf = fc->lazyload(filename);
 
-    iopt->wbuf()->put(bf->buf(), bf->size());
+    iopt->wbuf()->produce(bf->rawbuf(), bf->size());
     cppev::tcp::async_write(iopt);
     cppev::log::info << "transfer file complete" << cppev::log::endl;
 };
