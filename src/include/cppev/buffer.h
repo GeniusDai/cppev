@@ -104,19 +104,18 @@ public:
         offset_ = 0;
     }
 
-    void put(const std::string &str)
+    void put(const char *ptr, size_t len)
     {
-        put(str.c_str());
-    }
-
-    void put(const char *str)
-    {
-        int len = strlen(str);
         resize(offset_ + len);
         for (int i = 0; i < len; ++i)
         {
-            buffer_[offset_++] = str[i];
+            buffer_[offset_++] = ptr[i];
         }
+    }
+
+    void put(const std::string &str)
+    {
+        put(str.c_str(), str.size());
     }
 
     std::string get(int len = -1, bool consume = true)

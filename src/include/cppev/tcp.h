@@ -50,8 +50,22 @@ struct host_hash
 // Data used for event loop initialization
 struct tp_shared_data final
 {
+    friend class tcp_server;
+    friend class tcp_client;
+
+    // Idle function for callback
+    tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
+
 public:
-    tp_shared_data();
+    tp_shared_data(void *external_data_ptr = nullptr)
+    :
+        on_accept(idle_handler),
+        on_connect(idle_handler),
+        on_read_complete(idle_handler),
+        on_write_complete(idle_handler),
+        on_closed(idle_handler),
+        external_data_ptr(external_data_ptr)
+    {}
 
     tp_shared_data(const tp_shared_data &) = delete;
     tp_shared_data &operator=(const tp_shared_data &) = delete;
@@ -81,25 +95,20 @@ public:
     // Load balance algorithm : choose worker which has minimum loads
     event_loop *minloads_get_evlp();
 
-    tcp_server *server_ptr() const
+    void *external_data()
     {
-        return reinterpret_cast<tcp_server *>(ptr);
-    }
-
-    tcp_client *client_ptr() const
-    {
-        return reinterpret_cast<tcp_client *>(ptr);
+        return external_data_ptr;
     }
 
 private:
-    friend class tcp_server;
-    friend class tcp_client;
-    friend class connector;
-
     // Event loops of thread pool, used for task assign
     std::vector<event_loop *> evls;
 
+    // Pointer to reactor server or client
     void *ptr;
+
+    // Pointer to external data may be used by handler registered by user
+    void *external_data_ptr;
 };
 
 
@@ -185,7 +194,7 @@ private:
 class tcp_server final
 {
 public:
-    explicit tcp_server(int thr_num);
+    explicit tcp_server(int thr_num, void *external_data = nullptr);
 
     tcp_server(const tcp_server &) = delete;
     tcp_server &operator=(const tcp_server &) = delete;
@@ -294,7 +303,7 @@ private:
 class tcp_client final
 {
 public:
-    explicit tcp_client(int thr_num, int cont_num = 1);
+    explicit tcp_client(int thr_num, int cont_num = 1, void *external_data = nullptr);
 
     tcp_client(const tcp_client &) = delete;
     tcp_client &operator=(const tcp_client &) = delete;

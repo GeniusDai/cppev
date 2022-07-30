@@ -6,18 +6,6 @@ namespace cppev
 namespace tcp
 {
 
-// Idle function for callback
-tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
-
-tp_shared_data::tp_shared_data()
-:
-    on_accept(idle_handler),
-    on_connect(idle_handler),
-    on_read_complete(idle_handler),
-    on_write_complete(idle_handler),
-    on_closed(idle_handler)
-{}
-
 event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;
@@ -267,9 +255,9 @@ void connector::run_impl()
     evp_->loop();
 }
 
-tcp_server::tcp_server(int thr_num)
+tcp_server::tcp_server(int thr_num, void *external_data)
 {
-    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
+    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data(external_data));
     tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
         (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
     for (int i = 0; i < tp_->size(); ++i)
@@ -294,9 +282,9 @@ void tcp_server::run()
     }
 }
 
-tcp_client::tcp_client(int thr_num, int cont_num)
+tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
 {
-    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data);
+    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data(external_data));
     tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
         (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
     for (int i = 0; i < tp_->size(); ++i)
