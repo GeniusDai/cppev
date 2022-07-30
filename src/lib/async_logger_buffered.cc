@@ -36,7 +36,7 @@ async_logger &async_logger::operator<<(const char *str)
     {
         write_debug(&buffer_);
     }
-    buffer_.put(str);
+    buffer_.put_string(str);
     return *this;
 }
 

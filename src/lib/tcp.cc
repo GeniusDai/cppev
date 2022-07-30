@@ -203,7 +203,7 @@ void connector::add(const std::string &ip, int port, family f, int t)
     {
         hosts_[h] = t;
     }
-    wrp_->wbuf()->put("0");
+    wrp_->wbuf()->put_string("0");
     wrp_->write_all(1);
 }
 

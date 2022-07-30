@@ -18,16 +18,16 @@ cppev::tcp_event_cb on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> vo
 
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    cppev::log::info << "read message complete" << cppev::log::endl;
-    cppev::log::info << "[fd] " << iopt->fd() <<  " | [message] " << iopt->rbuf()->buf() << cppev::log::endl;
-    iopt->wbuf()->put(iopt->rbuf()->get());
+    cppev::log::info << "[fd] " << iopt->fd() << " | [callback] read_complete" << cppev::log::endl;
+    cppev::log::info << "[fd] " << iopt->fd() << " | [message] " << iopt->rbuf()->buf() << cppev::log::endl;
+    iopt->wbuf()->put_string(iopt->rbuf()->get_string());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     cppev::tcp::async_write(iopt);
 };
 
 cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    cppev::log::info << "write message complete" << cppev::log::endl;
+    cppev::log::info << "[fd] " << iopt->fd() << " | [callback] write_complete" << cppev::log::endl;
 };
 
 /*

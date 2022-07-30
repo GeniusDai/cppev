@@ -41,7 +41,7 @@ async_logger &async_logger::operator<<(const char *str)
             {
                 write_debug(std::get<0>(logs_[thr_id]).get());
             }
-            std::get<0>(logs_[thr_id])->put(str);
+            std::get<0>(logs_[thr_id])->put_string(str);
             return *this;
         }
     }
@@ -50,7 +50,7 @@ async_logger &async_logger::operator<<(const char *str)
         std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, utils::time());
     write_debug(std::get<0>(logs_[thr_id]).get());
     std::get<1>(logs_[thr_id])->lock();
-    std::get<0>(logs_[thr_id])->put(str);
+    std::get<0>(logs_[thr_id])->put_string(str);
     return *this;
 }
 

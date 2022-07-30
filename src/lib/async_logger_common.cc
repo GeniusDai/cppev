@@ -63,7 +63,7 @@ void async_logger::write_debug(buffer *buf)
 #elif defined(__APPLE__)
     ss << "] [TID 0x" << std::hex << thr_id << "] ";
 #endif
-    buf->put(ss.str());
+    buf->put_string(ss.str());
 }
 
 namespace log

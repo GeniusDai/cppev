@@ -100,7 +100,7 @@ void popen::communicate(const std::string &str)
 
     if (str.size())
     {
-        stdin_->wbuf()->put(str);
+        stdin_->wbuf()->put_string(str);
         stdin_->write_all();
     }
 }

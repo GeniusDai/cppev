@@ -32,7 +32,7 @@ private:
 cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "callback : on_read_complete" << cppev::log::endl;
-    std::string filename = iopt->rbuf()->get(-1, false);
+    std::string filename = iopt->rbuf()->get_string(-1, false);
     if (filename[filename.size()-1] != '\n')
     {
         return;

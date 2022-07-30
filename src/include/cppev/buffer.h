@@ -4,6 +4,7 @@
 #include <utility>
 #include <memory>
 #include <cstring>
+#include <cstdlib>
 #include "cppev/common_utils.h"
 
 namespace cppev
@@ -96,6 +97,23 @@ public:
         buffer_ = std::move(nbuffer);
     }
 
+    // Move unconsumed buffer to the start
+    void tiny()
+    {
+        if (start_ == 0)
+        {
+            return;
+        }
+        int len = offset_ - start_;
+        for (int i = 0; i < len; ++i)
+        {
+            buffer_[i] = buffer_[i + start_];
+        }
+        memset(buffer_.get() + len, 0, start_);
+        start_ = 0;
+        offset_ = len;
+    }
+
     // Clear buffer
     void clear()
     {
@@ -113,12 +131,12 @@ public:
         }
     }
 
-    void put(const std::string &str)
+    void put_string(const std::string &str)
     {
         put(str.c_str(), str.size());
     }
 
-    std::string get(int len = -1, bool consume = true)
+    std::string get_string(int len = -1, bool consume = true)
     {
         if (len == -1)
         {

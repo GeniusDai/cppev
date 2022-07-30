@@ -31,8 +31,8 @@ private:
 
 cppev::tcp_event_cb on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    iopt->wbuf()->put(file);
-    iopt->wbuf()->put("\n");
+    iopt->wbuf()->put_string(file);
+    iopt->wbuf()->put_string("\n");
     iopt->write_all();
 
     std::string file_copy_name = std::string(file) + "." + std::to_string(iopt->fd()) + "."
@@ -51,7 +51,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     iopt->read_all();
     fdcache *ptrcache = reinterpret_cast<fdcache *>(cppev::tcp::reactor_external_data(iopt));
     auto ios = ptrcache->getfd(iopt->fd());
-    ios->wbuf()->put(iopt->rbuf()->get());
+    ios->wbuf()->put_string(iopt->rbuf()->get_string());
     ios->write_all();
     cppev::log::info << "write chunk to file complete" << cppev::log::endl;
 };
