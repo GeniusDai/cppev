@@ -29,6 +29,9 @@ void async_write(std::shared_ptr<nsocktcp> iopt);
 // Safely close tcp socket
 void safely_close(std::shared_ptr<nsocktcp> iopt);
 
+// Get external data of reactor server and client
+void *reactor_external_data(std::shared_ptr<nsocktcp> iopt);
+
 class acceptor;
 class connector;
 class iohandler;

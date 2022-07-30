@@ -30,6 +30,7 @@ event_loop *tp_shared_data::minloads_get_evlp()
     return minloads_evp;
 }
 
+
 void async_write(std::shared_ptr<nsocktcp> iopt)
 {
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp()->data());
@@ -57,6 +58,12 @@ void safely_close(std::shared_ptr<nsocktcp> iopt)
     iopt->evlp()->fd_remove(iop, true, false);
     iopt->close();
 }
+
+void *reactor_external_data(std::shared_ptr<nsocktcp> iopt)
+{
+    return (reinterpret_cast<tp_shared_data *>(iopt->evlp()->data()))->external_data();
+}
+
 
 void iohandler::on_readable(std::shared_ptr<nio> iop)
 {

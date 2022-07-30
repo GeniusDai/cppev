@@ -41,8 +41,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     filename = filename.substr(0, filename.size()-1);
     cppev::log::info << "client request file : " << filename << cppev::log::endl;
 
-    filecache *fc =reinterpret_cast<filecache *>((reinterpret_cast<cppev::tp_shared_data *>
-        (iopt->evlp()->data()))->external_data());
+    filecache *fc =reinterpret_cast<filecache *>(cppev::reactor_external_data(iopt));
     cppev::buffer *bf = fc->lazyload(filename);
 
     iopt->wbuf()->put(bf->buf(), bf->size());
