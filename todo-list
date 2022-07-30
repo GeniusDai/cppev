@@ -3,6 +3,7 @@ P1:
     Support Timer
     Unix domain socket auto delete
     Dynamic library loader
+    Optimize file transfer client
 
 P2:
     Support udp multicast and broadcast
