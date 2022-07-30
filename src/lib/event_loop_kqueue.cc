@@ -60,6 +60,7 @@ event_loop::event_loop(void *data, void *back)
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     fd_event_cb ev_cb, bool activate, priority prio)
 {
+#ifdef CPPEV_DEBUG
     log::info << "Eventloop [Action:register] ";
     log::info << "[Fd:" << iop->fd() << "] ";
 
@@ -89,9 +90,8 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     {
         log::info << "[Activate:false]";
     }
-
     log::info << log::endl;
-
+#endif  // CPPEV_DEBUG
     iop->set_evlp(this);
     if (ev_cb)
     {
@@ -127,6 +127,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
 
 void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate)
 {
+#ifdef CPPEV_DEBUG
     log::info << "[Action:remove] ";
     log::info << "[Fd:" << iop->fd() << "] ";
     if (clean)
@@ -146,7 +147,7 @@ void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate
         log::info << "[Deactivate:false]";
     }
     log::info << log::endl;
-
+#endif  // CPPEV_DEBUG
     if (deactivate)
     {
         // Remove event records

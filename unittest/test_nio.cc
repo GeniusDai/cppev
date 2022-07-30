@@ -68,7 +68,7 @@ TEST_F(TestNio, test_fifo)
 }
 
 
-TEST_F(TestNio, test_tcp_connect)
+TEST_F(TestNio, test_tcp_connect_with_evlp)
 {
     std::vector<std::tuple<family, int, std::string > > vec = {
         { family::ipv4, 8884, "127.0.0.1" },
