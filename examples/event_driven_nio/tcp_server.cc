@@ -8,17 +8,10 @@ cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
     cppev::log::info << "tcp connection readable --> fd " << iops->fd() << " --> ";
-    if (iops->sockfamily() == cppev::family::local)
-    {
-        cppev::log::info << "[\tunixdomain\t] ";
-    }
-    else
-    {
-        auto sock = iops->sockname();
-        auto peer = iops->peername();
-        cppev::log::info << "[sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << "\t";
-        cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << "] ";
-    }
+    auto sock = iops->sockname();
+    auto peer = iops->peername();
+    cppev::log::info << "[sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << "\t";
+    cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << "] ";
     cppev::log::info << " --> " << "size : " << iops->rbuf()->size() << " " << iops->rbuf()->get_string() << cppev::log::endl;
     iop->evlp()->fd_remove(iop);
 };

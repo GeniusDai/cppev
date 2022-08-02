@@ -490,6 +490,10 @@ void nsocktcp::shutdown(shut_howto howto)
 
 std::tuple<std::string, int, family> nsocktcp::sockname()
 {
+    if (family_ == family::local)
+    {
+        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family::local);
+    }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getsockname(fd_, (sockaddr *)&addr, &len) < 0)
@@ -501,6 +505,10 @@ std::tuple<std::string, int, family> nsocktcp::sockname()
 
 std::tuple<std::string, int, family> nsocktcp::peername()
 {
+    if (family_ == family::local)
+    {
+        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family::local);
+    }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getpeername(fd_, (sockaddr *)&addr, &len) < 0)
@@ -530,6 +538,7 @@ void nsocktcp::listen(int port, const char *ip)
 
 void nsocktcp::listen_unix(const char *path)
 {
+    peer_ = std::make_tuple<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -546,7 +555,7 @@ void nsocktcp::listen_unix(const char *path)
 
 bool nsocktcp::connect(const char *ip, int port)
 {
-    peer_ = std::make_pair<>(ip, port);
+    peer_ = std::make_tuple<>(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -564,7 +573,7 @@ bool nsocktcp::connect(const char *ip, int port)
 
 bool nsocktcp::connect_unix(const char *path)
 {
-    peer_ = std::make_pair<>(path, -1);
+    peer_ = std::make_tuple<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -601,6 +610,10 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)
         else
         {
             sockfds.emplace_back(new nsocktcp(sockfd, family_));
+            if (family_ == family::local)
+            {
+                sockfds.back()->peer_ = peer_;
+            }
         }
     }
     return sockfds;

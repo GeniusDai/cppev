@@ -297,7 +297,7 @@ public:
 
     std::tuple<std::string, int, family> connpeer()
     {
-        return std::make_tuple<>(peer_.first, peer_.second, family_);
+        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family_);
     }
 
     void shutdown(shut_howto howto);
@@ -325,7 +325,7 @@ public:
 
 private:
     // Record peer for connect syscall
-    std::pair<std::string, int> peer_;
+    std::tuple<std::string, int> peer_;
 };
 
 
