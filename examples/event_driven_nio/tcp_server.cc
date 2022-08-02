@@ -10,9 +10,9 @@ cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
     cppev::log::info << "tcp connection readable --> fd " << iops->fd() << " --> ";
     auto sock = iops->sockname();
     auto peer = iops->peername();
-    cppev::log::info << "[sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << "\t";
-    cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << "] ";
-    cppev::log::info << " --> " << "size : " << iops->rbuf()->size() << " " << iops->rbuf()->get_string() << cppev::log::endl;
+    cppev::log::info << iops->rbuf()->size() << " && " << iops->rbuf()->get_string() << " --> ";
+    cppev::log::info << "sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << " | ";
+    cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << cppev::log::endl;
     iop->evlp()->fd_remove(iop);
 };
 
