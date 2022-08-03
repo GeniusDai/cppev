@@ -15,6 +15,6 @@ install(
     LIBRARY DESTINATION lib
 )
 install(
-    DIRECTORY "include/cppev" DESTINATION include
+    DIRECTORY "src/include/cppev" DESTINATION include
 )
 
