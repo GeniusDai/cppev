@@ -11,12 +11,12 @@
 /*
  * Define Handler
  */
-cppev::tcp_event_cb on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "connect succeed with fd " << iopt->fd() << cppev::log::endl;
 };
 
-cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "[fd] " << iopt->fd() << " | [callback] read_complete" << cppev::log::endl;
     cppev::log::info << "[fd] " << iopt->fd() << " | [message] " << iopt->rbuf()->rawbuf() << cppev::log::endl;
@@ -25,7 +25,7 @@ cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt)
     cppev::tcp::async_write(iopt);
 };
 
-cppev::tcp_event_cb on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     cppev::log::info << "[fd] " << iopt->fd() << " | [callback] write_complete" << cppev::log::endl;
 };

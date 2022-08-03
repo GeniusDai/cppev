@@ -3,7 +3,7 @@
 #include "cppev/nio.h"
 #include "config.h"
 
-cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+cppev::fd_event_handler conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
@@ -16,7 +16,7 @@ cppev::fd_event_cb conn_cb = [](std::shared_ptr<cppev::nio> iop) -> void
     iop->evlp()->fd_remove(iop);
 };
 
-cppev::fd_event_cb listen_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+cppev::fd_event_handler listen_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     std::shared_ptr<cppev::nsocktcp> conn = iopt->accept(1)[0];

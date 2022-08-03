@@ -3,7 +3,7 @@
 #include "cppev/event_loop.h"
 #include "config.h"
 
-cppev::fd_event_cb udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+cppev::fd_event_handler udp_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 {
     cppev::nsockudp *ioup = dynamic_cast<cppev::nsockudp *>(iop.get());
     cppev::log::info << "udp --> fd " << iop->fd() << " --> ";

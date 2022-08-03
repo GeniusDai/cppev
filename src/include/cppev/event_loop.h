@@ -39,7 +39,7 @@ enum priority
 
 class event_loop;
 
-typedef void (*fd_event_cb)(std::shared_ptr<nio> iop);
+typedef void (*fd_event_handler)(std::shared_ptr<nio> iop);
 
 typedef void (*ev_handler)(event_loop *);
 
@@ -63,20 +63,24 @@ public:
         return ev_fd_;
     }
 
-    void *data()
+    void *data() const
     {
         return data_;
     }
 
-    void *back()
+    void *back() const
     {
         return back_;
     }
 
-    // Loads of event loop
-    int fd_loads() const
+    int ev_loads() const
     {
         return fds_.size();
+    }
+
+    void set_on_loop(ev_handler h)
+    {
+        on_loop_ = h;
     }
 
     // Register fd event to event pollor
@@ -86,7 +90,7 @@ public:
     // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
-        fd_event_cb ev_cb = nullptr, bool activate = true, priority prio = low);
+        fd_event_handler ev_cb = nullptr, bool activate = true, priority prio = low);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer
@@ -127,10 +131,10 @@ private:
     void *back_;
 
     // Tuple : priority, nio, callback, event
-    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_cb, fd_event> > fds_;
+    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_handler, fd_event> > fds_;
 
     // Tuple : priority, nio, callback
-    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_cb> > fd_cbs_;
+    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_handler> > fd_cbs_;
 
     // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;

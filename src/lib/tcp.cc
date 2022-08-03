@@ -21,10 +21,10 @@ event_loop *tp_shared_data::minloads_get_evlp()
     for (auto evp : evls)
     {
         // This is not thread safe but it's okay
-        if (evp->fd_loads() < minloads)
+        if (evp->ev_loads() < minloads)
         {
             minloads_evp = evp;
-            minloads = evp->fd_loads();
+            minloads = evp->ev_loads();
         }
     }
     return minloads_evp;

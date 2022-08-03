@@ -21,7 +21,7 @@ namespace tcp
 {
 
 // Callback function type
-typedef void(*tcp_event_cb)(std::shared_ptr<nsocktcp>);
+typedef void(*tcp_event_handler)(std::shared_ptr<nsocktcp>);
 
 // Async write data in write buffer
 void async_write(std::shared_ptr<nsocktcp> iopt);
@@ -57,7 +57,7 @@ struct tp_shared_data final
     friend class tcp_client;
 
     // Idle function for callback
-    tcp_event_cb idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
+    tcp_event_handler idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
 
 public:
     // All the five callbacks will be executed by worker thread
@@ -79,19 +79,19 @@ public:
     ~tp_shared_data() = default;
 
     // When new connection arrived
-    tcp_event_cb on_accept;
+    tcp_event_handler on_accept;
 
     // When connection established
-    tcp_event_cb on_connect;
+    tcp_event_handler on_connect;
 
     // When read tcp connection complete
-    tcp_event_cb on_read_complete;
+    tcp_event_handler on_read_complete;
 
     // When write tcp connection complete
-    tcp_event_cb on_write_complete;
+    tcp_event_handler on_write_complete;
 
     // When socket closed by opposite host
-    tcp_event_cb on_closed;
+    tcp_event_handler on_closed;
 
     // Load balance algorithm : choose worker randomly
     event_loop *random_get_evlp();
@@ -219,22 +219,22 @@ public:
         acpts_.back()->listen_unix(path);
     }
 
-    void set_on_accept(tcp_event_cb handler)
+    void set_on_accept(tcp_event_handler handler)
     {
         data_->on_accept = handler;
     }
 
-    void set_on_read_complete(tcp_event_cb handler)
+    void set_on_read_complete(tcp_event_handler handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(tcp_event_cb handler)
+    void set_on_write_complete(tcp_event_handler handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(tcp_event_cb handler)
+    void set_on_closed(tcp_event_handler handler)
     {
         data_->on_closed = handler;
     }
@@ -320,22 +320,22 @@ public:
 
     void add_unix(const std::string &path, int t = 1);
 
-    void set_on_connect(tcp_event_cb handler)
+    void set_on_connect(tcp_event_handler handler)
     {
         data_->on_connect = handler;
     }
 
-    void set_on_read_complete(tcp_event_cb handler)
+    void set_on_read_complete(tcp_event_handler handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(tcp_event_cb handler)
+    void set_on_write_complete(tcp_event_handler handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(tcp_event_cb handler)
+    void set_on_closed(tcp_event_handler handler)
     {
         data_->on_closed = handler;
     }
@@ -354,7 +354,7 @@ private:
 
 using tcp::tcp_client;
 using tcp::tcp_server;
-using tcp::tcp_event_cb;
+using tcp::tcp_event_handler;
 
 }   // namespace cppev
 

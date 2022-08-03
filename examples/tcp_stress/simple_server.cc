@@ -19,14 +19,14 @@
  * On the socket sys-buffer read completed, retrieve the message from read buffer, then
  * put to the write buffer and trying to send it.
  */
-cppev::tcp_event_cb on_accept = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_accept = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     iopt->wbuf()->put_string("Cppev is a C++ event driven library");
     cppev::tcp::async_write(iopt);
     cppev::log::info << "Connection " << iopt->fd() << " arrived" << cppev::log::endl;
 };
 
-cppev::tcp_event_cb on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
     iopt->wbuf()->put_string(iopt->rbuf()->get_string());
     cppev::tcp::async_write(iopt);

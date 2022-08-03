@@ -58,7 +58,7 @@ event_loop::event_loop(void *data, void *back)
 }
 
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
-    fd_event_cb ev_cb, bool activate, priority prio)
+    fd_event_handler ev_cb, bool activate, priority prio)
 {
 #ifdef CPPEV_DEBUG
     log::info << "Eventloop [Action:register] ";
@@ -97,7 +97,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     {
         std::unique_lock<std::mutex> lock(lock_);
         fds_.emplace(iop->fd(), std::tuple<int, std::shared_ptr<nio>,
-            fd_event_cb, fd_event>(prio, iop, ev_cb, ev_type));
+            fd_event_handler, fd_event>(prio, iop, ev_cb, ev_type));
     }
     if (activate)
     {
