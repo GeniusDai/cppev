@@ -23,7 +23,7 @@ public:
     template <typename SharedClass, typename... Args>
     void constructor(Args&&... args)
     {
-        SharedClass *object = new (ptr_) SharedClass(args...);
+        SharedClass *object = new (ptr_) SharedClass(std::forward<Args>(args)...);
         if (object == nullptr)
         {
             throw_runtime_error("placement new error");
