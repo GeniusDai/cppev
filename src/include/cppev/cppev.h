@@ -2,11 +2,13 @@
 #define _cppev_h_6C0224787A17_
 
 #include "cppev/async_logger.h"
+
+#include "cppev/linux_specific.h"
+
 #include "cppev/buffer.h"
 #include "cppev/common_utils.h"
 #include "cppev/event_loop.h"
 #include "cppev/ipc.h"
-#include "cppev/linux_specific.h"
 #include "cppev/lock.h"
 #include "cppev/lru_cache.h"
 #include "cppev/nio.h"

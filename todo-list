@@ -1,6 +1,6 @@
 P1:
     Support retry for connect in reactor
-    Support Timer
+    Complete development of timer
     Dynamic library loader
     Use reference for shared_ptr in function parameters
 
