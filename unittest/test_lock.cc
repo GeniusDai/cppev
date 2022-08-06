@@ -112,50 +112,6 @@ TEST_F(TestLock, test_rwlock_wrlocked)
     thr.join();
 }
 
-#if _POSIX_C_SOURCE >= 200112L
-
-TEST_F(TestLock, test_spinlock)
-{
-    spinlock splck;
-    splck.lock();
-    splck.unlock();
-    auto func = [this, &splck]() -> void
-    {
-        std::unique_lock<std::mutex> lock(this->lock_);
-        this->ready_ = true;
-        ASSERT_TRUE(splck.trylock());
-        this->cond_.notify_one();
-        this->cond_exit_.wait(lock,
-            [this]() -> bool
-            {
-                return this->ready_exit_;
-            }
-        );
-        splck.unlock();
-    };
-
-    std::thread thr(func);
-
-    {
-        std::unique_lock<std::mutex> lock(lock_);
-        if (!ready_)
-        {
-            cond_.wait(lock,
-                [this] () -> bool
-                {
-                    return this->ready_;
-                }
-            );
-        }
-        ASSERT_FALSE(splck.trylock());
-        ready_exit_ = true;
-        cond_exit_.notify_one();
-    }
-    thr.join();
-}
-
-#endif  // spinlock
-
 TEST_F(TestLock, test_shm_rwlock)
 {
     struct TestStruct
@@ -288,4 +244,3 @@ int main(int argc, char **argv)
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }
-

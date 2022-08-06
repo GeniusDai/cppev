@@ -2,6 +2,7 @@ P1:
     Support retry for connect in reactor
     Support Timer
     Dynamic library loader
+    Use reference for shared_ptr in function parameters
 
 P2:
     Support udp multicast and broadcast

@@ -81,10 +81,6 @@ public:
 
     void release();
 
-#if defined(__linux__)
-    int getvalue();
-#endif
-
     void unlink();
 
 private:

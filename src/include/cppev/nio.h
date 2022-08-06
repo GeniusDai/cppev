@@ -14,10 +14,6 @@
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"
 
-#ifdef __linux__
-#include <sys/inotify.h>
-#endif
-
 namespace cppev
 {
 
@@ -34,6 +30,19 @@ enum class family
     ipv4,
     ipv6,
     local
+};
+
+namespace nio_factory
+{
+
+std::shared_ptr<nsocktcp> get_nsocktcp(family f);
+
+std::shared_ptr<nsockudp> get_nsockudp(family f);
+
+std::vector<std::shared_ptr<nstream> > get_pipes();
+
+std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &str);
+
 };
 
 class nio
@@ -119,7 +128,6 @@ private:
     void set_nonblock();
 };
 
-
 class nstream
 : public virtual nio
 {
@@ -178,11 +186,12 @@ protected:
 
 };
 
-
 class nsock
 : public virtual nio
 {
-    friend class nio_factory;
+    
+    friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
+    friend std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f);
 public:
     nsock(int fd, family f)
     : nio(fd), family_(f)
@@ -374,60 +383,6 @@ public:
 
     // getsockopt SO_BROADCAST
     bool get_so_broadcast();
-};
-
-#ifdef __linux__
-
-typedef void(*fs_handler)(inotify_event *, const char *path);
-
-class nwatcher final
-: public nstream
-{
-public:
-    explicit nwatcher(int fd, fs_handler handler = nullptr)
-    : nio(fd), nstream(fd), handler_(handler)
-    {}
-
-    void set_handler(fs_handler handler)
-    {
-        handler_ = handler;
-    }
-
-    void add_watch(std::string path, uint32_t events);
-
-    void del_watch(std::string path);
-
-    void process_events();
-
-private:
-    std::unordered_map<int, std::string> wds_;
-
-    std::unordered_map<std::string, int> paths_;
-
-    fs_handler handler_;
-};
-
-#endif  // nwatcher for linux
-
-class nio_factory
-{
-public:
-    static std::shared_ptr<nsocktcp> get_nsocktcp(family f);
-
-    static std::shared_ptr<nsockudp> get_nsockudp(family f);
-
-    static std::vector<std::shared_ptr<nstream> > get_pipes();
-
-    static std::vector<std::shared_ptr<nstream> > get_fifos(const char *str);
-
-    static std::vector<std::shared_ptr<nstream> > get_fifos(std::string &str)
-    {
-        return get_fifos(str.c_str());
-    }
-
-#ifdef __linux__
-    static std::shared_ptr<nwatcher> get_nwatcher();
-#endif  // nwatcher for linux
 };
 
 }   // namespace cppev

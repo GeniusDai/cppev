@@ -114,18 +114,6 @@ void semaphore::release()
     }
 }
 
-#if defined(__linux__)
-int semaphore::getvalue()
-{
-    int ret = -1;
-    if (sem_getvalue(sem_, &ret) == -1)
-    {
-        throw_system_error("sem_getvalue error");
-    }
-    return ret;
-}
-#endif
-
 void semaphore::unlink()
 {
     if (sem_unlink(name_.c_str()) == -1)

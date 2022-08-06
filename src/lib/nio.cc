@@ -677,7 +677,10 @@ void nsockudp::send_unix(const char *path)
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
 }
 
-std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f)
+namespace nio_factory
+{
+
+std::shared_ptr<nsocktcp> get_nsocktcp(family f)
 {
     int fd = ::socket(nsock::fmap_.at(f), SOCK_STREAM, 0);
     if (fd < 0)
@@ -687,7 +690,7 @@ std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f)
     return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
 }
 
-std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f)
+std::shared_ptr<nsockudp> get_nsockudp(family f)
 {
     int fd = ::socket(nsock::fmap_.at(f), SOCK_DGRAM, 0);
     if (fd < 0)
@@ -700,7 +703,7 @@ std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f)
     return sock;
 }
 
-std::vector<std::shared_ptr<nstream> > nio_factory::get_pipes()
+std::vector<std::shared_ptr<nstream> > get_pipes()
 {
     int pfds[2];
     if (pipe(pfds) != 0)
@@ -713,19 +716,19 @@ std::vector<std::shared_ptr<nstream> > nio_factory::get_pipes()
     return pipes;
 }
 
-std::vector<std::shared_ptr<nstream> > nio_factory::get_fifos(const char *path)
+std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &path)
 {
-    if (mkfifo(path, S_IRWXU) == -1 && errno != EEXIST)
+    if (mkfifo(path.c_str(), S_IRWXU) == -1 && errno != EEXIST)
     {
         throw_system_error("mkfifo error");
     }
 
-    int fdr = open(path, O_RDONLY | O_NONBLOCK);
+    int fdr = open(path.c_str(), O_RDONLY | O_NONBLOCK);
     if (fdr == -1)
     {
         throw_system_error("open error");
     }
-    int fdw = open(path, O_WRONLY | O_NONBLOCK);
+    int fdw = open(path.c_str(), O_WRONLY | O_NONBLOCK);
     if (fdw == -1)
     {
         throw_system_error("open error");
@@ -736,53 +739,6 @@ std::vector<std::shared_ptr<nstream> > nio_factory::get_fifos(const char *path)
     return fifos;
 }
 
-#if defined(__linux__)
-
-void nwatcher::add_watch(std::string path, uint32_t events)
-{
-    int wd = inotify_add_watch(fd_, path.c_str(), events);
-    if (wd < 0)
-    {
-        throw_system_error("inotify_add_watch error");
-    }
-    if (wds_.count(wd) == 0)
-    {
-        wds_[wd] = path; paths_[path] = wd;
-    }
-}
-
-void nwatcher::del_watch(std::string path)
-{
-    int wd = paths_[path];
-    paths_.erase(path); wds_.erase(wd);
-    if (inotify_rm_watch(fd_, paths_[path]) < 0)
-    {
-        throw_system_error("inotify_rm_watch error");
-    }
-}
-
-void nwatcher::process_events()
-{
-    int len = read_chunk(sysconfig::inotify_step);
-    char *p = rbuf()->rawbuf();
-    for (char *s = p; s < p + len; ++s)
-    {
-        inotify_event *evp = (inotify_event *)s;
-        handler_(evp, wds_[evp->wd].c_str());
-        p += sizeof(inotify_event) + evp->len;
-    }
-}
-
-std::shared_ptr<nwatcher> nio_factory::get_nwatcher()
-{
-    int fd = inotify_init();
-    if (fd < 0)
-    {
-        throw_system_error("inotify_init error");
-    }
-    return std::shared_ptr<nwatcher>(new nwatcher(fd));
-}
-
-#endif  // inotify for linux
+}   // namespace nio_factory
 
 }   // namespace cppev

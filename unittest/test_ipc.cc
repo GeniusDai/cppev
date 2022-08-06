@@ -135,16 +135,10 @@ TEST_F(TestIpc, test_by_fork)
 
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
         std::cout << "shared memory ptr : " << shm.ptr() << std::endl;
-#if defined(__linux__)
-        EXPECT_EQ(sp_sem.getvalue(), 2);
-#endif
         EXPECT_TRUE(sp_sem.acquire());
         EXPECT_TRUE(sp_sem.try_acquire());
         EXPECT_TRUE(sp_sem.acquire());
         EXPECT_FALSE(sp_sem.try_acquire());
-#if defined(__linux__)
-        EXPECT_EQ(sp_sem.getvalue(), 0);
-#endif
         sp_shm.unlink();
         sp_sem.unlink();
         std::cout << "end of child process" << std::endl;
