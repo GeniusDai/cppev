@@ -251,7 +251,7 @@ query_ip_port_family(sockaddr_storage &addr)
         throw_logic_error("unknown socket family");
     }
     }
-    return std::make_tuple<>(std::string(ip), port, f);
+    return std::make_tuple<>(ip, port, f);
 }
 
 void nsock::set_so_reuseaddr(bool enable)
@@ -527,8 +527,7 @@ void nsocktcp::listen(int port, const char *ip)
     set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
-        throw_system_error(std::string("bind error : ").
-            append(std::to_string(port)));
+        throw_system_error(std::string("bind error : ").append(std::to_string(port)));
     }
     if (::listen(fd_, sysconfig::listen_number) < 0)
     {
