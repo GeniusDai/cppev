@@ -1,6 +1,5 @@
 P1:
     Support retry for connect in reactor
-    Complete development of timer
     Dynamic library loader
     Use reference for shared_ptr in function parameters
 
@@ -8,4 +7,4 @@ P2:
     Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
-    Unittest for tcp stress test
+    Unittest for : 1) lru_cache; 2) nwatcher;
