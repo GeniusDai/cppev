@@ -114,7 +114,7 @@ class timer final
 public:
     typedef void(*timer_handler)(void *);
 
-    explicit timer(int interval, timer_handler handler, void *data = nullptr, int signo = SIGUSR1);
+    explicit timer(int interval, timer_handler handler, void *data = nullptr);
 
     timer(const timer &) = delete;
     timer &operator=(const timer &) = delete;

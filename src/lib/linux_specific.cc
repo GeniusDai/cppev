@@ -55,36 +55,27 @@ void nwatcher::process_events()
     }
 }
 
-timer::timer(int interval, timer_handler handler, void *data, int signo)
+timer::timer(int interval, timer_handler handler, void *data)
 : handler_(handler), data_(data)
 {
-    sigset_t sigset;
-    if (sigprocmask(SIG_BLOCK, &sigset, nullptr) != 0)
-    {
-        throw_system_error("sigprocmask error");
-    }
-    if (pthread_sigmask(SIG_UNBLOCK, &sigset, nullptr) != 0)
-    {
-        throw_system_error("pthread_sigmask error");
-    }
     sigevent sev;
-    sev.sigev_signo = signo;
-    sev.sigev_notify = SIGEV_THREAD;
+    memset(&sev, 0, sizeof(sev));
     sev.sigev_value.sival_ptr = this;
-    sev.sigev_notify_function = [](sigval_t value) -> void
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_notify_function = [](sigval value) -> void
     {
         timer *pseudo_this = reinterpret_cast<timer *>(value.sival_ptr);
         pseudo_this->handler_(pseudo_this->data_);
     };
-    if (timer_create(CLOCK_MONOTONIC, &sev, &tmid_) != 0)
+    if (timer_create(CLOCK_REALTIME, &sev, &tmid_) != 0)
     {
         throw_system_error("timer_create error");
     }
     itimerspec its;
     its.it_value.tv_sec = 0;
-    its.it_value.tv_nsec = 0;
-    its.it_value.tv_sec = interval / 1000;
-    its.it_value.tv_nsec = (interval % 1000) * 1000 * 1000;
+    its.it_value.tv_nsec = 1;
+    its.it_interval.tv_sec = interval / 1000;
+    its.it_interval.tv_nsec = (interval % 1000) * 1000 * 1000;
     if (timer_settime(tmid_, 0, &its, nullptr) != 0)
     {
         throw_system_error("timer_settime error");
@@ -93,7 +84,10 @@ timer::timer(int interval, timer_handler handler, void *data, int signo)
 
 void timer::stop()
 {
-
+    if (timer_delete(tmid_) != 0)
+    {
+        throw_system_error("timer_delete error");
+    }
 }
 
 }   // namespace cppev
