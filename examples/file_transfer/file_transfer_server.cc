@@ -15,9 +15,9 @@ public:
         {
             return hash_[filename]->rbuf();
         }
-        int fd = open(file, O_RDONLY);
+        int fd = open(filename.c_str(), O_RDONLY);
         std::shared_ptr<cppev::nstream> iops = std::make_shared<cppev::nstream>(fd);
-        iops->read_all(chunk_size);
+        iops->read_all(CHUNK_SIZE);
         close(fd);
         hash_[filename] = iops;
         return iops->rbuf();
@@ -61,7 +61,7 @@ int main()
     cppev::tcp_server server(2, &cache);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
-    server.listen(port, cppev::family::ipv4);
+    server.listen(PORT, cppev::family::ipv4);
     server.run();
     return 0;
 }

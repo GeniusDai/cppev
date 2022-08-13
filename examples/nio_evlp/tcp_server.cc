@@ -26,16 +26,16 @@ cppev::fd_event_handler listen_cb = [](std::shared_ptr<cppev::nio> iop) -> void
 
 void start_server_loop()
 {
-    remove(tcp_unix_path);
+    remove(TCP_UNIX_PATH);
     cppev::event_loop evlp;
 
     auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
     auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
 
-    tcp_ipv4->listen(       tcp_ipv4_port   );
-    tcp_ipv6->listen(       tcp_ipv6_port   );
-    tcp_unix->listen_unix(  tcp_unix_path   );
+    tcp_ipv4->listen(       TCP_IPV4_PORT   );
+    tcp_ipv6->listen(       TCP_IPV6_PORT   );
+    tcp_unix->listen_unix(  TCP_UNIX_PATH   );
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listen_cb);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listen_cb);

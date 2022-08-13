@@ -10,7 +10,7 @@ cppev::fd_event_handler client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
         cppev::log::error << "fd " << iop->fd() << "failed to connect" << cppev::log::endl;
         return;
     }
-    iopt->wbuf()->produce(str, len);
+    iopt->wbuf()->produce(MSG, MSG_LEN);
     iopt->write_all();
 };
 
@@ -23,9 +23,9 @@ void connect_to_servers()
     auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
     auto tcp_ipv4_to_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
 
-    tcp_ipv4->connect(      "127.0.0.1", tcp_ipv4_port  );
-    tcp_ipv6->connect(      "::1"      , tcp_ipv6_port  );
-    tcp_unix->connect_unix( tcp_unix_path               );
+    tcp_ipv4->connect(      "127.0.0.1", TCP_IPV4_PORT  );
+    tcp_ipv6->connect(      "::1"      , TCP_IPV6_PORT  );
+    tcp_unix->connect_unix( TCP_UNIX_PATH               );
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_writable, client_cb);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_writable, client_cb);

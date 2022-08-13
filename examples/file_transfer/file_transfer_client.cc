@@ -31,11 +31,11 @@ private:
 
 cppev::tcp_event_handler on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
 {
-    iopt->wbuf()->put_string(file);
+    iopt->wbuf()->put_string(FILENAME);
     iopt->wbuf()->put_string("\n");
     iopt->write_all();
 
-    std::string file_copy_name = std::string(file) + "." + std::to_string(iopt->fd()) + "."
+    std::string file_copy_name = std::string(FILENAME) + "." + std::to_string(iopt->fd()) + "."
          + std::to_string(cppev::utils::gettid()) + ".copy";
     int fd = open(file_copy_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
     if (fd < 0)
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     client.set_on_read_complete(on_read_complete);
     client.set_on_closed(on_closed);
 
-    client.add("127.0.0.1", port, cppev::family::ipv4, client_num);
+    client.add("127.0.0.1", PORT, cppev::family::ipv4, CONCURRENCY);
     client.run();
     return 0;
 }

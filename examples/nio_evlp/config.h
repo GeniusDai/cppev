@@ -1,20 +1,20 @@
 #ifndef _event_driven_nio_config_h_6C0224787A17_
 #define _event_driven_nio_config_h_6C0224787A17_
 
-const int tcp_ipv4_port = 18004;
+const int TCP_IPV4_PORT = 18004;
 
-const int tcp_ipv6_port = 18006;
+const int TCP_IPV6_PORT = 18006;
 
-const char *tcp_unix_path = "/tmp/test_cppev_tcp_unix_6C0224787A17.sock";
+const char *TCP_UNIX_PATH = "/tmp/test_cppev_tcp_unix_6C0224787A17.sock";
 
-const int udp_ipv4_port = 19004;
+const int UDP_IPV4_PORT = 19004;
 
-const int udp_ipv6_port = 19006;
+const int UDP_IPV6_PORT = 19006;
 
-const char *udp_unix_path = "/tmp/test_cppev_udp_unix_6C0224787A17.sock";
+const char *UDP_UNIX_PATH = "/tmp/test_cppev_udp_unix_6C0224787A17.sock";
 
-const char *str = "Cppev\0Nice";
+const char *MSG = "Cppev\0Nice";
 
-const int len = 10;
+const int MSG_LEN = 10;
 
 #endif  // config.h
