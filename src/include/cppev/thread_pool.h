@@ -82,18 +82,18 @@ protected:
 namespace tpq
 {
 
-typedef void(*task_func)(void *);
+using task_handler = std::function<void(void *)>;
 
 struct tp_task final
 {
 
     // Function pointer
-    task_func func;
+    task_handler func;
 
     // Function arguments
     void *args;
 
-    tp_task(task_func f, void *a)
+    tp_task(task_handler f, void *a)
     : func(f), args(a)
     {}
 };
@@ -209,7 +209,7 @@ public:
 
 using thread_pool_queue = tpq::thread_pool_queue;
 
-using task_func = tpq::task_func;
+using task_handler = tpq::task_handler;
 
 using tp_task = tpq::tp_task;
 

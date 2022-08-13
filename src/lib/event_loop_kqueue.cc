@@ -16,8 +16,6 @@
 namespace cppev
 {
 
-ev_handler idle_ev_handler = [](event_loop *) -> void {};
-
 static uint32_t fd_map_to_sys(fd_event ev)
 {
     int flags = 0;
@@ -47,14 +45,13 @@ static fd_event fd_map_to_event(uint32_t ev)
 }
 
 event_loop::event_loop(void *data, void *back)
-: data_(data), back_(back)
+: on_loop_(evlp_handler()), data_(data), back_(back)
 {
     ev_fd_ = kqueue();
     if (ev_fd_ < 0)
     {
         throw_system_error("kqueue error");
     }
-    on_loop_ = idle_ev_handler;
 }
 
 void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
@@ -96,8 +93,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     if (ev_cb)
     {
         std::unique_lock<std::mutex> lock(lock_);
-        fds_.emplace(iop->fd(), std::tuple<int, std::shared_ptr<nio>,
-            fd_event_handler, fd_event>(prio, iop, ev_cb, ev_type));
+        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(ev_cb), ev_type));
     }
     if (activate)
     {
@@ -235,9 +231,8 @@ void event_loop::loop_once(int timeout)
     {
         auto ev = fd_cbs_.top();
         fd_cbs_.pop();
-        (std::get<2>(ev))(std::get<1>(ev));
+        (*std::get<2>(ev))(std::get<1>(ev));
     }
-
 }
 
 }   // namespace cppev

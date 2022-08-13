@@ -14,17 +14,17 @@
 namespace cppev
 {
 
-typedef void(*fs_handler)(inotify_event *, const char *path);
+using fs_event_handler = std::function<void(inotify_event *, const std::string &)>;
 
 class nwatcher final
 : public nstream
 {
 public:
-    explicit nwatcher(int fd, fs_handler handler = nullptr)
+    explicit nwatcher(int fd, fs_event_handler handler = nullptr)
     : nio(fd), nstream(fd), handler_(handler)
     {}
 
-    void set_handler(fs_handler handler)
+    void set_handler(fs_event_handler handler)
     {
         handler_ = handler;
     }
@@ -40,7 +40,7 @@ private:
 
     std::unordered_map<std::string, int> paths_;
 
-    fs_handler handler_;
+    fs_event_handler handler_;
 };
 
 namespace nio_factory
@@ -112,7 +112,7 @@ private:
 class timer final
 {
 public:
-    typedef void(*timer_handler)(void *);
+    using timer_handler = std::function<void(void *)>;
 
     explicit timer(int interval, timer_handler handler, void *data = nullptr);
 

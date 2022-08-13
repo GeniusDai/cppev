@@ -7,6 +7,7 @@
 #include <queue>
 #include <tuple>
 #include <mutex>
+#include <functional>
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/common_utils.h"
@@ -39,9 +40,9 @@ enum priority
 
 class event_loop;
 
-typedef void (*fd_event_handler)(std::shared_ptr<nio> iop);
+using fd_event_handler = std::function<void(std::shared_ptr<nio>)>;
 
-typedef void (*ev_handler)(event_loop *);
+using evlp_handler = std::function<void(event_loop*)>;
 
 class event_loop
 {
@@ -78,7 +79,7 @@ public:
         return fds_.size();
     }
 
-    void set_on_loop(ev_handler h)
+    void set_on_loop(evlp_handler h)
     {
         on_loop_ = h;
     }
@@ -90,7 +91,7 @@ public:
     // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
     void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
-        fd_event_handler ev_cb = nullptr, bool activate = true, priority prio = low);
+        fd_event_handler ev_cb = fd_event_handler(), bool activate = true, priority prio = low);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer
@@ -106,7 +107,10 @@ public:
     {
         while(true)
         {
-            on_loop_(this);
+            if (on_loop_)
+            {
+                on_loop_(this);
+            }
 #ifdef CPPEV_DEBUG
             log::info << "start event loop" << log::endl;
 #endif
@@ -116,7 +120,7 @@ public:
 
 private:
     // When event loop starts;
-    ev_handler on_loop_;
+    evlp_handler on_loop_;
 
     // Used for registering callback for event loop
     std::mutex lock_;
@@ -131,10 +135,10 @@ private:
     void *back_;
 
     // Tuple : priority, nio, callback, event
-    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, fd_event_handler, fd_event> > fds_;
+    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event> > fds_;
 
     // Tuple : priority, nio, callback
-    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, fd_event_handler> > fd_cbs_;
+    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler> > > fd_cbs_;
 
     // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;

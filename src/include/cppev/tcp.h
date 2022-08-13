@@ -21,7 +21,7 @@ namespace tcp
 {
 
 // Callback function type
-typedef void(*tcp_event_handler)(std::shared_ptr<nsocktcp>);
+using tcp_event_handler = std::function<void(std::shared_ptr<nsocktcp>)>;
 
 // Async write data in write buffer
 void async_write(std::shared_ptr<nsocktcp> iopt);
@@ -53,6 +53,7 @@ struct host_hash
 // Data used for event loop initialization
 struct tp_shared_data final
 {
+private:
     friend class tcp_server;
     friend class tcp_client;
 

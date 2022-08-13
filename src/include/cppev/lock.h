@@ -88,7 +88,7 @@ private:
 class pshared_cond final
 {
 public:
-    typedef bool(*condition)();
+    using condition = std::function<bool()>;
 
     pshared_cond()
     {
