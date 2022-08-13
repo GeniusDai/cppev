@@ -40,7 +40,7 @@ TEST_F(TestBuffer, test_resize_tiny_null)
     EXPECT_EQ(buf.size(), len);
     EXPECT_EQ(std::string(buf.rawbuf()), "cppev");
     EXPECT_EQ(buf.get_string(5), "cppev");
-    EXPECT_EQ(buf.get_string(), std::string(""));
+    EXPECT_EQ(buf.get_string(), std::string("\0cppev", len - 5));
 
     buf.produce(str, len);
     buf.get_string(3);
