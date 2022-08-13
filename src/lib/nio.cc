@@ -1,6 +1,7 @@
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/common_utils.h"
+#include <cassert>
 #include <sys/socket.h>
 #include <exception>
 #include <unistd.h>
@@ -151,7 +152,8 @@ const std::unordered_map<family, int, enum_hash> nsock::fmap_ =
 const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ =
 {
     {family::ipv4, sizeof(sockaddr_in)},
-    {family::ipv6, sizeof(sockaddr_in6)}
+    {family::ipv6, sizeof(sockaddr_in6)},
+    {family::local, sizeof(sockaddr_un)}
 };
 
 static void set_ip_port(sockaddr_storage &addr, const char *ip, int port)
@@ -215,8 +217,7 @@ static void set_path(sockaddr_storage &addr, const char *path)
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
-static std::tuple<std::string, int, family>
-query_ip_port_family(sockaddr_storage &addr)
+static std::tuple<std::string, int, family> query_ip_port_family(sockaddr_storage &addr)
 {
     int port;
     char ip[sizeof(sockaddr_storage)];
@@ -633,6 +634,7 @@ void nsockudp::bind(int port, const char *ip)
 
 void nsockudp::bind_unix(const char *path)
 {
+    unix_listen_path_ = path;
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -647,15 +649,18 @@ std::tuple<std::string, int, family> nsockudp::recv()
 {
     sockaddr_storage addr;
     socklen_t len = faddr_len_.at(family_);
-    recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
+    int ret = recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
         rbuf()->cap_ - rbuf()->offset_, 0, (sockaddr *)&addr, &len);
+    if (ret == 0)
+    {
+        throw_system_error("recvfrom error");
+    }
+    rbuf()->offset_ += ret;
+    if (family_ == family::local)
+    {
+        return std::make_tuple<>(unix_listen_path_, -1, family::local);
+    }
     return query_ip_port_family(addr);
-}
-
-void nsockudp::recv_unix()
-{
-    recvfrom(fd_, rbuf()->buffer_.get() + rbuf()->offset_,
-        rbuf()->cap_ - rbuf()->offset_, 0, nullptr, nullptr);
 }
 
 void nsockudp::send(const char *ip, int port)

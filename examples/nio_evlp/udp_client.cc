@@ -2,7 +2,7 @@
 #include "cppev/event_loop.h"
 #include "config.h"
 
-void connect_to_servers()
+void send_to_servers()
 {
     cppev::event_loop evlp;
 
@@ -14,13 +14,13 @@ void connect_to_servers()
     udp_ipv6->wbuf()->produce(str, len);
     udp_unix->wbuf()->produce(str, len);
 
-    udp_ipv4->send("127.0.0.1", udp_ipv4_port);
-    udp_ipv6->send("::1", udp_ipv6_port);
-    udp_unix->send_unix(udp_unix_path);
+    udp_ipv4->send(         "127.0.0.1"  , udp_ipv4_port    );
+    udp_ipv6->send(         "::1"        , udp_ipv6_port    );
+    udp_unix->send_unix(    udp_unix_path                   );
 }
 
 int main()
 {
-    connect_to_servers();
+    send_to_servers();
     return 0;
 }

@@ -189,7 +189,6 @@ protected:
 class nsock
 : public virtual nio
 {
-    
     friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
     friend std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f);
 public:
@@ -333,7 +332,10 @@ public:
     int get_so_error();
 
 private:
-    // Record peer for connect syscall
+    // IPV4/6 : Record ip/port  in connect()
+    //          Return by connpeer()
+    // Unix   : Record sockpath in listen_unix()/connect_unix()
+    //        : Return by sockname()/peername()/connpeer()
     std::tuple<std::string, int> peer_;
 };
 
@@ -376,13 +378,14 @@ public:
         send_unix(path.c_str());
     }
 
-    void recv_unix();
-
     // setsockopt SO_BROADCAST
     void set_so_broadcast(bool enable=true);
 
     // getsockopt SO_BROADCAST
     bool get_so_broadcast();
+
+private:
+    std::string unix_listen_path_;
 };
 
 }   // namespace cppev
