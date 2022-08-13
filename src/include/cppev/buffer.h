@@ -122,7 +122,9 @@ public:
         offset_ = 0;
     }
 
-    // produce chars to buffer
+    // Produce chars to buffer
+    // @param ptr : Pointer to char array may contain '\0'
+    // @param len : Char array length that copy to buffer
     void produce(const char *ptr, int len)
     {
         resize(offset_ + len);
@@ -132,7 +134,7 @@ public:
         }
     }
 
-    // consume chars from buffer
+    // Consume chars from buffer
     void consume(int len = -1)
     {
         if (len == -1)
@@ -157,7 +159,7 @@ public:
         {
             len = size();
         }
-        std::string str(buffer_.get() + start_);
+        std::string str(buffer_.get() + start_, len);
         if (consume)
         {
             start_ += len;

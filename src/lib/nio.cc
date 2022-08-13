@@ -668,8 +668,13 @@ void nsockudp::send(const char *ip, int port)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
+    int ret = sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, faddr_len_.at(family_));
+    if (ret == 0)
+    {
+        throw_system_error("sendto error");
+    }
+    wbuf()->consume(ret);
 }
 
 void nsockudp::send_unix(const char *path)
@@ -677,8 +682,13 @@ void nsockudp::send_unix(const char *path)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
-    sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
+    int ret = sendto(fd_, wbuf()->buffer_.get() + wbuf()->start_, wbuf()->size(),
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
+    if (ret == 0)
+    {
+        throw_system_error("sendto error");
+    }
+    wbuf()->consume(ret);
 }
 
 namespace nio_factory
