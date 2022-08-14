@@ -10,6 +10,12 @@
 
 /*
  * Define Handler
+ * 
+ * On the socket connect succeeded, log the info.
+ * 
+ * On the socket read from sys-buffer completed, write the message back to the server.
+ * 
+ * On the socket write to sys-buffer completed, log the info.
  */
 cppev::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {

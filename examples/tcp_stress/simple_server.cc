@@ -16,8 +16,10 @@
  * The async_write here means if the message is very long then would register writable
  * event to do asynchrous write.
  *
- * On the socket sys-buffer read completed, retrieve the message from read buffer, then
+ * On the socket read from sys-buffer completed, retrieve the message from read buffer, then
  * put to the write buffer and trying to send it.
+ * 
+ * On the socket closed, log the info.
  */
 cppev::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
@@ -32,6 +34,11 @@ cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsoc
     cppev::tcp::async_write(iopt);
 };
 
+cppev::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+{
+    cppev::log::info << "Connection " << iopt->fd() << " closed by opposite host" << cppev::log::endl;
+};
+
 /*
  * Start Server
  *
@@ -43,6 +50,7 @@ int main()
     cppev::tcp_server server(SERVER_WORKER_NUM);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
+    server.set_on_closed(on_closed);
 
     // Create listening thread
     server.listen(     IPV4_PORT, cppev::family::ipv4);
