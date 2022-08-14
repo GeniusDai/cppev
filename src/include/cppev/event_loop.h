@@ -40,9 +40,9 @@ enum priority
 
 class event_loop;
 
-using fd_event_handler = std::function<void(std::shared_ptr<nio>)>;
+using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
 
-using evlp_handler = std::function<void(event_loop*)>;
+using evlp_handler = std::function<void(event_loop &)>;
 
 class event_loop
 {
@@ -79,9 +79,9 @@ public:
         return fds_.size();
     }
 
-    void set_on_loop(evlp_handler h)
+    void set_on_loop(const evlp_handler &handler)
     {
-        on_loop_ = h;
+        on_loop_ = handler;
     }
 
     // Register fd event to event pollor
@@ -90,14 +90,14 @@ public:
     // @param ev_cb     callback
     // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
-    void fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
-        fd_event_handler ev_cb = fd_event_handler(), bool activate = true, priority prio = low);
+    void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
+        const fd_event_handler &ev_cb = fd_event_handler(), bool activate = true, priority prio = low);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer
     // @param clean         whether clean callbacks stored in eventloop
     // @param deactivate    whether remove from os io-multiplexing api
-    void fd_remove(std::shared_ptr<nio> iop, bool clean = true, bool deactivate = true);
+    void fd_remove(const std::shared_ptr<nio> &iop, bool clean = true, bool deactivate = true);
 
     // Wait for events, only loop once, timeout unit is millisecond
     void loop_once(int timeout = -1);
@@ -109,7 +109,7 @@ public:
         {
             if (on_loop_)
             {
-                on_loop_(this);
+                on_loop_(*this);
             }
 #ifdef CPPEV_DEBUG
             log::info << "start event loop" << log::endl;

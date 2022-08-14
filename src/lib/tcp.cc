@@ -31,7 +31,7 @@ event_loop *tp_shared_data::minloads_get_evlp()
 }
 
 
-void async_write(std::shared_ptr<nsocktcp> iopt)
+void async_write(const std::shared_ptr<nsocktcp> &iopt)
 {
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp()->data());
     iopt->write_all(sysconfig::buffer_io_step);
@@ -51,7 +51,7 @@ void async_write(std::shared_ptr<nsocktcp> iopt)
     }
 }
 
-void safely_close(std::shared_ptr<nsocktcp> iopt)
+void safely_close(const std::shared_ptr<nsocktcp> &iopt)
 {
     std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
     // epoll/kqueue will remove fd when it's closed
@@ -59,13 +59,13 @@ void safely_close(std::shared_ptr<nsocktcp> iopt)
     iopt->close();
 }
 
-void *reactor_external_data(std::shared_ptr<nsocktcp> iopt)
+void *reactor_external_data(const std::shared_ptr<nsocktcp> &iopt)
 {
     return (reinterpret_cast<tp_shared_data *>(iopt->evlp()->data()))->external_data();
 }
 
 
-void iohandler::on_readable(std::shared_ptr<nio> iop)
+void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
@@ -83,7 +83,7 @@ void iohandler::on_readable(std::shared_ptr<nio> iop)
     }
 }
 
-void iohandler::on_writable(std::shared_ptr<nio> iop)
+void iohandler::on_writable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
@@ -108,7 +108,7 @@ void iohandler::on_writable(std::shared_ptr<nio> iop)
     }
 }
 
-void iohandler::on_acpt_writable(std::shared_ptr<nio> iop)
+void iohandler::on_acpt_writable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
@@ -123,7 +123,7 @@ void iohandler::on_acpt_writable(std::shared_ptr<nio> iop)
     iopt->evlp()->fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
-void iohandler::on_cont_writable(std::shared_ptr<nio> iop)
+void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
@@ -163,7 +163,7 @@ void acceptor::listen_unix(const std::string &path)
     log::info << "fd " << sock_->fd() << " listening in path " << path << log::endl;
 }
 
-void acceptor::on_acpt_readable(std::shared_ptr<nio> iop)
+void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
     if (iopt == nullptr)
@@ -212,7 +212,7 @@ void connector::add_unix(const std::string &path, int t)
     add(path, 0, family::local, t);
 }
 
-void connector::on_pipe_readable(std::shared_ptr<nio> iop)
+void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 {
     nstream *iops = dynamic_cast<nstream *>(iop.get());
     if (iops == nullptr)

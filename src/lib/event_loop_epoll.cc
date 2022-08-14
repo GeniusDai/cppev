@@ -53,8 +53,8 @@ event_loop::event_loop(void *data, void *back)
     }
 }
 
-void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
-    fd_event_handler ev_cb, bool activate, priority prio)
+void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
+    const fd_event_handler &ev_cb, bool activate, priority prio)
 {
 #ifdef CPPEV_DEBUG
     log::info << "Eventloop [Action:register] ";
@@ -105,7 +105,7 @@ void event_loop::fd_register(std::shared_ptr<nio> iop, fd_event ev_type,
     }
 }
 
-void event_loop::fd_remove(std::shared_ptr<nio> iop, bool clean, bool deactivate)
+void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool deactivate)
 {
 #ifdef CPPEV_DEBUG
     log::info << "[Action:remove] ";

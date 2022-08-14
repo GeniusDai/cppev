@@ -29,7 +29,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<cppev::nstream> > hash_;
 };
 
-cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "callback : on_read_complete" << cppev::log::endl;
     std::string filename = iopt->rbuf()->get_string(-1, false);
@@ -49,7 +49,7 @@ cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> 
     cppev::log::info << "transfer file complete" << cppev::log::endl;
 };
 
-cppev::tcp_event_handler on_write_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
     cppev::tcp::safely_close(iopt);

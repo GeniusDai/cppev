@@ -21,16 +21,16 @@ namespace tcp
 {
 
 // Callback function type
-using tcp_event_handler = std::function<void(std::shared_ptr<nsocktcp>)>;
+using tcp_event_handler = std::function<void(const std::shared_ptr<nsocktcp> &)>;
 
 // Async write data in write buffer
-void async_write(std::shared_ptr<nsocktcp> iopt);
+void async_write(const std::shared_ptr<nsocktcp> &iopt);
 
 // Safely close tcp socket
-void safely_close(std::shared_ptr<nsocktcp> iopt);
+void safely_close(const std::shared_ptr<nsocktcp> &iopt);
 
 // Get external data of reactor server and client
-void *reactor_external_data(std::shared_ptr<nsocktcp> iopt);
+void *reactor_external_data(const std::shared_ptr<nsocktcp> &iopt);
 
 class acceptor;
 class connector;
@@ -58,7 +58,7 @@ private:
     friend class tcp_client;
 
     // Idle function for callback
-    tcp_event_handler idle_handler = [](std::shared_ptr<nsocktcp>) -> void {};
+    tcp_event_handler idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
 public:
     // All the five callbacks will be executed by worker thread
@@ -124,8 +124,7 @@ class iohandler
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : evp_(std::shared_ptr<event_loop>(new event_loop(
-        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
+    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {}
 
     iohandler(const iohandler &) = delete;
@@ -135,17 +134,17 @@ public:
 
     virtual ~iohandler() = default;
 
-    static void on_readable(std::shared_ptr<nio> iop);
+    static void on_readable(const std::shared_ptr<nio> &iop);
 
-    static void on_writable(std::shared_ptr<nio> iop);
+    static void on_writable(const std::shared_ptr<nio> &iop);
 
-    // Connect socket is writable, this cb will be executed immediately
+    // Connected socket is writable, this cb will be executed immediately
     // by one thread of the pool to do init jobs
-    static void on_acpt_writable(std::shared_ptr<nio> iop);
+    static void on_acpt_writable(const std::shared_ptr<nio> &iop);
 
-    // Connect socket is writable, indicating connection is ready for check, this
+    // Connected socket is writable, indicating connection is ready for check, this
     // cb will be executed by one thread of the pool to do init jobs
-    static void on_cont_writable(std::shared_ptr<nio> iop);
+    static void on_cont_writable(const std::shared_ptr<nio> &iop);
 
     void run_impl() override
     {
@@ -183,7 +182,7 @@ public:
 
     // Listening socket is readable, indicating new client arrives, this cb will be executed
     // by accept thread to accept connection and assign connection to thread pool
-    static void on_acpt_readable(std::shared_ptr<nio> iop);
+    static void on_acpt_readable(const std::shared_ptr<nio> &iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
@@ -283,7 +282,7 @@ public:
 
     // Pipe fd is readable, indicating new task added, this cb will be executed by
     // connect thread to init connection
-    static void on_pipe_readable(std::shared_ptr<nio> iop);
+    static void on_pipe_readable(const std::shared_ptr<nio> &iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;

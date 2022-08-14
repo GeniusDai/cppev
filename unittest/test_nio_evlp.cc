@@ -80,7 +80,7 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
     event_loop acpt_evlp(&acpt_count);
     event_loop cont_evlp(&cont_count);
 
-    fd_event_handler cb = [](std::shared_ptr<nio> iop) -> void {
+    fd_event_handler cb = [](const std::shared_ptr<nio> &iop) -> void {
         (*reinterpret_cast<int *>(iop->evlp()->data()))++;
     };
 

@@ -29,7 +29,7 @@ private:
     std::mutex lock_;
 };
 
-cppev::tcp_event_handler on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->wbuf()->put_string(FILENAME);
     iopt->wbuf()->put_string("\n");
@@ -46,7 +46,7 @@ cppev::tcp_event_handler on_connect = [](std::shared_ptr<cppev::nsocktcp> iopt) 
     ptrcache->setfd(iopt->fd() ,fd);
 };
 
-cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->read_all();
     fdcache *ptrcache = reinterpret_cast<fdcache *>(cppev::tcp::reactor_external_data(iopt));
@@ -56,7 +56,7 @@ cppev::tcp_event_handler on_read_complete = [](std::shared_ptr<cppev::nsocktcp> 
     cppev::log::info << "write chunk to file complete" << cppev::log::endl;
 };
 
-cppev::tcp_event_handler on_closed = [](std::shared_ptr<cppev::nsocktcp> iopt) -> void
+cppev::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "receive file complete" << cppev::log::endl;
 };

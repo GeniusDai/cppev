@@ -2,7 +2,7 @@
 #include "cppev/nio.h"
 #include "config.h"
 
-cppev::fd_event_handler client_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+cppev::fd_event_handler client_cb = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     if (!iopt->check_connect())

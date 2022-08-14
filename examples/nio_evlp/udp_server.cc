@@ -3,7 +3,7 @@
 #include "cppev/event_loop.h"
 #include "config.h"
 
-cppev::fd_event_handler bind_cb = [](std::shared_ptr<cppev::nio> iop) -> void
+cppev::fd_event_handler bind_cb = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = iopu->recv();
