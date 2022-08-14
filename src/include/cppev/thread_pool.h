@@ -24,8 +24,7 @@ public:
     {
         for (int i = 0; i < thr_num; ++i)
         {
-            thrs_.push_back(std::shared_ptr<Runnable>
-                (new Runnable(std::forward<Args>(args)...)));
+            thrs_.push_back(std::make_shared<Runnable>(std::forward<Args>(args)...));
         }
     }
 
@@ -79,7 +78,7 @@ protected:
     std::vector<std::shared_ptr<Runnable> > thrs_;
 };
 
-namespace tpq
+namespace task_queue
 {
 
 using task_handler = std::function<void()>;
@@ -170,8 +169,7 @@ private:
 };
 
 class thread_pool_queue final
-: public tp_task_queue,
-    public thread_pool<tp_task_queue_runnable, tp_task_queue *>
+: public tp_task_queue, public thread_pool<tp_task_queue_runnable, tp_task_queue *>
 {
 public:
     thread_pool_queue(int thr_num)
@@ -191,11 +189,11 @@ public:
     }
 };
 
-}   // namespace tpq
+}   // namespace task_queue
 
-using thread_pool_queue = tpq::thread_pool_queue;
+using thread_pool_queue = task_queue::thread_pool_queue;
 
-using task_handler = tpq::task_handler;
+using task_handler = task_queue::task_handler;
 
 }   // namespace cppev
 
