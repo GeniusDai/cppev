@@ -82,21 +82,7 @@ protected:
 namespace tpq
 {
 
-using task_handler = std::function<void(void *)>;
-
-struct tp_task final
-{
-
-    // Function pointer
-    task_handler func;
-
-    // Function arguments
-    void *args;
-
-    tp_task(task_handler f, void *a)
-    : func(f), args(a)
-    {}
-};
+using task_handler = std::function<void()>;
 
 class tp_task_queue_runnable;
 
@@ -110,29 +96,29 @@ public:
 
     virtual ~tp_task_queue() = default;
 
-    void add_task(std::shared_ptr<tp_task> t)
+    void add_task(task_handler h)
     {
         {
             std::unique_lock<std::mutex> lock(lock_);
-            queue_.push(t);
+            queue_.push(std::make_shared<task_handler>(h));
         }
         cond_.notify_one();
     }
 
-    void add_task(std::vector<std::shared_ptr<tp_task> > &vt)
+    void add_task(const std::vector<std::shared_ptr<task_handler> > &vh)
     {
         {
             std::unique_lock<std::mutex> lock(lock_);
-            for (auto &t : vt)
+            for (const auto &h : vh)
             {
-                queue_.push(t);
+                queue_.push(h);
             }
         }
         cond_.notify_all();
     }
 
 protected:
-    std::queue<std::shared_ptr<tp_task> > queue_;
+    std::queue<std::shared_ptr<task_handler> > queue_;
 
     std::mutex lock_;
 
@@ -151,9 +137,9 @@ public:
 
     void run_impl() override
     {
+        std::shared_ptr<task_handler> handler;
         while(true)
         {
-            std::shared_ptr<tp_task> task;
             {
                 std::unique_lock<std::mutex> lock(tq_->lock_);
                 if (tq_->queue_.empty())
@@ -171,11 +157,11 @@ public:
                         break;
                     }
                 }
-                task = tq_->queue_.front();
+                handler = tq_->queue_.front();
                 tq_->queue_.pop();
             }
             tq_->cond_.notify_all();
-            task->func(task->args);
+            (*handler)();
         }
     }
 
@@ -188,8 +174,8 @@ class thread_pool_queue final
     public thread_pool<tp_task_queue_runnable, tp_task_queue *>
 {
 public:
-    thread_pool_queue(int thr_num) : tp_task_queue(),
-        thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
+    thread_pool_queue(int thr_num)
+    : tp_task_queue(), thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
     {}
 
     ~thread_pool_queue() = default;
@@ -210,8 +196,6 @@ public:
 using thread_pool_queue = tpq::thread_pool_queue;
 
 using task_handler = tpq::task_handler;
-
-using tp_task = tpq::tp_task;
 
 }   // namespace cppev
 

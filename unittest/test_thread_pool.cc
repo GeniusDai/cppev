@@ -20,10 +20,6 @@ public:
 
 const int runnable_tester::sleep_time = 1;
 
-int thr_count = 0;
-
-std::mutex m;
-
 class TestThreadPool
 : public testing::Test
 {
@@ -49,24 +45,24 @@ TEST(TestThreadPool, test_tp0)
 
 TEST(TestThreadPool, test_tp1)
 {
-    int count = 100;
+    int count = 1000;
+    int sum = 0;
+    std::mutex lock;
 
-    auto f = [](void *)
+    auto f = [&]()
     {
-        std::unique_lock<std::mutex> lock(m);
-        thr_count++;
+        std::unique_lock<std::mutex> lk(lock);
+        sum++;
     };
-
-    std::shared_ptr<tp_task> t(new tp_task(f, nullptr));
 
     thread_pool_queue tp(50);
     tp.run();
     for (int i = 0; i < count; ++i)
     {
-        tp.add_task(t);
+        tp.add_task(f);
     }
     tp.stop();
-    ASSERT_EQ(thr_count, count);
+    ASSERT_EQ(sum, count);
 }
 
 }   // namespace cppev
