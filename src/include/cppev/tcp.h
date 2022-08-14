@@ -134,16 +134,18 @@ public:
 
     virtual ~iohandler() = default;
 
+    // Connected socket that has been registered to thread pool is readable
     static void on_readable(const std::shared_ptr<nio> &iop);
 
+    // Connected socket that has been registered to thread pool is writable
     static void on_writable(const std::shared_ptr<nio> &iop);
 
-    // Connected socket is writable, this cb will be executed immediately
-    // by one thread of the pool to do init jobs
+    // Connected socket is writable, this callback is registered by listening thread and
+    // will be executed by one thread of the pool to do init jobs
     static void on_acpt_writable(const std::shared_ptr<nio> &iop);
 
-    // Connected socket is writable, indicating connection is ready for check, this
-    // cb will be executed by one thread of the pool to do init jobs
+    // Connected socket is writable, this callback is registered by connecting thread and
+    // will be executed by one thread of the pool to check the connection and do init jobs
     static void on_cont_writable(const std::shared_ptr<nio> &iop);
 
     void run_impl() override
@@ -152,6 +154,7 @@ public:
     }
 
 private:
+    // Event loop
     std::shared_ptr<event_loop> evp_;
 
     // hosts that failed to connect
@@ -163,8 +166,7 @@ class acceptor
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : evp_(std::shared_ptr<event_loop>(new event_loop(
-        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
+    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {}
 
     acceptor(const acceptor &) = delete;
@@ -180,7 +182,7 @@ public:
     // Specify unix domain listening socket's path
     void listen_unix(const std::string &path);
 
-    // Listening socket is readable, indicating new client arrives, this cb will be executed
+    // Listening socket is readable, indicating new client arrives, this callback will be executed
     // by accept thread to accept connection and assign connection to thread pool
     static void on_acpt_readable(const std::shared_ptr<nio> &iop);
 
@@ -209,13 +211,13 @@ public:
 
     void listen(int port, family f, const char *ip = nullptr)
     {
-        acpts_.push_back(std::shared_ptr<acceptor>(new acceptor(data_.get())));
+        acpts_.push_back(std::make_shared<acceptor>(data_.get()));
         acpts_.back()->listen(port, f, ip);
     }
 
     void listen_unix(const std::string &path)
     {
-        acpts_.push_back(std::shared_ptr<acceptor>(new acceptor(data_.get())));
+        acpts_.push_back(std::make_shared<acceptor>(data_.get()));
         acpts_.back()->listen_unix(path);
     }
 
@@ -255,16 +257,15 @@ class connector
 {
 public:
     explicit connector(tp_shared_data *data)
-    : evp_(std::shared_ptr<event_loop>(new event_loop(
-        reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))))
+    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {
         int pipefd[2];
         if (pipe(pipefd) == -1)
         {
             throw_system_error("pipe error");
         }
-        rdp_ = std::shared_ptr<nstream>(new nstream(pipefd[0]));
-        wrp_ = std::shared_ptr<nstream>(new nstream(pipefd[1]));
+        rdp_ = std::make_shared<nstream>(pipefd[0]);
+        wrp_ = std::make_shared<nstream>(pipefd[1]);
     }
 
     connector(const connector &) = delete;
@@ -280,8 +281,8 @@ public:
     // Add connection task (path, 0, family::local)
     void add_unix(const std::string &path, int t = 1);
 
-    // Pipe fd is readable, indicating new task added, this cb will be executed by
-    // connect thread to init connection
+    // Pipe fd is readable, indicating new task added, this callback will be executed by
+    // connect thread to execute the connection task and assign connection to thread pool
     static void on_pipe_readable(const std::shared_ptr<nio> &iop);
 
     // Register readable to event loop and start loop

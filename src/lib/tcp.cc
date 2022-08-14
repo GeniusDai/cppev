@@ -269,7 +269,7 @@ void connector::run_impl()
 
 tcp_server::tcp_server(int thr_num, void *external_data)
 {
-    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data(external_data));
+    data_ = std::make_shared<tp_shared_data>(external_data);
     tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
         (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
     for (int i = 0; i < tp_->size(); ++i)
@@ -296,7 +296,7 @@ void tcp_server::run()
 
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
 {
-    data_ = std::shared_ptr<tp_shared_data>(new tp_shared_data(external_data));
+    data_ = std::make_shared<tp_shared_data>(external_data);
     tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
         (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
     for (int i = 0; i < tp_->size(); ++i)
@@ -305,7 +305,7 @@ tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
     }
     for (int i = 0; i < cont_num; ++i)
     {
-        conts_.push_back(std::shared_ptr<connector>(new connector(data_.get())));
+        conts_.push_back(std::make_shared<connector>(data_.get()));
     }
     data_->ptr = this;
 }

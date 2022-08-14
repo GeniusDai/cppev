@@ -68,6 +68,6 @@ void lru_cache<Key, Value>::put(Key key, Value value)
     hash_[key] = cache_.begin();
 }
 
-}
+}   // namespace cppev
 
 #endif  // lru_cache.h

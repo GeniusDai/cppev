@@ -701,7 +701,7 @@ std::shared_ptr<nsocktcp> get_nsocktcp(family f)
     {
         throw_system_error("socket error");
     }
-    return std::shared_ptr<nsocktcp>(new nsocktcp(fd, f));
+    return std::make_shared<nsocktcp>(fd, f);
 }
 
 std::shared_ptr<nsockudp> get_nsockudp(family f)

@@ -15,7 +15,7 @@ std::shared_ptr<nwatcher> get_nwatcher()
     {
         throw_system_error("inotify_init error");
     }
-    return std::shared_ptr<nwatcher>(new nwatcher(fd));
+    return std::make_shared<nwatcher>(fd);
 }
 
 }   // namespace nio_factory
