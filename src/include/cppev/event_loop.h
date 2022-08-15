@@ -81,13 +81,13 @@ public:
 
     void set_on_loop(const evlp_handler &handler)
     {
-        on_loop_ = handler;
+        evlp_handler_ = handler;
     }
 
     // Register fd event to event pollor
     // @param iop       nio smart pointer
     // @param ev_type   event type
-    // @param handler     callback
+    // @param handler   fd event handler
     // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
@@ -107,9 +107,9 @@ public:
     {
         while(true)
         {
-            if (on_loop_)
+            if (evlp_handler_)
             {
-                on_loop_(*this);
+                evlp_handler_(*this);
             }
 #ifdef CPPEV_DEBUG
             log::info << "start event loop" << log::endl;
@@ -120,7 +120,7 @@ public:
 
 private:
     // When event loop starts;
-    evlp_handler on_loop_;
+    evlp_handler evlp_handler_;
 
     // Used for registering callback for event loop
     std::mutex lock_;
