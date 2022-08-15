@@ -55,7 +55,7 @@ void nwatcher::process_events()
     }
 }
 
-timer::timer(int interval, timer_handler handler, void *data)
+timer::timer(int interval, const timer_handler &handler, void *data)
 : handler_(handler), data_(data)
 {
     sigevent sev;

@@ -95,7 +95,7 @@ public:
 
     virtual ~tp_task_queue() = default;
 
-    void add_task(task_handler h)
+    void add_task(const task_handler &h)
     {
         {
             std::unique_lock<std::mutex> lock(lock_);

@@ -87,11 +87,11 @@ public:
     // Register fd event to event pollor
     // @param iop       nio smart pointer
     // @param ev_type   event type
-    // @param ev_cb     callback
+    // @param handler     callback
     // @param activate  whether register to os io-multiplexing api
     // @param prio      event priority
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-        const fd_event_handler &ev_cb = fd_event_handler(), bool activate = true, priority prio = low);
+        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = low);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer

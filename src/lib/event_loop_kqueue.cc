@@ -55,7 +55,7 @@ event_loop::event_loop(void *data, void *back)
 }
 
 void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &ev_cb, bool activate, priority prio)
+    const fd_event_handler &handler, bool activate, priority prio)
 {
 #ifdef CPPEV_DEBUG
     log::info << "Eventloop [Action:register] ";
@@ -70,7 +70,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
         log::info << "[Event:writable] ";
     }
 
-    if (ev_cb)
+    if (handler)
     {
         log::info << "[Callback:not-null] ";
     }
@@ -90,10 +90,10 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
     log::info << log::endl;
 #endif  // CPPEV_DEBUG
     iop->set_evlp(this);
-    if (ev_cb)
+    if (handler)
     {
         std::unique_lock<std::mutex> lock(lock_);
-        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(ev_cb), ev_type));
+        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(handler), ev_type));
     }
     if (activate)
     {

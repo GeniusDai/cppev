@@ -20,11 +20,11 @@ class nwatcher final
 : public nstream
 {
 public:
-    explicit nwatcher(int fd, fs_event_handler handler = nullptr)
+    explicit nwatcher(int fd, fs_event_handler handler = fs_event_handler())
     : nio(fd), nstream(fd), handler_(handler)
     {}
 
-    void set_handler(fs_event_handler handler)
+    void set_handler(const fs_event_handler &handler)
     {
         handler_ = handler;
     }
@@ -114,7 +114,7 @@ class timer final
 public:
     using timer_handler = std::function<void(void *)>;
 
-    explicit timer(int interval, timer_handler handler, void *data = nullptr);
+    explicit timer(int interval, const timer_handler &handler, void *data = nullptr);
 
     timer(const timer &) = delete;
     timer &operator=(const timer &) = delete;

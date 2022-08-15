@@ -64,7 +64,7 @@ public:
 
     // Wait for thread
     // @Ret: whether thread finishes
-    bool wait_for(std::chrono::milliseconds span)
+    bool wait_for(const std::chrono::milliseconds &span)
     {
         std::future_status stat = fut_.wait_for(span);
         bool ret = false;
