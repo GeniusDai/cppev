@@ -361,6 +361,6 @@ void tcp_client::run()
     }
 }
 
-}   // namespace tcp
+}   // namespace reactor
 
 }   // namespace cppev

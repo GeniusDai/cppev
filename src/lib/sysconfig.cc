@@ -7,19 +7,19 @@ namespace cppev
 namespace sysconfig
 {
 
-// buffer size for reading inotify fd
+// buffer size for reading linux inotify fd
 int inotify_step = 1024;
 
 // buffer size for udp socket
 int udp_buffer_size = 2048;
 
-// param backlog for ::listen()
+// param backlog for listen()
 int listen_number = SOMAXCONN;
 
-// param size for ::epoll_create() and ::epoll_wait()
+// param size for epoll_create()/epoll_wait()/kevent()
 int event_number = 2048;
 
-// logger thread buffer outdate timespan in seconds
+// hashed logger thread buffer outdate timespan in seconds
 int buffer_outdate = 30;
 
 // batch size for IO
