@@ -17,7 +17,7 @@
 namespace cppev
 {
 
-namespace tcp
+namespace reactor
 {
 
 // Callback function type
@@ -30,7 +30,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt);
 void safely_close(const std::shared_ptr<nsocktcp> &iopt);
 
 // Get external data of reactor server and client
-void *reactor_external_data(const std::shared_ptr<nsocktcp> &iopt);
+void *external_data(const std::shared_ptr<nsocktcp> &iopt);
 
 class acceptor;
 class connector;
@@ -161,6 +161,7 @@ private:
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
+
 class acceptor
 : public runnable
 {
@@ -196,6 +197,7 @@ private:
     // Listening socket
     std::shared_ptr<nsocktcp> sock_;
 };
+
 
 class tcp_server final
 {
@@ -305,6 +307,7 @@ private:
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
+
 class tcp_client final
 {
 public:
@@ -351,11 +354,7 @@ private:
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
 
-}   // namespace tcp
-
-using tcp::tcp_client;
-using tcp::tcp_server;
-using tcp::tcp_event_handler;
+}   // namespace reactor
 
 }   // namespace cppev
 

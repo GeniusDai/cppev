@@ -29,7 +29,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<cppev::nstream> > hash_;
 };
 
-cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "callback : on_read_complete" << cppev::log::endl;
     std::string filename = iopt->rbuf()->get_string(-1, false);
@@ -41,24 +41,24 @@ cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsoc
     filename = filename.substr(0, filename.size()-1);
     cppev::log::info << "client request file : " << filename << cppev::log::endl;
 
-    filecache *fc =reinterpret_cast<filecache *>(cppev::tcp::reactor_external_data(iopt));
+    filecache *fc =reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt));
     cppev::buffer *bf = fc->lazyload(filename);
 
     iopt->wbuf()->produce(bf->rawbuf(), bf->size());
-    cppev::tcp::async_write(iopt);
+    cppev::reactor::async_write(iopt);
     cppev::log::info << "transfer file complete" << cppev::log::endl;
 };
 
-cppev::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
-    cppev::tcp::safely_close(iopt);
+    cppev::reactor::safely_close(iopt);
 };
 
 int main()
 {
     filecache cache;
-    cppev::tcp_server server(2, &cache);
+    cppev::reactor::tcp_server server(2, &cache);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
     server.listen(PORT, cppev::family::ipv4);

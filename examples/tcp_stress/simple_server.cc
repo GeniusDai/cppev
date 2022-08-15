@@ -21,20 +21,20 @@
  * 
  * On the socket closed, log the info.
  */
-cppev::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->wbuf()->put_string("Cppev is a C++ event driven library");
-    cppev::tcp::async_write(iopt);
+    cppev::reactor::async_write(iopt);
     cppev::log::info << "Connection " << iopt->fd() << " arrived" << cppev::log::endl;
 };
 
-cppev::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->wbuf()->put_string(iopt->rbuf()->get_string());
-    cppev::tcp::async_write(iopt);
+    cppev::reactor::async_write(iopt);
 };
 
-cppev::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "Connection " << iopt->fd() << " closed by opposite host" << cppev::log::endl;
 };
@@ -47,7 +47,7 @@ cppev::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &
  */
 int main()
 {
-    cppev::tcp_server server(SERVER_WORKER_NUM);
+    cppev::reactor::tcp_server server(SERVER_WORKER_NUM);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
     server.set_on_closed(on_closed);

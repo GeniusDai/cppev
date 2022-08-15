@@ -3,7 +3,7 @@
 namespace cppev
 {
 
-namespace tcp
+namespace reactor
 {
 
 event_loop *tp_shared_data::random_get_evlp()
@@ -59,7 +59,7 @@ void safely_close(const std::shared_ptr<nsocktcp> &iopt)
     iopt->close();
 }
 
-void *reactor_external_data(const std::shared_ptr<nsocktcp> &iopt)
+void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 {
     return (reinterpret_cast<tp_shared_data *>(iopt->evlp()->data()))->external_data();
 }
