@@ -24,7 +24,7 @@ async_logger &async_logger::operator<<(const std::string &str)
     return (*this) << str.c_str();
 }
 
-async_logger &async_logger::operator<<(const long x)
+async_logger &async_logger::operator<<(long x)
 {
     return (*this) << std::to_string(x).c_str();
 }
@@ -34,12 +34,12 @@ async_logger &async_logger::operator<<(int x)
     return (*this) << std::to_string(x).c_str();
 }
 
-async_logger &async_logger::operator<<(const double x)
+async_logger &async_logger::operator<<(double x)
 {
     return (*this) << std::to_string(x).c_str();
 }
 
-async_logger &async_logger::operator<<(const float x)
+async_logger &async_logger::operator<<(float x)
 {
     return (*this) << std::to_string(x).c_str();
 }

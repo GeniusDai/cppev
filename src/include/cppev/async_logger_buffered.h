@@ -30,13 +30,13 @@ public:
 
     async_logger &operator<<(const std::string &str);
 
-    async_logger &operator<<(const long x);
+    async_logger &operator<<(long x);
 
     async_logger &operator<<(int x);
 
-    async_logger &operator<<(const double x);
+    async_logger &operator<<(double x);
 
-    async_logger &operator<<(const float x);
+    async_logger &operator<<(float x);
 
 private:
     void write_debug(buffer *buf);
