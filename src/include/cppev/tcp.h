@@ -100,6 +100,7 @@ public:
     // Load balance algorithm : choose worker which has minimum loads
     event_loop *minloads_get_evlp();
 
+    // External data defined by user
     void *external_data()
     {
         return external_data_ptr;
@@ -110,7 +111,7 @@ private:
     std::vector<event_loop *> evls;
 
     // Pointer to reactor server or client
-    void *ptr;
+    void *reactor_ptr;
 
     // Pointer to external data may be used by handler registered by user
     void *external_data_ptr;
@@ -124,7 +125,7 @@ class iohandler
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
+    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {}
 
     iohandler(const iohandler &) = delete;
@@ -150,14 +151,14 @@ public:
 
     void run_impl() override
     {
-        evp_->loop();
+        evlp_->loop();
     }
 
 private:
     // Event loop
-    std::shared_ptr<event_loop> evp_;
+    std::shared_ptr<event_loop> evlp_;
 
-    // hosts that failed to connect
+    // Hosts failed in the SO_ERROR check
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
@@ -167,7 +168,7 @@ class acceptor
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
+    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {}
 
     acceptor(const acceptor &) = delete;
@@ -192,7 +193,7 @@ public:
 
 private:
     // Event loop
-    std::shared_ptr<event_loop> evp_;
+    std::shared_ptr<event_loop> evlp_;
 
     // Listening socket
     std::shared_ptr<nsocktcp> sock_;
@@ -246,10 +247,13 @@ public:
     void run();
 
 private:
+    // Thread pool shared data
     std::shared_ptr<tp_shared_data> data_;
 
+    // Listening threads
     std::vector<std::shared_ptr<acceptor> > acpts_;
 
+    // Worker threads
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
 
@@ -259,7 +263,7 @@ class connector
 {
 public:
     explicit connector(tp_shared_data *data)
-    : evp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
+    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {
         int pipefd[2];
         if (pipe(pipefd) == -1)
@@ -292,7 +296,7 @@ public:
 
 private:
     // Event loop
-    std::shared_ptr<event_loop> evp_;
+    std::shared_ptr<event_loop> evlp_;
 
     // Pipe write end
     std::shared_ptr<nstream> wrp_;
@@ -300,10 +304,10 @@ private:
     // Pipe read end
     std::shared_ptr<nstream> rdp_;
 
-    // hosts waiting for connecting
+    // Hosts waiting for connecting
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts_;
 
-    // hosts that failed to connect
+    // Hosts failed in the connect syscall
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
@@ -347,10 +351,13 @@ public:
     void run();
 
 private:
+    // Thread pool shared data
     std::shared_ptr<tp_shared_data> data_;
 
+    // Connecting threads
     std::vector<std::shared_ptr<connector> > conts_;
 
+    // Worker threads
     std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
 };
 

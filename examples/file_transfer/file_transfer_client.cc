@@ -42,15 +42,15 @@ cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::n
     {
         cppev::throw_system_error("open error");
     }
-    fdcache *ptrcache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
-    ptrcache->setfd(iopt->fd() ,fd);
+    fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
+    cache->setfd(iopt->fd() ,fd);
 };
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->read_all();
-    fdcache *ptrcache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
-    auto ios = ptrcache->getfd(iopt->fd());
+    fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
+    auto ios = cache->getfd(iopt->fd());
     ios->wbuf()->put_string(iopt->rbuf()->get_string());
     ios->write_all();
     cppev::log::info << "write chunk to file complete" << cppev::log::endl;

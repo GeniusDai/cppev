@@ -17,17 +17,17 @@ event_loop *tp_shared_data::random_get_evlp()
 event_loop *tp_shared_data::minloads_get_evlp()
 {
     int minloads = INT32_MAX;
-    event_loop *minloads_evp;
-    for (auto evp : evls)
+    event_loop *minloads_evlp;
+    for (auto evlp : evls)
     {
         // This is not thread safe but it's okay
-        if (evp->ev_loads() < minloads)
+        if (evlp->ev_loads() < minloads)
         {
-            minloads_evp = evp;
-            minloads = evp->ev_loads();
+            minloads_evlp = evlp;
+            minloads = evlp->ev_loads();
         }
     }
-    return minloads_evp;
+    return minloads_evlp;
 }
 
 
@@ -53,7 +53,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
 
 void safely_close(const std::shared_ptr<nsocktcp> &iopt)
 {
-    std::shared_ptr<cppev::nio> iop = std::dynamic_pointer_cast<cppev::nio>(iopt);
+    std::shared_ptr<nio> iop = std::dynamic_pointer_cast<nio>(iopt);
     // epoll/kqueue will remove fd when it's closed
     iopt->evlp()->fd_remove(iop, true, false);
     iopt->close();
@@ -183,9 +183,9 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
 
 void acceptor::run_impl()
 {
-    evp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
+    evlp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable, true);
-    evp_->loop();
+    evlp_->loop();
 }
 
 void connector::add(const std::string &ip, int port, family f, int t)
@@ -262,21 +262,20 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 
 void connector::run_impl()
 {
-    evp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
+    evlp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable, true);
-    evp_->loop();
+    evlp_->loop();
 }
 
 tcp_server::tcp_server(int thr_num, void *external_data)
 {
     data_ = std::make_shared<tp_shared_data>(external_data);
-    tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
-        (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
+    tp_ = std::make_shared<thread_pool<iohandler, tp_shared_data *> >(thr_num, data_.get());
     for (int i = 0; i < tp_->size(); ++i)
     {
-        data_->evls.push_back((*tp_)[i]->evp_.get());
+        data_->evls.push_back((*tp_)[i]->evlp_.get());
     }
-    data_->ptr = this;
+    data_->reactor_ptr = this;
 }
 
 void tcp_server::run()
@@ -297,17 +296,16 @@ void tcp_server::run()
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
 {
     data_ = std::make_shared<tp_shared_data>(external_data);
-    tp_ = std::shared_ptr<thread_pool<iohandler, tp_shared_data *> >
-        (new thread_pool<iohandler, tp_shared_data *>(thr_num, data_.get()));
+    tp_ = std::make_shared<thread_pool<iohandler, tp_shared_data *> >(thr_num, data_.get());
     for (int i = 0; i < tp_->size(); ++i)
     {
-        data_->evls.push_back((*tp_)[i]->evp_.get());
+        data_->evls.push_back((*tp_)[i]->evlp_.get());
     }
     for (int i = 0; i < cont_num; ++i)
     {
         conts_.push_back(std::make_shared<connector>(data_.get()));
     }
-    data_->ptr = this;
+    data_->reactor_ptr = this;
 }
 
 void tcp_client::add(const std::string &ip, int port, family f, int t)
