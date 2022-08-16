@@ -10,7 +10,7 @@
 
 * Support readable / writable event listening by using io-multiplexing.
 
-### Concurrency
+### Concurrency Handling
 
 * Support thread pool with variadic-template and task-queue.
 
@@ -42,14 +42,21 @@ Five callbacks could be registered:
 
 * Prerequirement
 
-        OS           : Linux / macOS.
-        Compiler     : g++ support c++17.
-        Dependency   : googletest / cmake / make.
+        OS           :  Linux / macOS.
+        Compiler     :  g++ support c++17.
+        Dependency   :  googletest / cmake / make.
 
-* Build and Run Test
+* Build
 
         $ mkdir build && cd build
         $ cmake .. && make
+
+* Install Library
+
+        $ make install
+
+* Run Unittest
+
         $ cd unittest && ctest
 
 # Issues and Maintenance

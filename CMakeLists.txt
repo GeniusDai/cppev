@@ -17,4 +17,3 @@ install(
 install(
     DIRECTORY "src/include/cppev" DESTINATION include
 )
-
