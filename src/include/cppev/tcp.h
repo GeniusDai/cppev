@@ -58,7 +58,7 @@ private:
     friend class tcp_client;
 
     // Idle function for callback
-    tcp_event_handler idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
+    static const tcp_event_handler idle_handler;
 
 public:
     // All the five callbacks will be executed by worker thread
@@ -224,22 +224,22 @@ public:
         acpts_.back()->listen_unix(path);
     }
 
-    void set_on_accept(tcp_event_handler handler)
+    void set_on_accept(const tcp_event_handler &handler)
     {
         data_->on_accept = handler;
     }
 
-    void set_on_read_complete(tcp_event_handler handler)
+    void set_on_read_complete(const tcp_event_handler &handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(tcp_event_handler handler)
+    void set_on_write_complete(const tcp_event_handler &handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(tcp_event_handler handler)
+    void set_on_closed(const tcp_event_handler &handler)
     {
         data_->on_closed = handler;
     }
@@ -328,22 +328,22 @@ public:
 
     void add_unix(const std::string &path, int t = 1);
 
-    void set_on_connect(tcp_event_handler handler)
+    void set_on_connect(const tcp_event_handler &handler)
     {
         data_->on_connect = handler;
     }
 
-    void set_on_read_complete(tcp_event_handler handler)
+    void set_on_read_complete(const tcp_event_handler &handler)
     {
         data_->on_read_complete = handler;
     }
 
-    void set_on_write_complete(tcp_event_handler handler)
+    void set_on_write_complete(const tcp_event_handler &handler)
     {
         data_->on_write_complete = handler;
     }
 
-    void set_on_closed(tcp_event_handler handler)
+    void set_on_closed(const tcp_event_handler &handler)
     {
         data_->on_closed = handler;
     }

@@ -20,7 +20,7 @@ class nwatcher final
 : public nstream
 {
 public:
-    explicit nwatcher(int fd, fs_event_handler handler = fs_event_handler())
+    explicit nwatcher(int fd, const fs_event_handler &handler = fs_event_handler())
     : nio(fd), nstream(fd), handler_(handler)
     {}
 
