@@ -21,7 +21,7 @@ public:
     ~shared_memory();
 
     template <typename SharedClass, typename... Args>
-    void constructor(Args&&... args)
+    void construct(Args&&... args)
     {
         SharedClass *object = new (ptr_) SharedClass(std::forward<Args>(args)...);
         if (object == nullptr)
@@ -31,7 +31,7 @@ public:
     }
 
     template <typename SharedClass>
-    void destructor()
+    void destruct()
     {
         SharedClass *object = reinterpret_cast<SharedClass *>(ptr_);
         object->~SharedClass();
