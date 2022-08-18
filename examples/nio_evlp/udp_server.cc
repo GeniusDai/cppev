@@ -3,7 +3,7 @@
 #include "cppev/event_loop.h"
 #include "config.h"
 
-cppev::fd_event_handler bind_cb = [](const std::shared_ptr<cppev::nio> &iop) -> void
+cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = iopu->recv();
@@ -25,13 +25,12 @@ void start_server_loop()
     udp_ipv6->bind(         UDP_IPV6_PORT   );
     udp_unix->bind_unix(    UDP_UNIX_PATH   );
 
-    evlp.fd_register(udp_ipv4, cppev::fd_event::fd_readable, bind_cb);
-    evlp.fd_register(udp_ipv6, cppev::fd_event::fd_readable, bind_cb);
-    evlp.fd_register(udp_unix, cppev::fd_event::fd_readable, bind_cb);
+    evlp.fd_register(udp_ipv4, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register(udp_ipv6, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register(udp_unix, cppev::fd_event::fd_readable, binding_socket_callback);
 
     evlp.loop();
 }
-
 
 int main()
 {

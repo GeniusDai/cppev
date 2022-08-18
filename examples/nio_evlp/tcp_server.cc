@@ -3,7 +3,7 @@
 #include "cppev/nio.h"
 #include "config.h"
 
-cppev::fd_event_handler conn_cb = [](const std::shared_ptr<cppev::nio> &iop) -> void
+cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
@@ -16,12 +16,12 @@ cppev::fd_event_handler conn_cb = [](const std::shared_ptr<cppev::nio> &iop) -> 
     iop->evlp()->fd_remove(iop);
 };
 
-cppev::fd_event_handler listen_cb = [](const std::shared_ptr<cppev::nio> &iop) -> void
+cppev::fd_event_handler listening_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     std::shared_ptr<cppev::nsocktcp> conn = iopt->accept(1)[0];
     iop->evlp()->fd_register(std::dynamic_pointer_cast<cppev::nio>(conn),
-        cppev::fd_event::fd_readable, conn_cb, true);
+        cppev::fd_event::fd_readable, accepted_socket_callback, true);
 };
 
 void start_server_loop()
@@ -37,9 +37,9 @@ void start_server_loop()
     tcp_ipv6->listen(       TCP_IPV6_PORT   );
     tcp_unix->listen_unix(  TCP_UNIX_PATH   );
 
-    evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listen_cb);
-    evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listen_cb);
-    evlp.fd_register(tcp_unix, cppev::fd_event::fd_readable, listen_cb);
+    evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
 
     evlp.loop();
 }

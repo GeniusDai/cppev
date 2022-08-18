@@ -50,9 +50,9 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
 {
     iopt->read_all();
     fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
-    auto ios = cache->getfd(iopt->fd());
-    ios->wbuf()->put_string(iopt->rbuf()->get_string());
-    ios->write_all();
+    auto iops = cache->getfd(iopt->fd());
+    iops->wbuf()->put_string(iopt->rbuf()->get_string());
+    iops->write_all();
     cppev::log::info << "write chunk to file complete" << cppev::log::endl;
 };
 
