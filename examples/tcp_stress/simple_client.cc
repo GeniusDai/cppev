@@ -10,12 +10,14 @@
 
 /*
  * Define Handler
- * 
- * On the socket connect succeeded, log the info.
- * 
- * On the socket read from sys-buffer completed, write the message back to the server.
- * 
- * On the socket write to sys-buffer completed, log the info.
+ *
+ * On the socket connect succeeded : Log the info.
+ *
+ * On the socket read from sys-buffer completed : Write the message back to the server.
+ *
+ * On the socket write to sys-buffer completed : Log the info.
+ *
+ * On the socket closed : Log the info.
  */
 cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
@@ -36,6 +38,11 @@ cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<c
     cppev::log::info << "[fd] " << iopt->fd() << " | [callback] write_complete" << cppev::log::endl;
 };
 
+cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+{
+    cppev::log::info << "Connection " << iopt->fd() << " closed by opposite host" << cppev::log::endl;
+};
+
 /*
  * Start Client
  *
@@ -48,6 +55,7 @@ int main()
     client.set_on_connect(on_connect);
     client.set_on_read_complete(on_read_complete);
     client.set_on_write_complete(on_write_complete);
+    client.set_on_closed(on_closed);
 
     // Please lower the concurrency number if server refused to connect
     // in your OS, especially the unix domain socket.

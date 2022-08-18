@@ -12,14 +12,16 @@
 /*
  * Define handler
  *
- * On the socket accepted, put the message to the write buffer, then trying to send it.
+ * On the socket accepted : Put the message to the write buffer, then trying to send it.
  * The async_write here means if the message is very long then would register writable
  * event to do asynchrous write.
  *
- * On the socket read from sys-buffer completed, retrieve the message from read buffer, then
+ * On the socket read from sys-buffer completed : Retrieve the message from read buffer, then
  * put to the write buffer and trying to send it.
- * 
- * On the socket closed, log the info.
+ *
+ * On the socket write to sys-buffer completed : Log the info.
+ *
+ * On the socket closed : Log the info.
  */
 cppev::reactor::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
@@ -32,6 +34,11 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
 {
     iopt->wbuf()->put_string(iopt->rbuf()->get_string());
     cppev::reactor::async_write(iopt);
+};
+
+cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+{
+    cppev::log::info << "[fd] " << iopt->fd() << " | [callback] write_complete" << cppev::log::endl;
 };
 
 cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
@@ -50,12 +57,13 @@ int main()
     cppev::reactor::tcp_server server(SERVER_WORKER_NUM);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
+    server.set_on_write_complete(on_write_complete);
     server.set_on_closed(on_closed);
 
     // Create listening thread
+    remove(UNIX_PATH);
     server.listen(     IPV4_PORT, cppev::family::ipv4);
     server.listen(     IPV6_PORT, cppev::family::ipv6);
-    remove(UNIX_PATH);
     server.listen_unix(UNIX_PATH);
 
     server.run();
