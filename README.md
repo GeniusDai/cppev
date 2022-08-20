@@ -8,25 +8,21 @@
 
 * Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
-* Support readable / writable event listening by using io-multiplexing.
+* Support readable / writable event listening by io-multiplexing.
 
 ### Concurrency Handling
 
-* Support thread pool with variadic-template and task-queue.
-
-* Support posix ipc shared_memory and semaphore.
-
-* Support executing command by subprocess and communicate through pipe.
+* Supoort thread-pool / shared-memory / semaphore / subprocess.
 
 ### Massive Tcp Connection Handling
 
-Reactor similiar to Netty:
+Supoort reactor:
 
 * Server: multi-acceptor-thread and io-thread-pool.
 
 * Client: multi-connector-thread and io-thread-pool.
 
-Five callbacks could be registered:
+Support registering callbacks:
 
 * on_accept: server accept connection (works only for server).
 
@@ -51,7 +47,7 @@ Five callbacks could be registered:
         $ mkdir build && cd build
         $ cmake .. && make
 
-* Install Library
+* Install
 
         $ make install
 
@@ -61,7 +57,7 @@ Five callbacks could be registered:
 
 # Getting Started
 
-Please see the examples and there is a tutorial.
+Please see the examples along with a tutorial.
 
 # Issues and Maintenance
 
