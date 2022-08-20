@@ -59,10 +59,12 @@ Five callbacks could be registered:
 
         $ cd unittest && ctest
 
+# Getting Started
+
+Please see the examples and there is a tutorial.
+
 # Issues and Maintenance
 
-* Due to rapid development, regression issue may occur intermittently in the dev branch. Try git pull when you're blocked by compile/runtime issue.
+Repo will be long-term maintained, author will keep working on the todo-list. If you found any shortage or any new feature nice to have, feel free to raise an issue.
 
-* Repo will be long-term maintained, author will keep working on the todo-list. If you found any shortage or any new feature nice to have, feel free to raise an issue.
-
-* First release may be in 2025 due to author need some time to make sure the architecture is well designed. So before this day API may be changed.
+First release may be in 2024 due to author need some time to make sure the architecture is well designed. So before this day API may be changed.
