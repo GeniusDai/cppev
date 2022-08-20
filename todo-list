@@ -1,6 +1,5 @@
 P1:
     Support retry for connect in reactor
-    Tutorial for examples
 
 P2:
     Dynamic library loader
