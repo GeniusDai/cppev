@@ -1,4 +1,4 @@
-# Exmaples Tutorial
+# Examples Tutorial
 
 ### 1. Tcp Stress Test
 
@@ -10,7 +10,7 @@ In this example, tcp server initiates three listening threads to support ipc4 / 
         $ ./simple_server       # Shell-1
         $ ./simple_client       # Shell-2
 
-### 2. File Transfer
+### 2. Large File Transfer
 
 In this example, tcp client send the name of the required file, tcp server caches and transfers the required file, then client receives and stores the file to disk.
 
