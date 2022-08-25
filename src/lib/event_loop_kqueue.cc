@@ -1,3 +1,5 @@
+#include "cppev/event_loop.h"
+
 #ifdef __APPLE__
 
 #include <exception>
@@ -7,7 +9,6 @@
 #include <iostream>
 #include <thread>
 #include <ctime>
-#include "cppev/event_loop.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"

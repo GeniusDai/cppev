@@ -66,6 +66,15 @@ void async_logger::write_debug(buffer *buf)
     buf->put_string(ss.str());
 }
 
+std::string async_logger::version()
+{
+#if defined(__CPPEV_USE_HASHED_LOGGER__)
+    return "hashed";
+#else
+    return "buffered";
+#endif
+}
+
 namespace log
 {
     async_logger info(1);

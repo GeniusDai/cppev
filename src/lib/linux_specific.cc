@@ -1,6 +1,6 @@
-#ifdef __linux__
-
 #include "cppev/linux_specific.h"
+
+#ifdef __linux__
 
 namespace cppev
 {

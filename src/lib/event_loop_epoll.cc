@@ -1,3 +1,5 @@
+#include "cppev/event_loop.h"
+
 #ifdef __linux__
 
 #include <exception>
@@ -6,7 +8,6 @@
 #include <tuple>
 #include <iostream>
 #include <thread>
-#include "cppev/event_loop.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 #include "cppev/async_logger.h"

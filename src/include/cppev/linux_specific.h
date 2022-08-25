@@ -1,7 +1,7 @@
-#ifdef __linux__
-
 #ifndef _linux_specific_h_6C0224787A17_
 #define _linux_specific_h_6C0224787A17_
+
+#ifdef __linux__
 
 #include <memory>
 #include <string>
@@ -135,6 +135,6 @@ private:
 
 }   // namespace cppev
 
-#endif  // linux_specific.h
-
 #endif  // __linux__
+
+#endif  // linux_specific.h

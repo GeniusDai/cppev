@@ -38,6 +38,8 @@ public:
 
     async_logger &operator<<(float x);
 
+    static std::string version();
+
 private:
     void write_debug(buffer *buf);
 
