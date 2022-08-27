@@ -36,7 +36,7 @@ Support registering callbacks:
 
 # Usage
 
-* Prerequirement
+### Prerequirement
 
         OS           :  Linux / macOS.
         Compiler     :  g++ support c++17.
@@ -44,29 +44,29 @@ Support registering callbacks:
 
 ### Build with cmake
 
-* Build
+Build
 
         $ mkdir build && cd build
         $ cmake .. && make
 
-* Install
+Install
 
         $ make install
 
-* Run Unittest
+Run Unittest
 
         $ cd unittest && ctest
 
 
 ### Build with bazel
 
-* Build
+Build
 
         $ bazel build ...
 
-* Run Unittest
+Run Unittest
 
-        $ bazel test //unittest:*
+        $ bazel test ...
 
 # Getting Started
 
