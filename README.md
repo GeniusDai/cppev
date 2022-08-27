@@ -40,7 +40,9 @@ Support registering callbacks:
 
         OS           :  Linux / macOS.
         Compiler     :  g++ support c++17.
-        Dependency   :  googletest / cmake / make.
+        Dependency   :  googletest.
+
+### Build with cmake
 
 * Build
 
@@ -54,6 +56,17 @@ Support registering callbacks:
 * Run Unittest
 
         $ cd unittest && ctest
+
+
+### Build with bazel
+
+* Build
+
+        $ bazel build ...
+
+* Run Unittest
+
+        $ bazel test //unittest:*
 
 # Getting Started
 
