@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <filesystem>
 #include "cppev/nio.h"
 #include "cppev/event_loop.h"
 #include "config.h"
@@ -14,7 +14,7 @@ cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev
 
 void start_server_loop()
 {
-    remove(UDP_UNIX_PATH);
+    std::filesystem::remove(UDP_UNIX_PATH);
     cppev::event_loop evlp;
 
     auto udp_ipv4 = cppev::nio_factory::get_nsockudp(cppev::family::ipv4);
