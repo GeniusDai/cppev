@@ -2,6 +2,7 @@ P1:
     Support retry for connect in reactor
 
 P2:
+    Add implementation for timer by using signal
     Dynamic library loader
     Support udp multicast and broadcast
     DNS Resolution
