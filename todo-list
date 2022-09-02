@@ -1,10 +1,7 @@
-P1:
-    Support retry for connect in reactor
-
 P2:
-    Add implementation for timer by using signal
+    Support retry for connect in reactor
     Dynamic library loader
     Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
-    Unittest for : 1) lru_cache; 2) nwatcher;
+    Unittest for nwatcher

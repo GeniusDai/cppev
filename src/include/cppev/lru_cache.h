@@ -13,8 +13,8 @@ template<typename Key, typename Value>
 class lru_cache final
 {
 public:
-    explicit lru_cache(Value miss, int cap = INT_MAX)
-    : miss_(miss), cap_(cap)
+    explicit lru_cache(Value null, long cap = LONG_MAX)
+    : null_(null), cap_(cap)
     {}
 
     lru_cache(const lru_cache &) = delete;
@@ -29,13 +29,13 @@ public:
     void put(Key key, Value value);
 
 private:
-    std::list<std::pair<Key, Value> > cache_;
+    std::list<std::pair<Key, Value>> cache_;
 
-    std::unordered_map<Key, typename std::list<std::pair<Key, Value> >::iterator> hash_;
+    std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator> hash_;
 
-    Value miss_;
+    Value null_;
 
-    int cap_;
+    long cap_;
 };
 
 template<typename Key, typename Value>
@@ -43,7 +43,7 @@ Value lru_cache<Key, Value>::get(Key key)
 {
     if (hash_.count(key) == 0)
     {
-        return miss_;
+        return null_;
     }
     cache_.emplace_front(*hash_[key]);
     cache_.erase(hash_[key]);
@@ -59,7 +59,7 @@ void lru_cache<Key, Value>::put(Key key, Value value)
         cache_.erase(hash_[key]);
         --cap_;
     }
-    if (static_cast<int>(cache_.size()) == cap_)
+    if (cache_.size() == static_cast<size_t>(cap_))
     {
         hash_.erase(cache_.back().first);
         cache_.pop_back();
