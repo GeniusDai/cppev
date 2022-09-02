@@ -55,8 +55,8 @@ void nwatcher::process_events()
     }
 }
 
-timer::timer(int interval, const timer_handler &handler, void *data)
-: handler_(handler), data_(data)
+timer::timer(int interval, const timer_handler &handler)
+: handler_(handler)
 {
     sigevent sev;
     memset(&sev, 0, sizeof(sev));
@@ -65,7 +65,7 @@ timer::timer(int interval, const timer_handler &handler, void *data)
     sev.sigev_notify_function = [](sigval value) -> void
     {
         timer *pseudo_this = reinterpret_cast<timer *>(value.sival_ptr);
-        pseudo_this->handler_(pseudo_this->data_);
+        pseudo_this->handler_();
     };
     if (timer_create(CLOCK_REALTIME, &sev, &tmid_) != 0)
     {

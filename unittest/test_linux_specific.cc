@@ -55,23 +55,23 @@ TEST(TestLinuxSpecific, test_spinlock)
 TEST(TestLinuxSpecific, test_timer)
 {
     int count = 0;
-    timer::timer_handler func = [](void *ptr) -> void
+    timer::timer_handler handler = [&count]()
     {
         std::cout << "sub-tid: " << gettid() << std::endl;
-        int &val = *reinterpret_cast<int *>(ptr);
-        val++;
+        count++;
     };
     std::cout << "main-tid : " << gettid() << std::endl;
     int timer_interval = 1;
     int total_time = 200;
-    double accurate = 0.1;
-    timer tim(1, func, &count);
+    double err_percent = 0.1;
+
+    timer tim(1, handler);
     std::this_thread::sleep_for(std::chrono::milliseconds(total_time));
     tim.stop();
     std::this_thread::sleep_for(std::chrono::microseconds(total_time));
 
-    EXPECT_LE(count, (int)(total_time / timer_interval * (1 + accurate)));
-    EXPECT_GE(count, (int)(total_time / timer_interval * (1 - accurate)));
+    EXPECT_LE(count, (int)(total_time / timer_interval * (1 + err_percent)));
+    EXPECT_GE(count, (int)(total_time / timer_interval * (1 - err_percent)));
 }
 
 }   // namespace cppev

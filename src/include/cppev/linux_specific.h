@@ -112,9 +112,9 @@ private:
 class timer final
 {
 public:
-    using timer_handler = std::function<void(void *)>;
+    using timer_handler = std::function<void(void)>;
 
-    explicit timer(int interval, const timer_handler &handler, void *data = nullptr);
+    explicit timer(int interval, const timer_handler &handler);
 
     timer(const timer &) = delete;
     timer &operator=(const timer &) = delete;
@@ -127,8 +127,6 @@ public:
 
 private:
     timer_handler handler_;
-
-    void *data_;
 
     timer_t tmid_;
 };
