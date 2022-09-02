@@ -4,19 +4,19 @@
 
 ### IO Handling
 
-* Support disk-file / pipe / fifo / socket.
+Support disk-file / pipe / fifo / socket.
 
-* Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
+Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
-* Support readable / writable event listening by io-multiplexing.
+Support readable / writable event handling by io-multiplexing.
 
 ### Concurrency Handling
 
-* Supoort thread-pool / shared-memory / semaphore / subprocess.
+Support thread-pool / shared-memory / semaphore / subprocess.
 
 ### Massive Tcp Connection Handling
 
-Supoort reactor:
+Support reactor:
 
 * Server: multi-acceptor-thread and io-thread-pool.
 
