@@ -14,42 +14,6 @@
 namespace cppev
 {
 
-using fs_event_handler = std::function<void(inotify_event *, const std::string &)>;
-
-class nwatcher final
-: public nstream
-{
-public:
-    explicit nwatcher(int fd, const fs_event_handler &handler = fs_event_handler())
-    : nio(fd), nstream(fd), handler_(handler)
-    {}
-
-    void set_handler(const fs_event_handler &handler)
-    {
-        handler_ = handler;
-    }
-
-    void add_watch(const std::string &path, uint32_t events);
-
-    void del_watch(const std::string &path);
-
-    void process_events();
-
-private:
-    std::unordered_map<int, std::string> wds_;
-
-    std::unordered_map<std::string, int> paths_;
-
-    fs_event_handler handler_;
-};
-
-namespace nio_factory
-{
-
-std::shared_ptr<nwatcher> get_nwatcher();
-
-} // namespace nio_factory
-
 class spinlock final
 {
 public:

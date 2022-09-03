@@ -5,56 +5,6 @@
 namespace cppev
 {
 
-namespace nio_factory
-{
-
-std::shared_ptr<nwatcher> get_nwatcher()
-{
-    int fd = inotify_init();
-    if (fd < 0)
-    {
-        throw_system_error("inotify_init error");
-    }
-    return std::make_shared<nwatcher>(fd);
-}
-
-}   // namespace nio_factory
-
-void nwatcher::add_watch(const std::string &path, uint32_t events)
-{
-    int wd = inotify_add_watch(fd_, path.c_str(), events);
-    if (wd < 0)
-    {
-        throw_system_error("inotify_add_watch error");
-    }
-    if (wds_.count(wd) == 0)
-    {
-        wds_[wd] = path; paths_[path] = wd;
-    }
-}
-
-void nwatcher::del_watch(const std::string &path)
-{
-    int wd = paths_[path];
-    paths_.erase(path); wds_.erase(wd);
-    if (inotify_rm_watch(fd_, paths_[path]) < 0)
-    {
-        throw_system_error("inotify_rm_watch error");
-    }
-}
-
-void nwatcher::process_events()
-{
-    int len = read_chunk(sysconfig::inotify_step);
-    char *p = rbuf()->rawbuf();
-    for (char *s = p; s < p + len; ++s)
-    {
-        inotify_event *evp = (inotify_event *)s;
-        handler_(evp, wds_[evp->wd].c_str());
-        p += sizeof(inotify_event) + evp->len;
-    }
-}
-
 timer::timer(int interval, const timer_handler &handler)
 : handler_(handler)
 {

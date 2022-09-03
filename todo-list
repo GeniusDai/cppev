@@ -4,4 +4,3 @@ P2:
     Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
-    Unittest for nwatcher
