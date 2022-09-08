@@ -124,7 +124,7 @@ public:
         }
     }
 
-    void wait(std::unique_lock<pshared_lock> &lock, condition cond = []{ return true; })
+    void wait(std::unique_lock<pshared_lock> &lock, const condition &cond = []{ return true; })
     {
         while (true)
         {
