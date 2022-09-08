@@ -22,7 +22,6 @@ cc_library(
     srcs = [
         "lib/common_utils.cc",
         "lib/sysconfig.cc",
-        "lib/linux_specific.cc",
         "lib/tcp.cc",
         "lib/async_logger_buffered.cc",
         "lib/subprocess.cc",

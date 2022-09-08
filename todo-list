@@ -1,3 +1,6 @@
+P1:
+    Use std::chrono::duration<> in API's timespan parameter
+
 P2:
     Support retry for connect in reactor
     Dynamic library loader

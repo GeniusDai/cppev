@@ -10,7 +10,6 @@ set (LIB
     tcp.cc
     subprocess.cc
     ipc.cc
-    linux_specific.cc
 )
 
 add_library("cppev" SHARED ${LIB})
