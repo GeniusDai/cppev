@@ -18,7 +18,7 @@ extern int udp_buffer_size;
 // param backlog for ::listen()
 extern int listen_number;
 
-// param size for ::epoll_create()
+// param size for epoll / kevent
 extern int event_number;
 
 // logger thread buffer outdate timespan in seconds
