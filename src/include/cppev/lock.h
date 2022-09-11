@@ -1,6 +1,7 @@
 #ifndef _lock_h_6C0224787A17_
 #define _lock_h_6C0224787A17_
 
+#include <vector>
 #include <mutex>
 #include <pthread.h>
 #include "cppev/common_utils.h"
@@ -8,11 +9,97 @@
 namespace cppev
 {
 
+class spinlock;
 class pshared_lock;
 class pshared_cond;
 class pshared_rwlock;
 class rdlockguard;
 class wrlockguard;
+
+
+class spinlock final
+{
+public:
+    spinlock()
+    {
+#ifdef __linux__
+        if (pthread_spin_init(&lock_, PTHREAD_PROCESS_PRIVATE) != 0)
+        {
+            throw_system_error("pthread_spin_init error");
+        }
+#else
+        unlock();
+#endif
+    }
+
+    spinlock(const spinlock &&) = delete;
+    spinlock &operator=(const spinlock &&) = delete;
+    spinlock(spinlock &&) = delete;
+    spinlock &operator=(spinlock &&) = delete;
+
+    ~spinlock()
+    {
+#ifdef __linux__
+        if (pthread_spin_destroy(&lock_) != 0)
+        {
+            throw_system_error("pthread_spin_destroy error");
+        }
+#endif
+    }
+
+    void lock()
+    {
+#ifdef __linux__
+        if (pthread_spin_lock(&lock_) != 0)
+        {
+            throw_system_error("pthread_spin_lock error");
+        }
+#else
+        while (lock_.test_and_set(std::memory_order_acquire)) ;
+#endif
+    }
+
+    void unlock()
+    {
+#ifdef __linux__
+        if (pthread_spin_unlock(&lock_) != 0)
+        {
+            throw_system_error("pthread_spin_unlock error");
+        }
+#else
+        lock_.clear(std::memory_order_release);
+#endif
+    }
+
+    bool trylock()
+    {
+#ifdef __linux__
+        int ret = pthread_spin_trylock(&lock_);
+        if (ret == 0)
+        {
+            return true;
+        }
+        else if (ret == EBUSY)
+        {
+            return false;
+        }
+        else
+        {
+            throw_system_error("pthread_spin_trylock error");
+        }
+        return true;
+#else
+        return !lock_.test_and_set(std::memory_order_acquire);
+#endif
+    }
+
+private:
+#ifdef __linux__
+    pthread_spinlock_t lock_;
+#else
+    std::atomic_flag lock_;
+#endif
+};
 
 class pshared_lock final
 {

@@ -76,9 +76,9 @@ cc_test(
 )
 
 cc_test(
-    name = "test_pshared_lock",
+    name = "test_lock",
     srcs = [
-        "test_pshared_lock.cc",
+        "test_lock.cc",
     ],
     deps = [
         "//src:cppev",

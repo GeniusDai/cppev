@@ -239,6 +239,46 @@ TEST_F(TestLock, test_shm_lock_cond)
     }
 }
 
+TEST_F(TestLock, test_spinlock)
+{
+    spinlock splck;
+    splck.lock();
+    splck.unlock();
+    auto func = [&]() -> void
+    {
+        std::unique_lock<std::mutex> lk(lock_);
+        ready_ = true;
+        ASSERT_TRUE(splck.trylock());
+        cond_.notify_one();
+        cond_exit_.wait(lk,
+            [&]() -> bool
+            {
+                return ready_exit_;
+            }
+        );
+        splck.unlock();
+    };
+
+    std::thread thr(func);
+
+    {
+        std::unique_lock<std::mutex> lk(lock_);
+        if (!ready_)
+        {
+            cond_.wait(lk,
+                [&] () -> bool
+                {
+                    return ready_;
+                }
+            );
+        }
+        ASSERT_FALSE(splck.trylock());
+        ready_exit_ = true;
+        cond_exit_.notify_one();
+    }
+    thr.join();
+}
+
 }   // namespace cppev
 
 int main(int argc, char **argv)
