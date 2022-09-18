@@ -31,7 +31,8 @@ void throw_runtime_error(const std::string &str)
     throw std::runtime_error( str);
 }
 
-namespace utils {
+namespace utils
+{
 
 tid gettid()
 {

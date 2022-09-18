@@ -1,7 +1,5 @@
-#ifndef _linux_specific_h_6C0224787A17_
-#define _linux_specific_h_6C0224787A17_
-
-#ifdef __linux__
+#ifndef _timer_h_6C0224787A17_
+#define _timer_h_6C0224787A17_
 
 #include <chrono>
 #include <memory>
@@ -9,9 +7,7 @@
 #include <unordered_map>
 #include <ctime>
 #include <csignal>
-#include <atomic>
-#include <sys/inotify.h>
-#include "cppev/nio.h"
+#include "cppev/common_utils.h"
 
 namespace cppev
 {
@@ -29,20 +25,31 @@ public:
     timer(timer &&) = delete;
     timer &operator=(timer &&) = delete;
 
-    ~timer() = default;
+    ~timer();
 
     void stop();
 
 private:
     timer_handler handler_;
 
+#ifdef __linux__
     timer_t tmid_;
+#else
+    bool stop_;
+
+    std::chrono::time_point<std::chrono::system_clock> curr_;
+
+    std::chrono::nanoseconds span_;
+
+    std::unique_ptr<std::thread> thr_;
+#endif
 };
 
 template<typename Rep, typename Period>
 timer::timer(const std::chrono::duration<Rep, Period> &span, const timer_handler &handler)
 : handler_(handler)
 {
+#ifdef __linux__
     sigevent sev;
     memset(&sev, 0, sizeof(sev));
     sev.sigev_value.sival_ptr = this;
@@ -66,18 +73,43 @@ timer::timer(const std::chrono::duration<Rep, Period> &span, const timer_handler
     {
         throw_system_error("timer_settime error");
     }
+#else
+    stop_ = false;
+    curr_ = std::chrono::system_clock::now();
+    span_ = span;
+    using duration_type = decltype(curr_)::duration;
+    auto thr_func = [this]() -> void
+    {
+        while(!stop_)
+        {
+            curr_ += std::chrono::duration_cast<duration_type>(span_);
+            std::this_thread::sleep_until(curr_);
+            handler_();
+        }
+    };
+    thr_ = std::make_unique<std::thread>(thr_func);
+#endif
+}
+
+timer::~timer()
+{
+#ifndef __linux__
+    thr_->join();
+#endif
 }
 
 void timer::stop()
 {
+#ifdef __linux__
     if (timer_delete(tmid_) != 0)
     {
         throw_system_error("timer_delete error");
     }
+#else
+    stop_ = true;
+#endif
 }
 
 }   // namespace cppev
 
-#endif  // __linux__
-
-#endif  // linux_specific.h
+#endif  // timer.h

@@ -5,7 +5,7 @@ cc_library(
         "include/cppev/tcp.h",
         "include/cppev/async_logger_hashed.h",
         "include/cppev/common_utils.h",
-        "include/cppev/linux_specific.h",
+        "include/cppev/timer.h",
         "include/cppev/lru_cache.h",
         "include/cppev/lock.h",
         "include/cppev/ipc.h",

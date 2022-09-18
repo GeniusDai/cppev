@@ -1,19 +1,18 @@
 #include <gtest/gtest.h>
-#include "cppev/linux_specific.h"
+#include "cppev/timer.h"
 
 namespace cppev
 {
 
-#ifdef __linux__
-TEST(TestLinuxSpecific, test_timer)
+TEST(TestTimer, test_timer)
 {
     int count = 0;
     timer::timer_handler handler = [&count]()
     {
-        std::cout << gettid() << std::endl;
+        std::cout << utils::gettid() << std::endl;
         count++;
     };
-    std::cout << "main-tid : " << gettid() << std::endl;
+    std::cout << "main-tid : " << utils::gettid() << std::endl;
     std::cout << "sub-tid : " << std::endl;
     int timer_interval = 500;
     int total_time = 200 * 1000;
@@ -28,11 +27,8 @@ TEST(TestLinuxSpecific, test_timer)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
-#endif  // __linux__
 
 }   // namespace cppev
-
-
 
 int main(int argc, char **argv)
 {

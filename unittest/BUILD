@@ -43,9 +43,9 @@ cc_test(
 )
 
 cc_test(
-    name = "test_linux_specific",
+    name = "test_timer",
     srcs = [
-        "test_linux_specific.cc",
+        "test_timer.cc",
     ],
     deps = [
         "//src:cppev",
