@@ -77,12 +77,11 @@ timer::timer(const std::chrono::duration<Rep, Period> &span, const timer_handler
     stop_ = false;
     curr_ = std::chrono::system_clock::now();
     span_ = span;
-    using duration_type = decltype(curr_)::duration;
-    auto thr_func = [this]() -> void
+    auto thr_func = [this]()
     {
         while(!stop_)
         {
-            curr_ += std::chrono::duration_cast<duration_type>(span_);
+            curr_ += std::chrono::duration_cast<decltype(curr_)::duration>(span_);
             std::this_thread::sleep_until(curr_);
             handler_();
         }
