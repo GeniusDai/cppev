@@ -68,6 +68,12 @@ Run Unittest
 
         $ bazel test ...
 
+### About the compilation
+
+In Ubuntu-22.04 / macOS-Monterey, build passed.
+
+In CentOS-8, "-lrt" is needed and "std::filesystem" need to be replaced.
+
 # Getting Started
 
 Please see the examples along with a tutorial.
