@@ -62,11 +62,11 @@ Run Unittest
 
 Build
 
-        $ bazel build ...
+        $ bazel build //...
 
 Run Unittest
 
-        $ bazel test ...
+        $ bazel test //...
 
 ### About compilation
 
