@@ -68,11 +68,11 @@ Run Unittest
 
         $ bazel test ...
 
-### About the compilation
+### About compilation
 
-In Ubuntu-22.04 / macOS-Monterey, build passed.
+Cmake : Build passed in Ubuntu-22.04 / macOS-Monterey / CentOS-8.
 
-In CentOS-8, "-lrt" is needed.
+Bazel : Build passed in Ubuntu-22.04 / macOS-Monterey.
 
 # Getting Started
 
