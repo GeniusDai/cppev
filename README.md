@@ -72,7 +72,7 @@ Run Unittest
 
 In Ubuntu-22.04 / macOS-Monterey, build passed.
 
-In CentOS-8, "-lrt" is needed and "std::filesystem" need to be replaced.
+In CentOS-8, "-lrt" is needed.
 
 # Getting Started
 

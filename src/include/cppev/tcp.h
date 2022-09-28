@@ -182,7 +182,7 @@ public:
     void listen(int port, family f, const char *ip = nullptr);
 
     // Specify unix domain listening socket's path
-    void listen_unix(const std::string &path);
+    void listen_unix(const std::string &path, bool remove = false);
 
     // Listening socket is readable, indicating new client arrives, this callback will be executed
     // by accept thread to accept connection and assign connection to thread pool
@@ -218,10 +218,10 @@ public:
         acpts_.back()->listen(port, f, ip);
     }
 
-    void listen_unix(const std::string &path)
+    void listen_unix(const std::string &path, bool remove = false)
     {
         acpts_.push_back(std::make_shared<acceptor>(data_.get()));
-        acpts_.back()->listen_unix(path);
+        acpts_.back()->listen_unix(path, remove);
     }
 
     void set_on_accept(const tcp_event_handler &handler)

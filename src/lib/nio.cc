@@ -14,6 +14,7 @@
 #include <tuple>
 #include <sys/stat.h>
 #include <vector>
+#include <cstdio>
 
 namespace cppev
 {
@@ -536,8 +537,12 @@ void nsocktcp::listen(int port, const char *ip)
     }
 }
 
-void nsocktcp::listen_unix(const char *path)
+void nsocktcp::listen_unix(const char *path, bool remove)
 {
+    if (remove)
+    {
+        ::unlink(path);
+    }
     peer_ = std::make_tuple<>(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -632,8 +637,12 @@ void nsockudp::bind(int port, const char *ip)
     }
 }
 
-void nsockudp::bind_unix(const char *path)
+void nsockudp::bind_unix(const char *path, bool remove)
 {
+    if (remove)
+    {
+        ::unlink(path);
+    }
     unix_listen_path_ = path;
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));

@@ -278,11 +278,11 @@ public:
         return connect(ip.c_str(), port);
     }
 
-    void listen_unix(const char *path);
+    void listen_unix(const char *path, bool remove = false);
 
-    void listen_unix(const std::string &path)
+    void listen_unix(const std::string &path, bool remove = false)
     {
-        listen_unix(path.c_str());
+        listen_unix(path.c_str(), remove);
     }
 
     bool connect_unix(const char *path);
@@ -364,11 +364,11 @@ public:
 
     std::tuple<std::string, int, family> recv();
 
-    void bind_unix(const char *path);
+    void bind_unix(const char *path, bool remove = false);
 
-    void bind_unix(const std::string &path)
+    void bind_unix(const std::string &path, bool remove = false)
     {
-        bind_unix(path.c_str());
+        bind_unix(path.c_str(), remove);
     }
 
     void send_unix(const char *path);

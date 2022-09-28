@@ -1,4 +1,3 @@
-#include <filesystem>
 #include "cppev/event_loop.h"
 #include "cppev/nio.h"
 #include "config.h"
@@ -26,7 +25,6 @@ cppev::fd_event_handler listening_socket_callback = [](const std::shared_ptr<cpp
 
 void start_server_loop()
 {
-    std::filesystem::remove(TCP_UNIX_PATH);
     cppev::event_loop evlp;
 
     auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
@@ -35,7 +33,7 @@ void start_server_loop()
 
     tcp_ipv4->listen(       TCP_IPV4_PORT   );
     tcp_ipv6->listen(       TCP_IPV6_PORT   );
-    tcp_unix->listen_unix(  TCP_UNIX_PATH   );
+    tcp_unix->listen_unix(  TCP_UNIX_PATH   , true);
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);

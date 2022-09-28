@@ -157,10 +157,10 @@ void acceptor::listen(int port, family f, const char *ip)
     log::info << "fd " << sock_->fd() << " listening in port " << port << log::endl;
 }
 
-void acceptor::listen_unix(const std::string &path)
+void acceptor::listen_unix(const std::string &path, bool remove)
 {
     sock_ = nio_factory::get_nsocktcp(family::local);
-    sock_->listen_unix(path);
+    sock_->listen_unix(path, remove);
     log::info << "fd " << sock_->fd() << " listening in path " << path << log::endl;
 }
 
