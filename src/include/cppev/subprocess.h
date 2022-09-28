@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <chrono>
 #include "cppev/nio.h"
 
 namespace cppev
@@ -33,7 +34,13 @@ public:
 
     bool poll();
 
-    void wait();
+    template <typename Rep, typename Period>
+    void wait(const std::chrono::duration<Rep, Period> &interval);
+
+    void wait()
+    {
+        wait(std::chrono::milliseconds(50));
+    }
 
     void communicate(const std::string &str="");
 
@@ -78,6 +85,17 @@ private:
 
     int returncode_;
 };
+
+template<typename Rep, typename Period>
+void popen::wait(const std::chrono::duration<Rep, Period> &interval)
+{
+    while (!poll())
+    {
+        communicate();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    communicate();
+}
 
 }   // namespace cppev
 

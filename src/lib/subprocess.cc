@@ -105,16 +105,6 @@ void popen::communicate(const std::string &str)
     }
 }
 
-void popen::wait()
-{
-    while (!poll())
-    {
-        communicate();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-    communicate();
-}
-
 void popen::send_signal(int sig)
 {
     if (::kill(pid(), sig) < 0)
