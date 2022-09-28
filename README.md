@@ -12,7 +12,7 @@ Support readable / writable event handling by io-multiplexing.
 
 ### Concurrency Handling
 
-Support thread-pool / shared-memory / semaphore / subprocess.
+Support thread-pool / subprocess / shared-memory / semaphore.
 
 ### Massive Tcp Connection Handling
 
@@ -72,7 +72,7 @@ Run Unittest
 
 ### About compilation
 
-Build passed in Ubuntu-22.04 / macOS-Monterey / CentOS-8.
+Build passed in Ubuntu-22.04 / CentOS-8 / macOS-Monterey.
 
 # Getting Started
 
@@ -81,5 +81,3 @@ Please see the examples along with a tutorial.
 # Issues and Maintenance
 
 Repo will be long-term maintained, author will keep working on the todo-list. If you found any shortage or any new feature nice to have, feel free to raise an issue.
-
-First release may be in 2024 due to author need some time to make sure the architecture is well designed. So before this day API may be changed.
