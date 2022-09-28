@@ -62,17 +62,17 @@ Run Unittest
 
 Build
 
-        $ bazel build //...
+        $ bazel build --config=linux //...      # For Linux
+        $ bazel build --config=osx   //...      # For macOS
 
 Run Unittest
 
-        $ bazel test //...
+        $ bazel test --config=linux //...       # For Linux
+        $ bazel test --config=osx   //...       # For macOS
 
 ### About compilation
 
-Cmake : Build passed in Ubuntu-22.04 / macOS-Monterey / CentOS-8.
-
-Bazel : Build passed in Ubuntu-22.04 / macOS-Monterey.
+Build passed in Ubuntu-22.04 / macOS-Monterey / CentOS-8.
 
 # Getting Started
 
