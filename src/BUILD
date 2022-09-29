@@ -3,13 +3,11 @@ cc_library(
     hdrs = [
         "include/cppev/sysconfig.h",
         "include/cppev/tcp.h",
-        "include/cppev/async_logger_hashed.h",
         "include/cppev/common_utils.h",
         "include/cppev/timer.h",
         "include/cppev/lru_cache.h",
         "include/cppev/lock.h",
         "include/cppev/ipc.h",
-        "include/cppev/async_logger.h",
         "include/cppev/thread_pool.h",
         "include/cppev/buffer.h",
         "include/cppev/runnable.h",
@@ -17,7 +15,9 @@ cc_library(
         "include/cppev/event_loop.h",
         "include/cppev/nio.h",
         "include/cppev/subprocess.h",
+        "include/cppev/async_logger.h",
         "include/cppev/async_logger_buffered.h",
+        "include/cppev/async_logger_hashed.h",
     ],
     srcs = [
         "lib/common_utils.cc",
@@ -32,6 +32,15 @@ cc_library(
         "lib/async_logger_common.cc",
         "lib/async_logger_hashed.cc",
     ],
+    linkopts = select({
+        "@platforms//os:linux" : [
+            "-pthread",
+            "-lrt"
+        ],
+        "@platforms//os:osx" : [
+            "-pthread"
+        ],
+    }),
     strip_include_prefix = "include/",
     visibility = [
         "//visibility:public",

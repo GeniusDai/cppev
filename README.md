@@ -62,13 +62,11 @@ Run Unittest
 
 Build
 
-        $ bazel build --config=linux //...      # For Linux
-        $ bazel build --config=osx   //...      # For macOS
+        $ bazel build  //...
 
 Run Unittest
 
-        $ bazel test --config=linux //...       # For Linux
-        $ bazel test --config=osx   //...       # For macOS
+        $ bazel test //...
 
 ### About compilation
 

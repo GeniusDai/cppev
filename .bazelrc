@@ -2,7 +2,3 @@ build --cxxopt="-std=c++17"
 build --cxxopt="-O0"
 build --cxxopt="-Wall"
 build --compilation_mode="dbg"
-build --linkopt="-pthread"
-
-build:linux --linkopt="-lrt"
-build:osx   --linkopt=""
