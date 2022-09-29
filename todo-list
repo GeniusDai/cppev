@@ -1,7 +1,4 @@
 P2:
-    Use std::chrono::duration<> in API's timespan parameter
-    Support retry for connect in reactor
     Dynamic library loader
-    Support udp multicast and broadcast
     DNS Resolution
     Application layer protocol
