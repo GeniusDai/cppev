@@ -1,12 +1,10 @@
-link_libraries("cppev")
-
 find_package(GTest)
-link_libraries("gtest")
 enable_testing()
 
 function(compile_and_enable_test testname_)
     add_executable(${testname_} ${testname_}.cc)
     add_test(NAME ${testname_} COMMAND ${testname_})
+    target_link_libraries(${testname_} cppev gtest)
 endfunction(compile_and_enable_test)
 
 compile_and_enable_test(test_async_logger)

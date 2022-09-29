@@ -1,2 +1,2 @@
-add_executable(simple_server simple_server.cc)
-add_executable(simple_client simple_client.cc)
+compile_target(simple_server simple_server.cc)
+compile_target(simple_client simple_client.cc)

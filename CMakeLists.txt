@@ -1,22 +1,22 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project("libcppev")
+project(libcppev)
 
 if (CMAKE_HOST_UNIX)
     message("Platform : Unix")
 endif()
 
-set(CMAKE_CXX_FLAGS "-O0 -Wall -g -std=c++17")
-include_directories("src/include")
+set(CMAKE_CXX_FLAGS "-O0 -Wall -g -std=c++17 -pthread")
+include_directories(src/include)
 
-add_subdirectory("src")
-add_subdirectory("unittest")
-add_subdirectory("examples")
+add_subdirectory(src)
+add_subdirectory(unittest)
+add_subdirectory(examples)
 
 install(
-    TARGETS "cppev"
+    TARGETS cppev
     LIBRARY DESTINATION lib
 )
 install(
-    DIRECTORY "src/include/cppev" DESTINATION include
+    DIRECTORY src/include/cppev DESTINATION include
 )
