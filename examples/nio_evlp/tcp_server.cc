@@ -1,5 +1,4 @@
-#include "cppev/event_loop.h"
-#include "cppev/nio.h"
+#include "cppev/cppev.h"
 #include "config.h"
 
 cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
