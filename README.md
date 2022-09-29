@@ -38,9 +38,8 @@ Support registering callbacks:
 
 ### Prerequirement
 
-        OS           :  Linux / macOS.
-        Compiler     :  g++ support c++17.
-        Dependency   :  googletest.
+        OS           :  Linux / macOS
+        Dependency   :  googletest
 
 ### Build with cmake
 
@@ -68,9 +67,9 @@ Run Unittest
 
         $ bazel test //...
 
-### About compilation
+### Tested platform
 
-Build passed in Ubuntu-22.04 / CentOS-8 / macOS-Monterey.
+Ubuntu-22.04 / CentOS-8 / macOS-Monterey.
 
 # Getting Started
 
