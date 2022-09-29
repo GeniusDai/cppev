@@ -12,4 +12,11 @@ set (LIB
     ipc.cc
 )
 
-add_library("cppev" SHARED ${LIB})
+add_library(cppev SHARED ${LIB})
+if (CMAKE_HOST_APPLE)
+    message("Platform : Apple")
+    target_link_libraries(cppev "pthread")
+else()
+    message("Platform : Linux")
+    target_link_libraries(cppev "pthread" "rt")
+endif()
