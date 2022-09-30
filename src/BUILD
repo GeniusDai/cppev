@@ -16,8 +16,6 @@ cc_library(
         "include/cppev/nio.h",
         "include/cppev/subprocess.h",
         "include/cppev/async_logger.h",
-        "include/cppev/async_logger_buffered.h",
-        "include/cppev/async_logger_hashed.h",
     ],
     srcs = [
         "lib/common_utils.cc",

@@ -1,7 +1,15 @@
 #ifndef _async_logger_h_6C0224787A17_
 #define _async_logger_h_6C0224787A17_
 
-#include <cstdio>
+#include <unordered_map>
+#include <tuple>
+#include <mutex>
+#include <condition_variable>
+#include <shared_mutex>
+#include <memory>
+#include "cppev/buffer.h"
+#include "cppev/common_utils.h"
+#include "cppev/runnable.h"
 
 // Only use hashed async logger in linux with higher version
 // glibc, lower version glibc or macOS got bug in read-write-lock
@@ -11,14 +19,64 @@
 # endif
 #endif
 
-#if defined(__CPPEV_USE_HASHED_LOGGER__)
-# include "cppev/async_logger_hashed.h"
-#else
-# include "cppev/async_logger_buffered.h"
-#endif
-
 namespace cppev
 {
+
+class async_logger final
+: public runnable
+{
+public:
+    explicit async_logger(int level);
+
+    ~async_logger();
+
+    void run_impl() override;
+
+    async_logger &operator<<(const char *str);
+
+    async_logger &operator<<(const async_logger &);
+
+    async_logger &operator<<(const std::string &str);
+
+    async_logger &operator<<(long x);
+
+    async_logger &operator<<(int x);
+
+    async_logger &operator<<(double x);
+
+    async_logger &operator<<(float x);
+
+    static std::string version();
+
+private:
+    void write_debug(buffer *buf);
+
+    int level_;
+
+    bool stop_;
+
+#if defined(__CPPEV_USE_HASHED_LOGGER__)
+
+    // thread_id --> < buffer, recursive_mutex, recursive_level, utils::timestamp >
+    std::unordered_map<tid, std::tuple<std::shared_ptr<buffer>,
+        std::shared_ptr<std::recursive_mutex>, int, time_t> > logs_;
+
+    std::shared_mutex lock_;
+
+#else
+
+    std::recursive_mutex lock_;
+
+    buffer buffer_;
+
+    int recur_level_;
+
+#endif  // __CPPEV_USE_HASHED_LOGGER__
+
+    std::condition_variable_any cond_;
+
+    static std::mutex global_lock_;
+};
 
 namespace log
 {

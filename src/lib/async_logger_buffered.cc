@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <cassert>
 #include <ios>
-#include "cppev/lock.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 
