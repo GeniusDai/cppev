@@ -285,7 +285,7 @@ public:
 
     void unlock()
     {
-        if (::pthread_rwlock_unlock(&lock_) != 0)
+        if (pthread_rwlock_unlock(&lock_) != 0)
         {
             throw_system_error("pthread_rwlock_destroy error");
         }
@@ -293,7 +293,7 @@ public:
 
     void rdlock()
     {
-        if (::pthread_rwlock_rdlock(&lock_) != 0)
+        if (pthread_rwlock_rdlock(&lock_) != 0)
         {
             throw_system_error("pthread_rwlock_rdlock error");
         }
@@ -301,7 +301,7 @@ public:
 
     void wrlock()
     {
-        if (::pthread_rwlock_wrlock(&lock_) != 0)
+        if (pthread_rwlock_wrlock(&lock_) != 0)
         {
             throw_system_error("pthread_rwlock_wrlock error");
         }
