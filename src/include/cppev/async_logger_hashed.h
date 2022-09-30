@@ -1,15 +1,15 @@
 #ifndef _async_logger_hashed_h_6C0224787A17_
 #define _async_logger_hashed_h_6C0224787A17_
 
-#include <unordered_map>
+#include <memory>
 #include <tuple>
+#include <unordered_map>
 #include <mutex>
 #include <condition_variable>
-#include <memory>
+#include <shared_mutex>
 #include "cppev/buffer.h"
 #include "cppev/common_utils.h"
 #include "cppev/runnable.h"
-#include "cppev/lock.h"
 
 namespace cppev
 {
@@ -51,7 +51,7 @@ private:
 
     int level_;
 
-    pshared_rwlock lock_;
+    std::shared_mutex lock_;
 
     bool stop_;
 

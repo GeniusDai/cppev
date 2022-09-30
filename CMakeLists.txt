@@ -6,7 +6,7 @@ if (CMAKE_HOST_UNIX)
     message("Platform : Unix")
 endif()
 
-set(CMAKE_CXX_FLAGS "-O0 -Wall -g -std=c++14 -pthread")
+set(CMAKE_CXX_FLAGS "-std=c++17 -O0 -Wall -g -pthread")
 include_directories(src/include)
 
 add_subdirectory(src)

@@ -4,6 +4,7 @@
 
 #include <tuple>
 #include <mutex>
+#include <shared_mutex>
 #include <ctime>
 #include <sstream>
 #include <thread>
@@ -12,7 +13,6 @@
 #include <unistd.h>
 #include <cassert>
 #include <ios>
-#include "cppev/lock.h"
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
 
@@ -33,7 +33,7 @@ async_logger &async_logger::operator<<(const char *str)
 {
     tid thr_id = utils::gettid();
     {
-        rdlockguard rdlock(lock_);
+        std::shared_lock<std::shared_mutex> rdlock(lock_);
         if (logs_.count(thr_id) != 0)
         {
             std::get<1>(logs_[thr_id])->lock();
@@ -45,7 +45,7 @@ async_logger &async_logger::operator<<(const char *str)
             return *this;
         }
     }
-    wrlockguard wrlock(lock_);
+    std::unique_lock<std::shared_mutex> wrlock(lock_);
     logs_[thr_id] = std::make_tuple<>(std::shared_ptr<buffer>(new buffer),
         std::shared_ptr<std::recursive_mutex>(new std::recursive_mutex()), 1, utils::time());
     write_debug(std::get<0>(logs_[thr_id]).get());
@@ -59,7 +59,7 @@ async_logger &async_logger::operator<<(const async_logger &)
     (*this) << "\n";
     tid thr_id = utils::gettid();
     {
-        rdlockguard rdlock(lock_);
+        std::shared_lock<std::shared_mutex> rdlock(lock_);
         int lock_count = std::get<2>(logs_[thr_id]);
         std::get<2>(logs_[thr_id]) = 0;
         std::get<3>(logs_[thr_id]) = utils::time();
@@ -79,7 +79,7 @@ void async_logger::run_impl()
         std::unordered_set<tid> outdate_list;
         bool delay = true;
         {
-            rdlockguard rdlock(lock_);
+            std::shared_lock<std::shared_mutex> rdlock(lock_);
             for (auto iter = logs_.begin(); iter != logs_.end(); ++iter)
             {
                 std::unique_lock<std::recursive_mutex>
@@ -101,7 +101,7 @@ void async_logger::run_impl()
         }
         if (outdate_list.size() || delay)
         {
-            wrlockguard wrlock(lock_);
+            std::unique_lock<std::shared_mutex> wrlock(lock_);
             for (auto iter = logs_.begin(); iter != logs_.end(); )
             {
                 if (0 != std::get<0>(iter->second)->size())
