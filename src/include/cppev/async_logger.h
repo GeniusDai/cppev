@@ -5,7 +5,7 @@
 
 // Only use hashed async logger in linux with higher version
 // glibc, lower version glibc or macOS got bug in read-write-lock
-#if defined(__linux__)
+#if defined(__linux__) && defined(__GNUC_PREREQ)
 # if __GNUC_PREREQ(2, 25)
 # define __CPPEV_USE_HASHED_LOGGER__
 # endif

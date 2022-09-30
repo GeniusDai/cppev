@@ -12,7 +12,6 @@
 #include "cppev/common_utils.h"
 #include "cppev/buffer.h"
 #include "cppev/sysconfig.h"
-#include "cppev/async_logger.h"
 
 namespace cppev
 {
