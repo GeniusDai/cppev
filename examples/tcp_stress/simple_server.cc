@@ -4,9 +4,8 @@
  * The simple server just send a message to the client, then echo any message back to the client.
  */
 
-#include "cppev/async_logger.h"
-#include "cppev/tcp.h"
 #include "config.h"
+#include "cppev/cppev.h"
 
 /*
  * Define handler
