@@ -31,13 +31,6 @@ public:
         return object;
     }
 
-    template <typename SharedClass>
-    void destruct()
-    {
-        SharedClass *object = reinterpret_cast<SharedClass *>(ptr_);
-        object->~SharedClass();
-    }
-
     void unlink();
 
     void *ptr()

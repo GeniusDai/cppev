@@ -173,7 +173,7 @@ TEST_F(TestLock, test_shm_rwlock)
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
 
-        shm.destruct<TestStruct>();
+        f_ptr->~TestStruct();
         shm.unlink();
     }
 }
@@ -233,8 +233,7 @@ TEST_F(TestLock, test_shm_lock_cond)
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
 
-        shm.destruct<TestStruct>();
-
+        f_ptr->~TestStruct();
         shm.unlink();
     }
 }
