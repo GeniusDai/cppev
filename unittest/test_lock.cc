@@ -134,8 +134,8 @@ TEST_F(TestLock, test_shm_rwlock)
     std::string name = "/cppev_test_shm_lock";
 
     shared_memory shm(name, sizeof(TestStruct), true);
-    shm.construct<TestStruct, int, double, std::string>(0, 6.6, std::string("hi"));
-    TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+    TestStruct *f_ptr = shm.construct<TestStruct, int, double, std::string>(0, 6.6, std::string("hi"));
+    EXPECT_EQ(reinterpret_cast<void *>(f_ptr), shm.ptr() );
     EXPECT_TRUE(f_ptr->lock.try_wrlock());
     f_ptr->lock.unlock();
 
@@ -192,8 +192,8 @@ TEST_F(TestLock, test_shm_lock_cond)
     std::string name = "/cppev_test_shm_lock";
 
     shared_memory shm(name, sizeof(TestStruct), true);
-    shm.construct<TestStruct>();
-    TestStruct *f_ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+    TestStruct *f_ptr = shm.construct<TestStruct>();
+    EXPECT_EQ(f_ptr, reinterpret_cast<TestStruct *>(shm.ptr()));
     int num = 100;
 
     pid_t pid = fork();

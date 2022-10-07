@@ -21,13 +21,14 @@ public:
     ~shared_memory();
 
     template <typename SharedClass, typename... Args>
-    void construct(Args&&... args)
+    SharedClass *construct(Args&&... args)
     {
         SharedClass *object = new (ptr_) SharedClass(std::forward<Args>(args)...);
         if (object == nullptr)
         {
             throw_runtime_error("placement new error");
         }
+        return object;
     }
 
     template <typename SharedClass>
