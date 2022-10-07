@@ -168,15 +168,15 @@ private:
     tp_task_queue *tq_;
 };
 
-class thread_pool_queue final
+class thread_pool_task_queue final
 : public tp_task_queue, public thread_pool<tp_task_queue_runnable, tp_task_queue *>
 {
 public:
-    thread_pool_queue(int thr_num)
+    thread_pool_task_queue(int thr_num)
     : tp_task_queue(), thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
     {}
 
-    ~thread_pool_queue() = default;
+    ~thread_pool_task_queue() = default;
 
     void stop()
     {
@@ -191,7 +191,7 @@ public:
 
 }   // namespace task_queue
 
-using thread_pool_queue = task_queue::thread_pool_queue;
+using thread_pool_task_queue = task_queue::thread_pool_task_queue;
 
 using task_handler = task_queue::task_handler;
 

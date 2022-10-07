@@ -20,18 +20,7 @@ public:
 
 const int runnable_tester::sleep_time = 1;
 
-class TestThreadPool
-: public testing::Test
-{
-protected:
-    void SetUp() override
-    {}
-
-    void TearDown() override
-    {}
-};
-
-TEST(TestThreadPool, test_tp0)
+TEST(TestThreadPool, test_thread_pool_variadic_template)
 {
     thread_pool<runnable_tester> tp(50);
     tp.run();
@@ -43,7 +32,7 @@ TEST(TestThreadPool, test_tp0)
     ASSERT_GT(d.count(), (runnable_tester::sleep_time * 0.9) / 1000.0);
 }
 
-TEST(TestThreadPool, test_tp1)
+TEST(TestThreadPool, test_thread_pool_task_queue)
 {
     int count = 1000;
     int sum = 0;
@@ -55,7 +44,7 @@ TEST(TestThreadPool, test_tp1)
         sum++;
     };
 
-    thread_pool_queue tp(50);
+    thread_pool_task_queue tp(50);
     tp.run();
     for (int i = 0; i < count; ++i)
     {

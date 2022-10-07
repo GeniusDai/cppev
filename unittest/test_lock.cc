@@ -13,8 +13,8 @@ class TestLock
 protected:
     void SetUp() override
     {
-        ready_ = false;
-        ready_exit_ = false;
+        ready1_ = false;
+        ready2_ = false;
     }
 
     void TearDown() override
@@ -22,13 +22,13 @@ protected:
 
     std::mutex lock_;
 
-    std::condition_variable cond_;
+    std::condition_variable cond1_;
 
-    std::condition_variable cond_exit_;
+    std::condition_variable cond2_;
 
-    bool ready_;
+    bool ready1_;
 
-    bool ready_exit_;
+    bool ready2_;
 };
 
 TEST_F(TestLock, test_rwlock_rdlocked)
@@ -37,13 +37,13 @@ TEST_F(TestLock, test_rwlock_rdlocked)
     auto func = [this, &rwlck]() -> void
     {
         std::unique_lock<std::mutex> lock(this->lock_);
-        this->ready_ = true;
+        this->ready1_ = true;
         rwlck.rdlock();
-        this->cond_.notify_one();
-        this->cond_exit_.wait(lock,
+        this->cond1_.notify_one();
+        this->cond2_.wait(lock,
             [this]() -> bool
             {
-                return this->ready_exit_;
+                return this->ready2_;
             }
         );
         rwlck.unlock();
@@ -53,12 +53,12 @@ TEST_F(TestLock, test_rwlock_rdlocked)
 
     {
         std::unique_lock<std::mutex> lock(lock_);
-        if (!ready_)
+        if (!ready1_)
         {
-            cond_.wait(lock,
+            cond1_.wait(lock,
                 [this] () -> bool
                 {
-                    return this->ready_;
+                    return this->ready1_;
                 }
             );
         }
@@ -67,8 +67,8 @@ TEST_F(TestLock, test_rwlock_rdlocked)
         rwlck.unlock();
         ASSERT_FALSE(rwlck.try_wrlock());
 
-        ready_exit_ = true;
-        cond_exit_.notify_one();
+        ready2_ = true;
+        cond2_.notify_one();
     }
     thr.join();
 }
@@ -79,13 +79,13 @@ TEST_F(TestLock, test_rwlock_wrlocked)
     auto func = [this, &rwlck]() -> void
     {
         std::unique_lock<std::mutex> lock(this->lock_);
-        this->ready_ = true;
+        this->ready1_ = true;
         rwlck.wrlock();
-        this->cond_.notify_one();
-        this->cond_exit_.wait(lock,
+        this->cond1_.notify_one();
+        this->cond2_.wait(lock,
             [this]() -> bool
             {
-                return this->ready_exit_;
+                return this->ready2_;
             }
         );
         rwlck.unlock();
@@ -95,19 +95,19 @@ TEST_F(TestLock, test_rwlock_wrlocked)
 
     {
         std::unique_lock<std::mutex> lock(lock_);
-        if (!ready_)
+        if (!ready1_)
         {
-            cond_.wait(lock,
+            cond1_.wait(lock,
                 [this] () -> bool
                 {
-                    return this->ready_;
+                    return this->ready1_;
                 }
             );
         }
         ASSERT_FALSE(rwlck.try_rdlock());
         ASSERT_FALSE(rwlck.try_wrlock());
-        ready_exit_ = true;
-        cond_exit_.notify_one();
+        ready2_ = true;
+        cond2_.notify_one();
     }
     thr.join();
 }
@@ -246,13 +246,13 @@ TEST_F(TestLock, test_spinlock)
     auto func = [&]() -> void
     {
         std::unique_lock<std::mutex> lk(lock_);
-        ready_ = true;
+        ready1_ = true;
         ASSERT_TRUE(splck.trylock());
-        cond_.notify_one();
-        cond_exit_.wait(lk,
+        cond1_.notify_one();
+        cond2_.wait(lk,
             [&]() -> bool
             {
-                return ready_exit_;
+                return ready2_;
             }
         );
         splck.unlock();
@@ -262,18 +262,18 @@ TEST_F(TestLock, test_spinlock)
 
     {
         std::unique_lock<std::mutex> lk(lock_);
-        if (!ready_)
+        if (!ready1_)
         {
-            cond_.wait(lk,
+            cond1_.wait(lk,
                 [&] () -> bool
                 {
-                    return ready_;
+                    return ready1_;
                 }
             );
         }
         ASSERT_FALSE(splck.trylock());
-        ready_exit_ = true;
-        cond_exit_.notify_one();
+        ready2_ = true;
+        cond2_.notify_one();
     }
     thr.join();
 }
