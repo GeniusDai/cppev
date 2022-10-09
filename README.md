@@ -67,7 +67,7 @@ Run Unittest
 
         $ bazel test //...
 
-### Tested platform
+### Validated platform
 
 Ubuntu-22.04 / CentOS-8 / macOS-Monterey.
 

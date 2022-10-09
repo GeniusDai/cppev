@@ -309,7 +309,7 @@ public:
 
     bool try_rdlock()
     {
-        int ret = ::pthread_rwlock_tryrdlock(&lock_);
+        int ret = pthread_rwlock_tryrdlock(&lock_);
         if (ret == 0)
         {
             return true;
@@ -324,7 +324,7 @@ public:
 
     bool try_wrlock()
     {
-        int ret = ::pthread_rwlock_trywrlock(&lock_);
+        int ret = pthread_rwlock_trywrlock(&lock_);
         if (ret == 0)
         {
             return true;
