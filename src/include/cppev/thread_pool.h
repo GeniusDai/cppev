@@ -97,21 +97,17 @@ public:
 
     void add_task(const task_handler &h)
     {
-        {
-            std::unique_lock<std::mutex> lock(lock_);
-            queue_.push(std::make_shared<task_handler>(h));
-        }
+        std::unique_lock<std::mutex> lock(lock_);
+        queue_.push(std::make_shared<task_handler>(h));
         cond_.notify_one();
     }
 
     void add_task(const std::vector<std::shared_ptr<task_handler> > &vh)
     {
+        std::unique_lock<std::mutex> lock(lock_);
+        for (const auto &h : vh)
         {
-            std::unique_lock<std::mutex> lock(lock_);
-            for (const auto &h : vh)
-            {
-                queue_.push(h);
-            }
+            queue_.push(h);
         }
         cond_.notify_all();
     }
@@ -183,8 +179,8 @@ public:
         {
             std::unique_lock<std::mutex> lock(lock_);
             stop_ = true;
+            cond_.notify_all();
         }
-        cond_.notify_all();
         join();
     }
 };

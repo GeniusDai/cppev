@@ -6,21 +6,19 @@
 namespace cppev
 {
 
+const int delay = 100;
+
 class runnable_tester
 : public runnable
 {
 public:
-    static const int sleep_time;
-
     void run_impl() override
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
 };
 
-const int runnable_tester::sleep_time = 1;
-
-TEST(TestThreadPool, test_thread_pool_variadic_template)
+TEST(TestThreadPool, test_thread_pool_by_join)
 {
     thread_pool<runnable_tester> tp(50);
     tp.run();
@@ -29,7 +27,15 @@ TEST(TestThreadPool, test_thread_pool_variadic_template)
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> d = std::chrono::duration_cast
         <std::chrono::duration<double> >(end - start);
-    ASSERT_GT(d.count(), (runnable_tester::sleep_time * 0.9) / 1000.0);
+    ASSERT_GT(d.count(), (delay * 0.9) / 1000.0);
+}
+
+TEST(TestThreadPool, test_thread_pool_by_cancel)
+{
+    thread_pool<runnable_tester> tp(50);
+    tp.run();
+    tp.cancel();
+    tp.join();
 }
 
 TEST(TestThreadPool, test_thread_pool_task_queue)

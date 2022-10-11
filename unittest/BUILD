@@ -107,3 +107,14 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "test_runnable",
+    srcs = [
+        "test_runnable.cc",
+    ],
+    deps = [
+        "//src:cppev",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -9,6 +9,7 @@ endfunction(compile_and_enable_test)
 
 compile_and_enable_test(test_async_logger)
 compile_and_enable_test(test_thread_pool)
+compile_and_enable_test(test_runnable)
 compile_and_enable_test(test_buffer)
 compile_and_enable_test(test_nio_evlp)
 compile_and_enable_test(test_lock)
