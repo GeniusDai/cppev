@@ -39,7 +39,25 @@ TEST(TestRunnable, test_detach)
     runnable_tester tester;
     tester.run();
     tester.detach();
-    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(delay*1.5)));
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay * 2));
+}
+
+TEST(TestRunnable, test_wait_for_timeout)
+{
+    runnable_tester tester;
+    tester.run();
+    bool ok = tester.wait_for(std::chrono::milliseconds(1));
+    EXPECT_FALSE(ok);
+    tester.join();
+}
+
+TEST(TestRunnable, test_wait_for_ok)
+{
+    runnable_tester tester;
+    tester.run();
+    bool ok = tester.wait_for(std::chrono::milliseconds(delay * 2));
+    EXPECT_TRUE(ok);
+    tester.join();
 }
 
 }

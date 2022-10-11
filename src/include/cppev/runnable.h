@@ -90,7 +90,6 @@ public:
         switch (stat)
         {
         case std::future_status::ready :
-            join();
             ret = true;
             break;
         case std::future_status::timeout :
