@@ -11,7 +11,6 @@
 #include <ctime>
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
-#include "cppev/async_logger.h"
 #include <sys/event.h>
 
 namespace cppev

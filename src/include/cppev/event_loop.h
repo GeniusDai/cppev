@@ -11,7 +11,9 @@
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/common_utils.h"
+#ifdef CPPEV_DEBUG
 #include "cppev/async_logger.h"
+#endif  // CPPEV_DEBUG
 
 namespace cppev
 {
@@ -113,7 +115,7 @@ public:
             }
 #ifdef CPPEV_DEBUG
             log::info << "start event loop" << log::endl;
-#endif
+#endif  // CPPEV_DEBUG
             loop_once(timeout);
         }
     }

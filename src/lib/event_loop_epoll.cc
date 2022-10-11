@@ -10,7 +10,6 @@
 #include <thread>
 #include "cppev/common_utils.h"
 #include "cppev/sysconfig.h"
-#include "cppev/async_logger.h"
 #include <sys/epoll.h>
 
 namespace cppev
