@@ -7,20 +7,24 @@
 namespace cppev
 {
 
-shared_memory::shared_memory(const std::string &name, int size, bool create, mode_t mode)
-: name_(name), size_(size), ptr_(nullptr)
+shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
+: name_(name), size_(size), ptr_(nullptr), is_creator_(true)
 {
-    int flag = O_RDWR;
-    if (create)
-    {
-        flag |= O_CREAT | O_EXCL;
-    }
-    int fd = shm_open(name_.c_str(), flag, mode);
+    int fd = -1;
+    fd = shm_open(name_.c_str(), O_RDWR | O_CREAT | O_EXCL, mode);
     if (fd < 0)
     {
-        throw_system_error("shm_open error");
+        if (errno == EEXIST)
+        {
+            fd = shm_open(name_.c_str(), O_RDWR, mode);
+            is_creator_ = false;
+        }
+        else
+        {
+            throw_system_error("shm_open error");
+        }
     }
-    if (create)
+    if (is_creator_)
     {
         ftruncate(fd, size_);
     }
@@ -30,7 +34,7 @@ shared_memory::shared_memory(const std::string &name, int size, bool create, mod
         throw_system_error("mmap error");
     }
     close(fd);
-    if (create)
+    if (is_creator_)
     {
         memset(ptr_, 0, size_);
     }
@@ -54,20 +58,21 @@ void shared_memory::unlink()
 
 
 
-semaphore::semaphore(const std::string &name, int value, mode_t mode)
-: name_(name)
+semaphore::semaphore(const std::string &name, mode_t mode)
+: name_(name), sem_(nullptr), is_creator_(true)
 {
-    if (value != -1)
-    {
-        sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, mode, value);
-    }
-    else
-    {
-        sem_ = sem_open(name_.c_str(), 0);
-    }
+    sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, mode, 0);
     if (sem_ == SEM_FAILED)
     {
-        throw_system_error("sem_open error");
+        if (errno == EEXIST)
+        {
+            sem_ = sem_open(name_.c_str(), 0);
+            is_creator_ = false;
+        }
+        else
+        {
+            throw_system_error("sem_open error");
+        }
     }
 }
 
@@ -79,31 +84,28 @@ semaphore::~semaphore()
     }
 }
 
-bool semaphore::acquire(int timeout)
+bool semaphore::try_acquire()
 {
-    int ret = 0;
-    if (timeout == -1)
+    if(sem_trywait(sem_) == -1)
     {
-        ret = sem_wait(sem_);
-    }
-    else if (timeout == 0)
-    {
-        ret = sem_trywait(sem_);
-    }
-    else
-    {
-        throw_logic_error("invalid timeout for semaphore::acquire");
-    }
-    if (ret == -1)
-    {
-        if (errno == EAGAIN || errno == EINTR)
+        if (errno == EINTR || errno == EAGAIN)
         {
             return false;
         }
-        std::string str = timeout == -1 ? "sem_wait" : "sem_trywait";
-        throw_system_error(str.append(" error"));
+        else
+        {
+            throw_system_error("sem_trywait error");
+        }
     }
     return true;
+}
+
+void semaphore::acquire()
+{
+    if (sem_wait(sem_) == -1)
+    {
+        throw_system_error("sem_wait error");
+    }
 }
 
 void semaphore::release()

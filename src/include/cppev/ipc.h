@@ -11,7 +11,7 @@ namespace cppev
 class shared_memory final
 {
 public:
-    shared_memory(const std::string &name, int size, bool create, mode_t mode = 0600);
+    shared_memory(const std::string &name, int size, mode_t mode = 0600);
 
     shared_memory(const shared_memory &) = delete;
     shared_memory &operator=(const shared_memory &) = delete;
@@ -43,18 +43,25 @@ public:
         return size_;
     }
 
+    bool creator()
+    {
+        return is_creator_;
+    }
+
 private:
     std::string name_;
 
     int size_;
 
     void *ptr_;
+
+    bool is_creator_;
 };
 
 class semaphore final
 {
 public:
-    semaphore(const std::string &name, int value = -1, mode_t mode = 0600);
+    semaphore(const std::string &name, mode_t mode = 0600);
 
     semaphore(const semaphore &) = delete;
     semaphore &operator=(const semaphore &) = delete;
@@ -63,26 +70,25 @@ public:
 
     ~semaphore();
 
-    bool acquire()
-    {
-        return acquire(-1);
-    }
+    bool try_acquire();
 
-    bool try_acquire()
-    {
-        return acquire(0);
-    }
+    void acquire();
 
     void release();
 
     void unlink();
 
-private:
-    bool acquire(int timeout);
+    bool creator()
+    {
+        return is_creator_;
+    }
 
+private:
     std::string name_;
 
     sem_t *sem_;
+
+    bool is_creator_;
 };
 
 }   // namespace cppev
