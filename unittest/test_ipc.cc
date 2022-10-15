@@ -126,6 +126,9 @@ TEST_F(TestIpc, test_shm_rwlock)
         EXPECT_TRUE(ptr->lock.try_rdlock());
         ptr->lock.unlock();
 
+        ptr->~TestStruct();
+        shm.unlink();
+
         _exit(0);
     }
     else
@@ -133,9 +136,6 @@ TEST_F(TestIpc, test_shm_rwlock)
         shared_memory shm(name, sizeof(TestStruct));
         TestStruct *ptr = shm.construct<TestStruct, int, double>(0, 6.6);
         EXPECT_EQ(reinterpret_cast<void *>(ptr), shm.ptr());
-
-        semaphore sem(name);
-        sem.release();
 
         EXPECT_TRUE(ptr->lock.try_wrlock());
         ptr->lock.unlock();
@@ -145,12 +145,12 @@ TEST_F(TestIpc, test_shm_rwlock)
         EXPECT_TRUE(ptr->lock.try_rdlock());
         ptr->lock.unlock();
 
+        semaphore sem(name);
+        sem.release();
+
         int ret = -1;
         waitpid(pid, &ret, 0);
         EXPECT_EQ(ret, 0);
-
-        ptr->~TestStruct();
-        shm.unlink();
     }
 }
 
