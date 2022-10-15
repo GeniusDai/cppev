@@ -61,10 +61,12 @@ TEST_F(TestIpc, test_shm_sem_by)
 
         if (shm.creator())
         {
+            std::cout << "subprocess is shm's creator" << std::endl;
             shm.unlink();
         }
         if (sem.creator())
         {
+            std::cout << "subprocess is sem's creator" << std::endl;
             sem.unlink();
         }
 
@@ -73,12 +75,12 @@ TEST_F(TestIpc, test_shm_sem_by)
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::microseconds(200));
 
         shared_memory shm(name, shm_size);
-        semaphore sem(name);
         memcpy(shm.ptr(), "cppev", 5);
 
+        semaphore sem(name);
         sem.release();
 
         int ret = -1;
@@ -87,10 +89,12 @@ TEST_F(TestIpc, test_shm_sem_by)
 
         if (shm.creator())
         {
+            std::cout << "main-process is shm's creator" << std::endl;
             shm.unlink();
         }
         if (sem.creator())
         {
+            std::cout << "main-process is sem's creator" << std::endl;
             sem.unlink();
         }
     }
