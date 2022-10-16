@@ -9,7 +9,7 @@
 #include "cppev/common_utils.h"
 
 // Q1 : Why a new thread library ?
-// A1 : std::thread doesn't provide support for cancel.
+// A1 : std::thread doesn't support cancel.
 
 // Q2 : Is runnable a full encapsulation of pthread ?
 // A2 : Remain components of pthread:

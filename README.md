@@ -12,7 +12,9 @@ Support readable / writable event handling by io-multiplexing.
 
 ### Concurrency Handling
 
-Support thread-pool / subprocess / shared-memory / semaphore.
+Support thread / thread-pool.
+
+Support semaphore / shared-memory / pshared-lock.
 
 ### Massive Tcp Connection Handling
 
