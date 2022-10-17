@@ -14,7 +14,7 @@ Support readable / writable event handling by io-multiplexing.
 
 Support thread / thread-pool.
 
-Support semaphore / shared-memory / pshared-lock.
+Support semaphore / shared-memory / pshared-locks.
 
 ### Massive Tcp Connection Handling
 
@@ -26,9 +26,9 @@ Support reactor:
 
 Support registering callbacks:
 
-* on_accept: server accept connection (works only for server).
+* on_accept: server accept connection (server only).
 
-* on_connect: client establish connection (works only for client).
+* on_connect: client establish connection (client only).
 
 * on_read_complete: data read into rbuffer complete.
 
