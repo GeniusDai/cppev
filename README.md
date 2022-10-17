@@ -71,7 +71,7 @@ Run Unittest
 
 ### Validated platform
 
-Ubuntu-22.04 / CentOS-8 / macOS-Monterey.
+Ubuntu-20.04 / CentOS-8 / macOS-Monterey.
 
 # Getting Started
 

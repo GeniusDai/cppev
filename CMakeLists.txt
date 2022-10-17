@@ -7,6 +7,7 @@ if (CMAKE_HOST_UNIX)
 endif()
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -O0 -Wall -g -pthread")
+
 include_directories(src/include)
 
 add_subdirectory(src)
