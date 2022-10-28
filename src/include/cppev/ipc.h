@@ -45,7 +45,7 @@ public:
 
     bool creator()
     {
-        return is_creator_;
+        return creator_;
     }
 
 private:
@@ -55,7 +55,7 @@ private:
 
     void *ptr_;
 
-    bool is_creator_;
+    bool creator_;
 };
 
 class semaphore final
@@ -80,7 +80,7 @@ public:
 
     bool creator()
     {
-        return is_creator_;
+        return creator_;
     }
 
 private:
@@ -88,7 +88,7 @@ private:
 
     sem_t *sem_;
 
-    bool is_creator_;
+    bool creator_;
 };
 
 }   // namespace cppev

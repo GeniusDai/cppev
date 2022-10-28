@@ -8,23 +8,42 @@ namespace cppev
 {
 
 shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
-: name_(name), size_(size), ptr_(nullptr), is_creator_(true)
+: name_(name), size_(size), ptr_(nullptr), creator_(false)
 {
     int fd = -1;
-    fd = shm_open(name_.c_str(), O_RDWR | O_CREAT | O_EXCL, mode);
+    fd = shm_open(name_.c_str(), O_RDWR, mode);
     if (fd < 0)
     {
-        if (errno == EEXIST)
+        if (errno == ENOENT)
         {
-            fd = shm_open(name_.c_str(), O_RDWR, mode);
-            is_creator_ = false;
+            fd = shm_open(name_.c_str(), O_RDWR | O_CREAT | O_EXCL, mode);
+            if (fd < 0)
+            {
+                if (errno == EEXIST)
+                {
+                    fd = shm_open(name_.c_str(), O_RDWR, mode);
+                    if (fd < 0)
+                    {
+                        throw_system_error("shm_open error");
+                    }
+                }
+                else
+                {
+                    throw_system_error("shm_open error");
+                }
+            }
+            else
+            {
+                creator_ = true;
+            }
         }
         else
         {
             throw_system_error("shm_open error");
         }
     }
-    if (is_creator_)
+
+    if (creator_)
     {
         ftruncate(fd, size_);
     }
@@ -34,7 +53,7 @@ shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
         throw_system_error("mmap error");
     }
     close(fd);
-    if (is_creator_)
+    if (creator_)
     {
         memset(ptr_, 0, size_);
     }
@@ -59,15 +78,33 @@ void shared_memory::unlink()
 
 
 semaphore::semaphore(const std::string &name, mode_t mode)
-: name_(name), sem_(nullptr), is_creator_(true)
+: name_(name), sem_(nullptr), creator_(false)
 {
-    sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, mode, 0);
+    sem_ = sem_open(name_.c_str(), 0);
     if (sem_ == SEM_FAILED)
     {
-        if (errno == EEXIST)
+        if (errno == ENOENT)
         {
-            sem_ = sem_open(name_.c_str(), 0);
-            is_creator_ = false;
+            sem_ = sem_open(name_.c_str(), O_CREAT | O_EXCL, mode, 0);
+            if (sem_ == SEM_FAILED)
+            {
+                if (errno == EEXIST)
+                {
+                    sem_ = sem_open(name_.c_str(), 0);
+                    if (sem_ == SEM_FAILED)
+                    {
+                        throw_system_error("sem_open error");
+                    }
+                }
+                else
+                {
+                    throw_system_error("sem_open error");
+                }
+            }
+            else
+            {
+                creator_ = true;
+            }
         }
         else
         {
