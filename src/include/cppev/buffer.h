@@ -53,7 +53,12 @@ public:
 
     ~buffer() = default;
 
-    char &operator[](int i) const noexcept
+    const char &operator[](int i) const noexcept
+    {
+        return buffer_[start_ + i];
+    }
+
+    char &operator[](int i) noexcept
     {
         return buffer_[start_ + i];
     }
