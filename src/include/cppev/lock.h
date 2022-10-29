@@ -37,13 +37,10 @@ public:
     spinlock(spinlock &&) = delete;
     spinlock &operator=(spinlock &&) = delete;
 
-    ~spinlock()
+    ~spinlock() noexcept
     {
 #ifdef __linux__
-        if (pthread_spin_destroy(&lock_) != 0)
-        {
-            throw_system_error("pthread_spin_destroy error");
-        }
+        pthread_spin_destroy(&lock_);
 #endif
     }
 
@@ -131,12 +128,9 @@ public:
     pshared_lock(pshared_lock &&) = delete;
     pshared_lock &operator=(pshared_lock &&) = delete;
 
-    ~pshared_lock()
+    ~pshared_lock() noexcept
     {
-        if (pthread_mutex_destroy(&lock_) != 0)
-        {
-            throw_system_error("pthread_mutex_destroy error");
-        }
+        pthread_mutex_destroy(&lock_);
     }
 
     void lock()
@@ -203,12 +197,9 @@ public:
     pshared_cond(pshared_cond &&) = delete;
     pshared_cond &operator=(pshared_cond &&) = delete;
 
-    ~pshared_cond()
+    ~pshared_cond() noexcept
     {
-        if (pthread_cond_destroy(&cond_) != 0)
-        {
-            throw_system_error("pthread_cond_destroy error");
-        }
+        pthread_cond_destroy(&cond_);
     }
 
     void wait(std::unique_lock<pshared_lock> &lock, const condition &cond = []{ return true; })
@@ -355,9 +346,14 @@ public:
     rdlockguard(rdlockguard &&) = delete;
     rdlockguard &operator=(rdlockguard &&) = delete;
 
-    ~rdlockguard()
+    ~rdlockguard() noexcept
     {
-        rwlock_->unlock();
+        try
+        {
+            rwlock_->unlock();
+        }
+        catch(...)
+        {}
     }
 
     void lock()
@@ -388,9 +384,14 @@ public:
     wrlockguard(wrlockguard &&) = delete;
     wrlockguard &operator=(wrlockguard &&) = delete;
 
-    ~wrlockguard()
+    ~wrlockguard() noexcept
     {
-        rwlock_->unlock();
+        try
+        {
+            rwlock_->unlock();
+        }
+        catch(...)
+        {}
     }
 
     void lock()

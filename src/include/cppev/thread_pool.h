@@ -36,7 +36,7 @@ public:
     virtual ~thread_pool() = default;
 
     // Run all threads
-    void run()
+    void run() const
     {
         for (auto &thr : thrs_)
         {
@@ -45,7 +45,7 @@ public:
     }
 
     // Wait for all threads
-    void join()
+    void join() const
     {
         for (auto &thr : thrs_)
         {
@@ -54,7 +54,7 @@ public:
     }
 
     // Cancel all threads
-    virtual void cancel()
+    virtual void cancel() const
     {
         for (auto &thr : thrs_)
         {
@@ -63,13 +63,13 @@ public:
     }
 
     // Specific one of the threads
-    Runnable *operator[](int i)
+    Runnable *operator[](int i) const noexcept
     {
         return thrs_[i].get();
     }
 
     // Thread pool size
-    int size()
+    int size() const noexcept
     {
         return thrs_.size();
     }
@@ -89,20 +89,20 @@ class tp_task_queue
 {
     friend class tp_task_queue_runnable;
 public:
-    tp_task_queue()
+    tp_task_queue() noexcept
     : stop_(false)
     {}
 
     virtual ~tp_task_queue() = default;
 
-    void add_task(const task_handler &h)
+    void add_task(const task_handler &h) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
         queue_.push(std::make_shared<task_handler>(h));
         cond_.notify_one();
     }
 
-    void add_task(const std::vector<std::shared_ptr<task_handler> > &vh)
+    void add_task(const std::vector<std::shared_ptr<task_handler> > &vh) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
         for (const auto &h : vh)
@@ -126,7 +126,7 @@ class tp_task_queue_runnable final
 : public runnable
 {
 public:
-    tp_task_queue_runnable(tp_task_queue *tq)
+    tp_task_queue_runnable(tp_task_queue *tq) noexcept
     : tq_(tq)
     {}
 
@@ -174,7 +174,7 @@ public:
 
     ~thread_pool_task_queue() = default;
 
-    void stop()
+    void stop() noexcept
     {
         {
             std::unique_lock<std::mutex> lock(lock_);

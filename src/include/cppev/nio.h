@@ -60,7 +60,7 @@ public:
     nio(nio &&) = delete;
     nio &operator=(nio &&) = delete;
 
-    virtual ~nio()
+    virtual ~nio() noexcept
     {
         if (!closed_)
         {
@@ -68,39 +68,39 @@ public:
         }
     }
 
-    int fd() const
+    int fd() const noexcept
     {
         return fd_;
     }
 
     // Read buffer
-    buffer *rbuf()
+    buffer *rbuf() const noexcept
     {
         return rbuffer_.get();
     }
 
     // Write buffer
-    buffer *wbuf()
+    buffer *wbuf() const noexcept
     {
         return wbuffer_.get();
     }
 
-    event_loop *evlp()
+    event_loop *evlp() const noexcept
     {
         return evlp_;
     }
 
-    void set_evlp(event_loop *evlp)
+    void set_evlp(event_loop *evlp) noexcept
     {
         evlp_ = evlp;
     }
 
-    bool is_closed()
+    bool is_closed() const noexcept
     {
         return closed_;
     }
 
-    void close()
+    void close() noexcept
     {
         ::close(fd_);
         closed_ = true;
@@ -124,7 +124,7 @@ protected:
 
 private:
     // Set fd to nonblock
-    void set_nonblock();
+    void set_nonblock() const;
 };
 
 class nstream
@@ -135,20 +135,19 @@ public:
     : nio(fd), reset_(false), eof_(false), eop_(false)
     {}
 
-    virtual ~nstream()
-    {}
+    virtual ~nstream() = default;
 
-    bool is_reset()
+    bool is_reset() const noexcept
     {
         return reset_;
     }
 
-    bool eof()
+    bool eof() const noexcept
     {
         return eof_;
     }
 
-    bool eop()
+    bool eop() const noexcept
     {
         return eop_;
     }
@@ -195,49 +194,48 @@ public:
     : nio(fd), family_(f)
     {}
 
-    virtual ~nsock()
-    {}
+    virtual ~nsock() = default;
 
-    family sockfamily()
+    family sockfamily() const noexcept
     {
         return family_;
     }
 
     // setsockopt SO_REUSEADDR
-    void set_so_reuseaddr(bool enable=true);
+    void set_so_reuseaddr(bool enable=true) const;
 
     // getsockopt SO_REUSEADDR
-    bool get_so_reuseaddr();
+    bool get_so_reuseaddr() const;
 
     // setsockopt SO_REUSEPORT
-    void set_so_reuseport(bool enable=true);
+    void set_so_reuseport(bool enable=true) const;
 
     // getsockopt SO_REUSEPORT
-    bool get_so_reuseport();
+    bool get_so_reuseport() const;
 
     // setsockopt SO_RCVBUF, actual value = size*2 in linux
-    void set_so_rcvbuf(int size);
+    void set_so_rcvbuf(int size) const;
 
     // getsockopt SO_RCVBUF, actual value = size*2 in linux
-    int get_so_rcvbuf();
+    int get_so_rcvbuf() const;
 
     // setsockopt SO_SNDBUF
-    void set_so_sndbuf(int size);
+    void set_so_sndbuf(int size) const;
 
     // getsockopt SO_SNDBUF
-    int get_so_sndbuf();
+    int get_so_sndbuf() const;
 
     // setsockopt SO_RCVLOWAT
-    void set_so_rcvlowat(int size);
+    void set_so_rcvlowat(int size) const;
 
     // getsockopt SO_RCVLOWAT
-    int get_so_rcvlowat();
+    int get_so_rcvlowat() const;
 
     // setsockopt SO_SNDLOWAT, Protocol not available in linux
-    void set_so_sndlowat(int size);
+    void set_so_sndlowat(int size) const;
 
     // getsockopt SO_SNDLOWAT, Protocol not available in linux
-    int get_so_sndlowat();
+    int get_so_sndlowat() const;
 
 protected:
     // socket family
@@ -263,9 +261,9 @@ public:
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
     {}
 
-    void listen(int port, const char *ip = nullptr);
+    void listen(int port, const char *ip = nullptr) const;
 
-    void listen(int port, const std::string &ip)
+    void listen(int port, const std::string &ip) const
     {
         listen(port, ip.c_str());
     }
@@ -291,44 +289,44 @@ public:
         return connect_unix(path.c_str());
     }
 
-    bool check_connect()
+    bool check_connect() const
     {
         return get_so_error() == 0;
     }
 
-    std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
+    std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX) const;
 
-    std::tuple<std::string, int, family> sockname();
+    std::tuple<std::string, int, family> sockname() const;
 
-    std::tuple<std::string, int, family> peername();
+    std::tuple<std::string, int, family> peername() const;
 
-    std::tuple<std::string, int, family> connpeer()
+    std::tuple<std::string, int, family> connpeer() const noexcept
     {
         return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family_);
     }
 
-    void shutdown(shut_howto howto);
+    void shutdown(shut_howto howto) const noexcept;
 
     // setsockopt SO_KEEPALIVE
-    void set_so_keepalive(bool enable=true);
+    void set_so_keepalive(bool enable=true) const;
 
     // getsockopt SO_KEEPALIVE
-    bool get_so_keepalive();
+    bool get_so_keepalive() const;
 
     // setsockopt SO_LINGER
-    void set_so_linger(bool l_onoff, int l_linger=0);
+    void set_so_linger(bool l_onoff, int l_linger=0) const;
 
     // getsockopt SO_LINGER
-    std::pair<bool, int> get_so_linger();
+    std::pair<bool, int> get_so_linger() const;
 
     // setsockopt TCP_NODELAY
-    void set_tcp_nodelay(bool enable=true);
+    void set_tcp_nodelay(bool enable=true) const;
 
     // getsockopt TCP_NODELAY
-    bool get_tcp_nodelay();
+    bool get_tcp_nodelay() const;
 
     // getsockopt SO_ERROR, option cannot be set
-    int get_so_error();
+    int get_so_error() const;
 
 private:
     // IPV4/6 : Record ip/port  in connect()
@@ -343,13 +341,13 @@ class nsockudp final
 : public nsock
 {
 public:
-    nsockudp(int sockfd, family f)
+    nsockudp(int sockfd, family f) noexcept
     : nio(sockfd), nsock(sockfd, f)
     {}
 
-    void bind(int port, const char *ip = nullptr);
+    void bind(int port, const char *ip = nullptr) const;
 
-    void bind(int port, const std::string &ip)
+    void bind(int port, const std::string &ip) const
     {
         bind(port, ip.c_str());
     }
@@ -378,10 +376,10 @@ public:
     }
 
     // setsockopt SO_BROADCAST
-    void set_so_broadcast(bool enable=true);
+    void set_so_broadcast(bool enable=true) const;
 
     // getsockopt SO_BROADCAST
-    bool get_so_broadcast();
+    bool get_so_broadcast() const;
 
 private:
     std::string unix_listen_path_;

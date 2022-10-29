@@ -56,32 +56,32 @@ public:
     event_loop(event_loop &&) = delete;
     event_loop &operator=(event_loop &&) = delete;
 
-    virtual ~event_loop()
+    virtual ~event_loop() noexcept
     {
         close(ev_fd_);
     }
 
-    int ev_fd() const
+    int ev_fd() const noexcept
     {
         return ev_fd_;
     }
 
-    void *data() const
+    void *data() const noexcept
     {
         return data_;
     }
 
-    void *back() const
+    void *back() const noexcept
     {
         return back_;
     }
 
-    int ev_loads() const
+    int ev_loads() const noexcept
     {
         return fds_.size();
     }
 
-    void set_on_loop(const evlp_handler &handler)
+    void set_on_loop(const evlp_handler &handler) noexcept
     {
         evlp_handler_ = handler;
     }

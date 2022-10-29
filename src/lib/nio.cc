@@ -19,7 +19,7 @@
 namespace cppev
 {
 
-void nio::set_nonblock()
+void nio::set_nonblock() const
 {
     int flags = fcntl(fd_, F_GETFL);
     if (flags < 0)
@@ -256,7 +256,7 @@ static std::tuple<std::string, int, family> query_ip_port_family(sockaddr_storag
     return std::make_tuple<>(ip, port, f);
 }
 
-void nsock::set_so_reuseaddr(bool enable)
+void nsock::set_so_reuseaddr(bool enable) const
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -266,7 +266,7 @@ void nsock::set_so_reuseaddr(bool enable)
     }
 }
 
-bool nsock::get_so_reuseaddr()
+bool nsock::get_so_reuseaddr() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -277,7 +277,7 @@ bool nsock::get_so_reuseaddr()
     return static_cast<bool>(optval);
 }
 
-void nsock::set_so_reuseport(bool enable)
+void nsock::set_so_reuseport(bool enable) const
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -287,7 +287,7 @@ void nsock::set_so_reuseport(bool enable)
     }
 }
 
-bool nsock::get_so_reuseport()
+bool nsock::get_so_reuseport() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -298,7 +298,7 @@ bool nsock::get_so_reuseport()
     return static_cast<bool>(optval);
 }
 
-void nsock::set_so_rcvbuf(int size)
+void nsock::set_so_rcvbuf(int size) const
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, sizeof(size)) == -1)
     {
@@ -306,7 +306,7 @@ void nsock::set_so_rcvbuf(int size)
     }
 }
 
-int nsock::get_so_rcvbuf()
+int nsock::get_so_rcvbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -317,7 +317,7 @@ int nsock::get_so_rcvbuf()
     return size;
 }
 
-void nsock::set_so_sndbuf(int size)
+void nsock::set_so_sndbuf(int size) const
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, sizeof(size)) == -1)
     {
@@ -325,7 +325,7 @@ void nsock::set_so_sndbuf(int size)
     }
 }
 
-int nsock::get_so_sndbuf()
+int nsock::get_so_sndbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -336,7 +336,7 @@ int nsock::get_so_sndbuf()
     return size;
 }
 
-void nsock::set_so_rcvlowat(int size)
+void nsock::set_so_rcvlowat(int size) const
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, sizeof(size)) == -1)
     {
@@ -344,7 +344,8 @@ void nsock::set_so_rcvlowat(int size)
     }
 }
 
-int nsock::get_so_rcvlowat() {
+int nsock::get_so_rcvlowat() const
+{
     int size;
     socklen_t len = sizeof(size);
     if (getsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, &len) == -1)
@@ -352,7 +353,7 @@ int nsock::get_so_rcvlowat() {
     return size;
 }
 
-void nsock::set_so_sndlowat(int size)
+void nsock::set_so_sndlowat(int size) const
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, sizeof(size)) == -1)
     {
@@ -360,7 +361,7 @@ void nsock::set_so_sndlowat(int size)
     }
 }
 
-int nsock::get_so_sndlowat()
+int nsock::get_so_sndlowat() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -371,7 +372,7 @@ int nsock::get_so_sndlowat()
     return size;
 }
 
-void nsocktcp::set_so_keepalive(bool enable)
+void nsocktcp::set_so_keepalive(bool enable) const
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -381,7 +382,7 @@ void nsocktcp::set_so_keepalive(bool enable)
     }
 }
 
-bool nsocktcp::get_so_keepalive()
+bool nsocktcp::get_so_keepalive() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -392,7 +393,7 @@ bool nsocktcp::get_so_keepalive()
     return static_cast<bool>(optval);
 }
 
-void nsocktcp::set_so_linger(bool l_onoff, int l_linger)
+void nsocktcp::set_so_linger(bool l_onoff, int l_linger) const
 {
     struct linger lg;
     lg.l_onoff = static_cast<int>(l_onoff);
@@ -403,7 +404,7 @@ void nsocktcp::set_so_linger(bool l_onoff, int l_linger)
     }
 }
 
-std::pair<bool, int> nsocktcp::get_so_linger()
+std::pair<bool, int> nsocktcp::get_so_linger() const
 {
     struct linger lg;
     socklen_t len = sizeof(lg);
@@ -414,7 +415,7 @@ std::pair<bool, int> nsocktcp::get_so_linger()
     return std::make_pair<>(static_cast<bool>(lg.l_onoff), lg.l_linger);
 }
 
-void nsockudp::set_so_broadcast(bool enable)
+void nsockudp::set_so_broadcast(bool enable) const
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -424,7 +425,7 @@ void nsockudp::set_so_broadcast(bool enable)
     }
 }
 
-bool nsockudp::get_so_broadcast()
+bool nsockudp::get_so_broadcast() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -435,7 +436,7 @@ bool nsockudp::get_so_broadcast()
     return static_cast<bool>(optval);
 }
 
-void nsocktcp::set_tcp_nodelay(bool enable)
+void nsocktcp::set_tcp_nodelay(bool enable) const
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -445,7 +446,7 @@ void nsocktcp::set_tcp_nodelay(bool enable)
     }
 }
 
-bool nsocktcp::get_tcp_nodelay()
+bool nsocktcp::get_tcp_nodelay() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -456,7 +457,7 @@ bool nsocktcp::get_tcp_nodelay()
     return static_cast<bool>(optval);
 }
 
-int nsocktcp::get_so_error()
+int nsocktcp::get_so_error() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -467,7 +468,7 @@ int nsocktcp::get_so_error()
     return optval;
 }
 
-void nsocktcp::shutdown(shut_howto howto)
+void nsocktcp::shutdown(shut_howto howto) const noexcept
 {
     switch (howto)
     {
@@ -483,14 +484,11 @@ void nsocktcp::shutdown(shut_howto howto)
     {
         ::shutdown(fd_, SHUT_RDWR);
     }
-    default:
-    {
-        throw_logic_error("unknown shutdown howto");
-    }
+    default: ;
     }
 }
 
-std::tuple<std::string, int, family> nsocktcp::sockname()
+std::tuple<std::string, int, family> nsocktcp::sockname() const
 {
     if (family_ == family::local)
     {
@@ -505,7 +503,7 @@ std::tuple<std::string, int, family> nsocktcp::sockname()
     return query_ip_port_family(addr);
 }
 
-std::tuple<std::string, int, family> nsocktcp::peername()
+std::tuple<std::string, int, family> nsocktcp::peername() const
 {
     if (family_ == family::local)
     {
@@ -520,7 +518,7 @@ std::tuple<std::string, int, family> nsocktcp::peername()
     return query_ip_port_family(addr);
 }
 
-void nsocktcp::listen(int port, const char *ip)
+void nsocktcp::listen(int port, const char *ip) const
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -595,7 +593,7 @@ bool nsocktcp::connect_unix(const char *path)
     return true;
 }
 
-std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)
+std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch) const
 {
     std::vector<std::shared_ptr<nsocktcp> > sockfds;
     for(int i = 0; i < batch; ++i)
@@ -624,7 +622,7 @@ std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)
     return sockfds;
 }
 
-void nsockudp::bind(int port, const char *ip)
+void nsockudp::bind(int port, const char *ip) const
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));

@@ -25,7 +25,7 @@ public:
     timer(timer &&) = delete;
     timer &operator=(timer &&) = delete;
 
-    ~timer();
+    ~timer() noexcept;
 
     void stop();
 
@@ -90,7 +90,7 @@ timer::timer(const std::chrono::duration<Rep, Period> &span, const timer_handler
 #endif
 }
 
-timer::~timer()
+timer::~timer() noexcept
 {
 #ifndef __linux__
     thr_->join();

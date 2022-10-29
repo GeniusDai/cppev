@@ -93,19 +93,19 @@ bool popen::poll()
     return ret != 0;
 }
 
-void popen::communicate(const std::string &str)
+void popen::communicate(const char *input, int len)
 {
     stdout_->read_all();
     stderr_->read_all();
 
-    if (str.size())
+    if (input != nullptr && len != 0)
     {
-        stdin_->wbuf()->put_string(str);
+        stdin_->wbuf()->produce(input, len);
         stdin_->write_all();
     }
 }
 
-void popen::send_signal(int sig)
+void popen::send_signal(int sig) const 
 {
     if (::kill(pid(), sig) < 0)
     {
@@ -113,12 +113,12 @@ void popen::send_signal(int sig)
     }
 }
 
-void popen::terminate()
+void popen::terminate() const
 {
     send_signal(SIGTERM);
 }
 
-void popen::kill()
+void popen::kill() const
 {
     send_signal(SIGKILL);
 }

@@ -15,11 +15,11 @@ class buffer final
     friend class nstream;
     friend class nsockudp;
 public:
-    buffer()
+    buffer() noexcept
     : buffer(1)
     {}
 
-    explicit buffer(int cap)
+    explicit buffer(int cap) noexcept
     : cap_(cap), start_(0), offset_(0)
     {
         buffer_ = std::unique_ptr<char[]>(new char[cap_]);
@@ -53,28 +53,28 @@ public:
 
     ~buffer() = default;
 
-    char &operator[](int i)
+    char &operator[](int i) const noexcept
     {
         return buffer_[start_ + i];
     }
 
-    int size() const
+    int size() const noexcept
     {
         return offset_ - start_;
     }
 
-    int cap() const
+    int cap() const noexcept
     {
         return cap_;
     }
 
-    char *rawbuf()
+    char *rawbuf() const noexcept
     {
         return buffer_.get() + start_;
     }
 
     // Expand buffer
-    void resize(int cap)
+    void resize(int cap) noexcept
     {
         if (cap_ >= cap)
         {
@@ -98,7 +98,7 @@ public:
     }
 
     // Move unconsumed buffer to the start
-    void tiny()
+    void tiny() noexcept
     {
         if (start_ == 0)
         {
@@ -115,7 +115,7 @@ public:
     }
 
     // Clear buffer
-    void clear()
+    void clear() noexcept
     {
         memset(buffer_.get(), 0, cap_);
         start_ = 0;
@@ -125,7 +125,7 @@ public:
     // Produce chars to buffer
     // @param ptr : Pointer to char array may contain '\0'
     // @param len : Char array length that copy to buffer
-    void produce(const char *ptr, int len)
+    void produce(const char *ptr, int len) noexcept
     {
         resize(offset_ + len);
         for (int i = 0; i < len; ++i)
@@ -135,7 +135,7 @@ public:
     }
 
     // Consume chars from buffer
-    void consume(int len = -1)
+    void consume(int len = -1) noexcept
     {
         if (len == -1)
         {
@@ -148,12 +148,12 @@ public:
         }
     }
 
-    void put_string(const std::string &str)
+    void put_string(const std::string &str) noexcept
     {
         produce(str.c_str(), str.size());
     }
 
-    std::string get_string(int len = -1, bool consume = true)
+    std::string get_string(int len = -1, bool consume = true) noexcept
     {
         if (len == -1)
         {

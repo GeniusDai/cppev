@@ -18,7 +18,7 @@ public:
     shared_memory(shared_memory &&) = delete;
     shared_memory &operator=(shared_memory &&) = delete;
 
-    ~shared_memory();
+    ~shared_memory() noexcept;
 
     template <typename SharedClass, typename... Args>
     SharedClass *construct(Args&&... args)
@@ -31,19 +31,19 @@ public:
         return object;
     }
 
-    void unlink();
+    void unlink() const;
 
-    void *ptr()
+    void *ptr() const noexcept
     {
         return ptr_;
     }
 
-    int size() const
+    int size() const noexcept
     {
         return size_;
     }
 
-    bool creator()
+    bool creator() const noexcept
     {
         return creator_;
     }
@@ -68,17 +68,17 @@ public:
     semaphore(semaphore &&) = delete;
     semaphore &operator=(semaphore &&) = delete;
 
-    ~semaphore();
+    ~semaphore() noexcept;
 
-    bool try_acquire();
+    bool try_acquire() const;
 
-    void acquire();
+    void acquire() const;
 
-    void release();
+    void release() const;
 
-    void unlink();
+    void unlink() const;
 
-    bool creator()
+    bool creator() const noexcept
     {
         return creator_;
     }

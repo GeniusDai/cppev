@@ -13,7 +13,7 @@ template<typename Key, typename Value>
 class lru_cache final
 {
 public:
-    explicit lru_cache(Value null, long cap = LONG_MAX)
+    explicit lru_cache(Value null, long cap = LONG_MAX) noexcept
     : null_(null), cap_(cap)
     {}
 
@@ -24,9 +24,9 @@ public:
 
     ~lru_cache() = default;
 
-    Value get(Key key);
+    Value get(Key key) noexcept;
 
-    void put(Key key, Value value);
+    void put(Key key, Value value) noexcept;
 
 private:
     std::list<std::pair<Key, Value>> cache_;
@@ -39,7 +39,7 @@ private:
 };
 
 template<typename Key, typename Value>
-Value lru_cache<Key, Value>::get(Key key)
+Value lru_cache<Key, Value>::get(Key key) noexcept
 {
     if (hash_.count(key) == 0)
     {
@@ -52,7 +52,7 @@ Value lru_cache<Key, Value>::get(Key key)
 }
 
 template<typename Key, typename Value>
-void lru_cache<Key, Value>::put(Key key, Value value)
+void lru_cache<Key, Value>::put(Key key, Value value) noexcept
 {
     if (hash_.count(key) != 0)
     {

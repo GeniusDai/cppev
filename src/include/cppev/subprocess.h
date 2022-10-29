@@ -42,30 +42,35 @@ public:
         wait(std::chrono::milliseconds(50));
     }
 
-    void communicate(const std::string &str="");
+    void communicate(const char *input = nullptr, int len = 0);
 
-    void terminate();
+    void communicate(const std::string &input)
+    {
+        communicate(input.c_str());
+    }
 
-    void kill();
+    void terminate() const;
 
-    void send_signal(int sig);
+    void kill() const;
 
-    int returncode() const
+    void send_signal(int sig) const;
+
+    int returncode() const noexcept
     {
         return returncode_;
     }
 
-    const char *stdout() const
+    const char *stdout() const noexcept
     {
         return stdout_->rbuf()->rawbuf();
     }
 
-    const char *stderr() const
+    const char *stderr() const noexcept
     {
         return stderr_->rbuf()->rawbuf();
     }
 
-    pid_t pid() const
+    pid_t pid() const noexcept
     {
         return pid_;
     }
