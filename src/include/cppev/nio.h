@@ -124,7 +124,7 @@ protected:
 
 private:
     // Set fd to nonblock
-    void set_nonblock() const;
+    void set_nonblock();
 };
 
 class nstream
@@ -202,37 +202,37 @@ public:
     }
 
     // setsockopt SO_REUSEADDR
-    void set_so_reuseaddr(bool enable=true) const;
+    void set_so_reuseaddr(bool enable=true);
 
     // getsockopt SO_REUSEADDR
     bool get_so_reuseaddr() const;
 
     // setsockopt SO_REUSEPORT
-    void set_so_reuseport(bool enable=true) const;
+    void set_so_reuseport(bool enable=true);
 
     // getsockopt SO_REUSEPORT
     bool get_so_reuseport() const;
 
     // setsockopt SO_RCVBUF, actual value = size*2 in linux
-    void set_so_rcvbuf(int size) const;
+    void set_so_rcvbuf(int size);
 
     // getsockopt SO_RCVBUF, actual value = size*2 in linux
     int get_so_rcvbuf() const;
 
     // setsockopt SO_SNDBUF
-    void set_so_sndbuf(int size) const;
+    void set_so_sndbuf(int size);
 
     // getsockopt SO_SNDBUF
     int get_so_sndbuf() const;
 
     // setsockopt SO_RCVLOWAT
-    void set_so_rcvlowat(int size) const;
+    void set_so_rcvlowat(int size);
 
     // getsockopt SO_RCVLOWAT
     int get_so_rcvlowat() const;
 
     // setsockopt SO_SNDLOWAT, Protocol not available in linux
-    void set_so_sndlowat(int size) const;
+    void set_so_sndlowat(int size);
 
     // getsockopt SO_SNDLOWAT, Protocol not available in linux
     int get_so_sndlowat() const;
@@ -246,7 +246,7 @@ protected:
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
-enum class shut_howto
+enum class shut_mode
 {
     shut_rd,
     shut_wr,
@@ -261,9 +261,9 @@ public:
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
     {}
 
-    void listen(int port, const char *ip = nullptr) const;
+    void listen(int port, const char *ip = nullptr);
 
-    void listen(int port, const std::string &ip) const
+    void listen(int port, const std::string &ip)
     {
         listen(port, ip.c_str());
     }
@@ -294,7 +294,7 @@ public:
         return get_so_error() == 0;
     }
 
-    std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX) const;
+    std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
 
     std::tuple<std::string, int, family> sockname() const;
 
@@ -305,22 +305,22 @@ public:
         return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family_);
     }
 
-    void shutdown(shut_howto howto) const noexcept;
+    void shutdown(shut_mode howto) noexcept;
 
     // setsockopt SO_KEEPALIVE
-    void set_so_keepalive(bool enable=true) const;
+    void set_so_keepalive(bool enable=true);
 
     // getsockopt SO_KEEPALIVE
     bool get_so_keepalive() const;
 
     // setsockopt SO_LINGER
-    void set_so_linger(bool l_onoff, int l_linger=0) const;
+    void set_so_linger(bool l_onoff, int l_linger=0);
 
     // getsockopt SO_LINGER
     std::pair<bool, int> get_so_linger() const;
 
     // setsockopt TCP_NODELAY
-    void set_tcp_nodelay(bool enable=true) const;
+    void set_tcp_nodelay(bool enable=true);
 
     // getsockopt TCP_NODELAY
     bool get_tcp_nodelay() const;
@@ -345,9 +345,9 @@ public:
     : nio(sockfd), nsock(sockfd, f)
     {}
 
-    void bind(int port, const char *ip = nullptr) const;
+    void bind(int port, const char *ip = nullptr);
 
-    void bind(int port, const std::string &ip) const
+    void bind(int port, const std::string &ip)
     {
         bind(port, ip.c_str());
     }
@@ -376,7 +376,7 @@ public:
     }
 
     // setsockopt SO_BROADCAST
-    void set_so_broadcast(bool enable=true) const;
+    void set_so_broadcast(bool enable=true);
 
     // getsockopt SO_BROADCAST
     bool get_so_broadcast() const;
