@@ -73,7 +73,12 @@ public:
         return cap_;
     }
 
-    char *rawbuf() const noexcept
+    const char *rawbuf() const noexcept
+    {
+        return buffer_.get() + start_;
+    }
+
+    char *rawbuf() noexcept
     {
         return buffer_.get() + start_;
     }
@@ -129,7 +134,7 @@ public:
 
     // Produce chars to buffer
     // @param ptr : Pointer to char array may contain '\0'
-    // @param len : Char array length that copy to buffer
+    // @param len : Char array length that copies to buffer
     void produce(const char *ptr, int len) noexcept
     {
         resize(offset_ + len);
@@ -140,6 +145,7 @@ public:
     }
 
     // Consume chars from buffer
+    // @param len : Char array length that consumes, -1 means all.
     void consume(int len = -1) noexcept
     {
         if (len == -1)
@@ -153,25 +159,26 @@ public:
         }
     }
 
+    // Produce string to buffer
+    // param str : string to put
     void put_string(const std::string &str) noexcept
     {
         produce(str.c_str(), str.size());
     }
 
-    std::string get_string(int len = -1, bool consume = true) noexcept
+    // Get string from buffer
+    // param len: Char array length that consumes, -1 means all.
+    // param remove : whether consumes the char array.
+    std::string get_string(int len = -1, bool remove = true) noexcept
     {
         if (len == -1)
         {
             len = size();
         }
         std::string str(buffer_.get() + start_, len);
-        if (consume)
+        if (remove)
         {
-            start_ += len;
-        }
-        if (start_ == offset_)
-        {
-            clear();
+            consume(len);
         }
         return str;
     }
