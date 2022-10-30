@@ -74,25 +74,40 @@ public:
     }
 
     // Read buffer
-    buffer *rbuf() const noexcept
+    const buffer &rbuf() const noexcept
     {
-        return rbuffer_.get();
+        return *rbuffer_.get();
+    }
+
+    buffer &rbuf() noexcept
+    {
+        return *rbuffer_.get();
     }
 
     // Write buffer
-    buffer *wbuf() const noexcept
+    const buffer &wbuf() const noexcept
     {
-        return wbuffer_.get();
+        return *wbuffer_.get();
     }
 
-    event_loop *evlp() const noexcept
+    buffer &wbuf() noexcept
     {
-        return evlp_;
+        return *wbuffer_.get();
     }
 
-    void set_evlp(event_loop *evlp) noexcept
+    const event_loop &evlp() const noexcept
     {
-        evlp_ = evlp;
+        return *evlp_;
+    }
+
+    event_loop &evlp() noexcept
+    {
+        return *evlp_;
+    }
+
+    void set_evlp(event_loop &evlp) noexcept
+    {
+        evlp_ = &evlp;
     }
 
     bool is_closed() const noexcept

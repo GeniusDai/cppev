@@ -55,7 +55,7 @@ public:
     }
 
     // Wait until thread finish
-    void join() const
+    void join()
     {
         if (pthread_join(thr_, nullptr) != 0)
         {
@@ -64,7 +64,7 @@ public:
     }
 
     // Detach thread
-    void detach() const
+    void detach()
     {
         if (pthread_detach(thr_) != 0)
         {
@@ -73,7 +73,7 @@ public:
     }
 
     // Cancel thread
-    void cancel() const
+    void cancel()
     {
         if (pthread_cancel(thr_) != 0)
         {

@@ -36,7 +36,7 @@ public:
     virtual ~thread_pool() = default;
 
     // Run all threads
-    void run() const
+    void run()
     {
         for (auto &thr : thrs_)
         {
@@ -45,7 +45,7 @@ public:
     }
 
     // Wait for all threads
-    void join() const
+    void join()
     {
         for (auto &thr : thrs_)
         {
@@ -54,7 +54,7 @@ public:
     }
 
     // Cancel all threads
-    virtual void cancel() const
+    virtual void cancel()
     {
         for (auto &thr : thrs_)
         {
@@ -62,10 +62,16 @@ public:
         }
     }
 
-    // Specific one of the threads
-    Runnable *operator[](int i) const noexcept
+    // Specific const one of the threads
+    const Runnable &operator[](int i) const noexcept
     {
-        return thrs_[i].get();
+        return *(thrs_[i].get());
+    }
+
+    // Specific one of the threads
+    Runnable &operator[](int i) noexcept
+    {
+        return *(thrs_[i].get());
     }
 
     // Thread pool size

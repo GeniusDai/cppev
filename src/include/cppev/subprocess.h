@@ -62,12 +62,12 @@ public:
 
     const char *stdout() const noexcept
     {
-        return stdout_->rbuf()->rawbuf();
+        return stdout_->rbuf().rawbuf();
     }
 
     const char *stderr() const noexcept
     {
-        return stderr_->rbuf()->rawbuf();
+        return stderr_->rbuf().rawbuf();
     }
 
     pid_t pid() const noexcept

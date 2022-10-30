@@ -100,7 +100,7 @@ void popen::communicate(const char *input, int len)
 
     if (input != nullptr && len != 0)
     {
-        stdin_->wbuf()->produce(input, len);
+        stdin_->wbuf().produce(input, len);
         stdin_->write_all();
     }
 }

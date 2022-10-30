@@ -6,7 +6,7 @@ cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = iopu->recv();
     cppev::log::info << "udp bind sock readable --> fd " << iopu->fd() << " --> ";
-    cppev::log::info << iopu->rbuf()->size() << " " << iopu->rbuf()->get_string() <<  " --> ";
+    cppev::log::info << iopu->rbuf().size() << " " << iopu->rbuf().get_string() <<  " --> ";
     cppev::log::info << "peer: " << std::get<0>(cli) << " " << std::get<1>(cli) << cppev::log::endl;
 };
 

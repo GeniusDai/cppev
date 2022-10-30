@@ -9,7 +9,7 @@ cppev::fd_event_handler connecting_socket_callback = [](const std::shared_ptr<cp
         cppev::log::error << "fd " << iop->fd() << " failed to connect" << cppev::log::endl;
         return;
     }
-    iopt->wbuf()->produce(MSG, MSG_LEN);
+    iopt->wbuf().produce(MSG, MSG_LEN);
     iopt->write_all();
 };
 

@@ -87,7 +87,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
     }
     log::info << log::endl;
 #endif  // CPPEV_DEBUG
-    iop->set_evlp(this);
+    iop->set_evlp(*this);
     if (handler)
     {
         std::unique_lock<std::mutex> lock(lock_);
