@@ -8,10 +8,10 @@ cc_library(
 cc_binary(
     name = "tcp_client",
     srcs = [
-        "config.h",
         "tcp_client.cc"
     ],
     deps = [
+        ":lib",
         "//src:cppev",
     ]
 )
@@ -19,10 +19,10 @@ cc_binary(
 cc_binary(
     name = "tcp_server",
     srcs = [
-        "config.h",
         "tcp_server.cc"
     ],
     deps = [
+        ":lib",
         "//src:cppev",
     ]
 )
@@ -30,10 +30,10 @@ cc_binary(
 cc_binary(
     name = "udp_client",
     srcs = [
-        "config.h",
         "udp_client.cc"
     ],
     deps = [
+        ":lib",
         "//src:cppev",
     ]
 )
@@ -41,10 +41,10 @@ cc_binary(
 cc_binary(
     name = "udp_server",
     srcs = [
-        "config.h",
         "udp_server.cc"
     ],
     deps = [
+        ":lib",
         "//src:cppev",
     ]
 )
