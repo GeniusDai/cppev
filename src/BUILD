@@ -6,14 +6,16 @@ cc_library(
     srcs = glob(
         include = ["lib/*.cc"],
     ),
-    linkopts = select({
+    linkopts = [
+        "-pthread",
+        "-ldl",
+    ]
+    +
+    select({
         "@platforms//os:linux" : [
-            "-pthread",
             "-lrt"
         ],
-        "@platforms//os:osx" : [
-            "-pthread"
-        ],
+        "@platforms//os:osx" : [],
     }),
     strip_include_prefix = "include/",
     visibility = [

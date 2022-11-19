@@ -10,9 +10,12 @@ set (LIB
     tcp.cc
     subprocess.cc
     ipc.cc
+    dynamic_loader.cc
 )
 
 add_library(cppev SHARED ${LIB})
+target_link_libraries(cppev dl)
+
 if (CMAKE_HOST_APPLE)
     message("Platform : Apple")
 else()

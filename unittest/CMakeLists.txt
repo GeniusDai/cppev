@@ -18,3 +18,7 @@ compile_and_enable_test(test_subprocess)
 compile_and_enable_test(test_lru_cache)
 compile_and_enable_test(test_ipc)
 compile_and_enable_test(test_timer)
+
+add_library(test_dyld_impl SHARED test_dyld_impl.cc)
+target_link_libraries(test_dyld_impl cppev)
+compile_and_enable_test(test_dynamic_loader)
