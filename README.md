@@ -18,23 +18,7 @@ Support semaphore / shared-memory / pshared-locks.
 
 ### Massive Tcp Connection Handling
 
-Support reactor:
-
-* Server: multi-acceptor-thread and io-thread-pool.
-
-* Client: multi-connector-thread and io-thread-pool.
-
-Support registering callbacks:
-
-* on_accept: server accept connection (server only).
-
-* on_connect: client establish connection (client only).
-
-* on_read_complete: data read into rbuffer complete.
-
-* on_write_complete: data write from wbuffer complete.
-
-* on_closed: socket closed by opposite host.
+Support reactor pattern and registering callbacks.
 
 # Usage
 

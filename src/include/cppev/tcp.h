@@ -79,19 +79,19 @@ public:
 
     ~tp_shared_data() = default;
 
-    // When new connection arrived
+    // When tcp server accepts new connection
     tcp_event_handler on_accept;
 
-    // When connection established
+    // When tcp client establishes new connection
     tcp_event_handler on_connect;
 
-    // When read tcp connection complete
+    // When read from tcp connection completes
     tcp_event_handler on_read_complete;
 
-    // When write tcp connection complete
+    // When write to tcp connection completes
     tcp_event_handler on_write_complete;
 
-    // When socket closed by opposite host
+    // When tcp socket closed by opposite host
     tcp_event_handler on_closed;
 
     // Load balance algorithm : choose worker randomly
