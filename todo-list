@@ -1,4 +1,3 @@
 P2:
     DNS Resolution
     Application layer protocol
-    Try to support dynamic loader unittest in bazel

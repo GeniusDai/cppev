@@ -129,15 +129,32 @@ cc_binary(
     linkshared = True,
 )
 
-# Dynamic loader test not supported by bazel !
-# cc_test(
-#     name = "test_dynamic_loader",
-#     srcs = [
-#         "test_dyld_base.h",
-#         "test_dynamic_loader.cc",
-#     ],
-#     deps = [
-#         "//src:cppev",
-#         "@googletest//:gtest_main",
-#     ],
-# )
+cc_binary(
+    name = "libtest_dyld_impl.dylib",
+    srcs = [
+        "test_dyld_base.h",
+        "test_dyld_impl.h",
+        "test_dyld_impl.cc",
+    ],
+    linkshared = True,
+)
+
+cc_test(
+    name = "test_dynamic_loader",
+    srcs = [
+        "test_dyld_base.h",
+        "test_dynamic_loader.cc",
+    ],
+    deps = [
+        "//src:cppev",
+        "@googletest//:gtest_main",
+    ] +
+    select({
+        "@platforms//os:linux" : [
+            ":libtest_dyld_impl.so",
+        ],
+        "@platforms//os:osx" : [
+            ":libtest_dyld_impl.dylib",
+        ],
+    }),
+)
