@@ -1,3 +1,4 @@
+#include <memory>
 #include "test_dyld_impl.h"
 
 extern "C"
@@ -11,6 +12,13 @@ cppev::LoaderTestBase *LoaderTestBaseConstructorImpl()
 void LoaderTestBaseDestructorImpl(cppev::LoaderTestBase *ptr)
 {
     delete ptr;
+}
+
+std::shared_ptr<cppev::LoaderTestBase>
+LoaderTestBaseSharedPtrConstructorImpl()
+{
+    return std::dynamic_pointer_cast<cppev::LoaderTestBase>(
+        std::make_shared<cppev::LoaderTestImpl>());
 }
 
 }

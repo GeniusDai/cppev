@@ -16,6 +16,11 @@ public:
     {
         return x + y;
     }
+
+    std::string type() override
+    {
+        return "impl";
+    }
 };
 
 }   // namespace cppev
