@@ -126,6 +126,9 @@ cc_binary(
         "test_dyld_impl.h",
         "test_dyld_impl.cc",
     ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
     linkshared = True,
 )
 
@@ -135,6 +138,9 @@ cc_binary(
         "test_dyld_base.h",
         "test_dyld_impl.h",
         "test_dyld_impl.cc",
+    ],
+    target_compatible_with = [
+        "@platforms//os:osx",
     ],
     linkshared = True,
 )
