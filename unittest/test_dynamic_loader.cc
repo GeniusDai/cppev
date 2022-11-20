@@ -7,20 +7,37 @@
 namespace cppev
 {
 
-std::string dypath = "";
+std::string ld_path = "";
 
-std::string basename = "test_dyld_impl";
+static const std::string get_ld_path(const std::string &exec_path)
+{
+    std::string path = "";
+    for (int i = exec_path.size() - 1; i >= 0; --i)
+    {
+        if (exec_path[i] == '/')
+        {
+            path = exec_path.substr(0, i + 1);
+            break;
+        }
+    }
+    if (path.empty())
+    {
+        cppev::throw_runtime_error("find path error");
+    }
+
 #ifdef __linux__
-std::string dyname = "lib" + basename + ".so";
+    std::string ld_suffix = ".so";
 #else
-std::string dyname = "lib" + basename + ".dylib";
+    std::string ld_suffix = ".dylib";
 #endif  // __linux__
 
-// It's very hard to get the exact path of the .so due to compile toolchain !!
+    return path + "lib" + "test_dyld_impl" + ld_suffix;
+}
 
-TEST(TestDynamicLoader, test_base_impl_loader)
+
+TEST(TestDynamicLoader, test_base_impl_new_delete_loader)
 {
-    dynamic_loader dyld(dypath + dyname);
+    dynamic_loader dyld(ld_path);
     auto *constructor = dyld.load<LoaderTestBaseConstructorType>("LoaderTestBaseConstructorImpl");
     auto *destructor = dyld.load<LoaderTestBaseDestructorType>("LoaderTestBaseDestructorImpl");
 
@@ -35,7 +52,7 @@ TEST(TestDynamicLoader, test_base_impl_loader)
 
 TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 {
-    dynamic_loader dyld(dypath + dyname);
+    dynamic_loader dyld(ld_path);
     auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
 
     std::shared_ptr<LoaderTestBase> base_cls = shared_ptr_constructor();
@@ -49,21 +66,8 @@ TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 
 int main(int argc, char **argv)
 {
-    std::string path = argv[0];
-    for (int i = path.size() - 1; i >= 0; --i)
-    {
-        if (path[i] == '/')
-        {
-            cppev::dypath = path.substr(0, i + 1);
-            break;
-        }
-    }
-    if (cppev::dypath.size() == 0)
-    {
-        cppev::throw_runtime_error("find path error");
-    }
-    std::cout << "dynamic library path : " << cppev::dypath << std::endl;
-
+    cppev::ld_path = cppev::get_ld_path(argv[0]);
+    std::cout << "dynamic library path : " << cppev::ld_path << std::endl;
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }
