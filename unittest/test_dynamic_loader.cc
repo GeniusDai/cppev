@@ -1,23 +1,26 @@
 #include <memory>
 #include <gtest/gtest.h>
+#include "cppev/common_utils.h"
 #include "cppev/dynamic_loader.h"
 #include "test_dyld_base.h"
 
 namespace cppev
 {
 
+std::string dypath = "";
+
 std::string basename = "test_dyld_impl";
 #ifdef __linux__
-std::string dyname = "./lib" + basename + ".so";
+std::string dyname = "lib" + basename + ".so";
 #else
-std::string dyname = "./lib" + basename + ".dylib";
+std::string dyname = "lib" + basename + ".dylib";
 #endif  // __linux__
 
 // It's very hard to get the exact path of the .so due to compile toolchain !!
 
 TEST(TestDynamicLoader, test_base_impl_loader)
 {
-    dynamic_loader dyld(dyname);
+    dynamic_loader dyld(dypath + dyname);
     auto *constructor = dyld.load<LoaderTestBaseConstructorType>("LoaderTestBaseConstructorImpl");
     auto *destructor = dyld.load<LoaderTestBaseDestructorType>("LoaderTestBaseDestructorImpl");
 
@@ -32,7 +35,7 @@ TEST(TestDynamicLoader, test_base_impl_loader)
 
 TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 {
-    dynamic_loader dyld(dyname);
+    dynamic_loader dyld(dypath + dyname);
     auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
 
     std::shared_ptr<LoaderTestBase> base_cls = shared_ptr_constructor();
@@ -46,6 +49,21 @@ TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 
 int main(int argc, char **argv)
 {
+    std::string path = argv[0];
+    for (int i = path.size() - 1; i >= 0; --i)
+    {
+        if (path[i] == '/')
+        {
+            cppev::dypath = path.substr(0, i + 1);
+            break;
+        }
+    }
+    if (cppev::dypath.size() == 0)
+    {
+        cppev::throw_runtime_error("find path error");
+    }
+    std::cout << "dynamic library path : " << cppev::dypath << std::endl;
+
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }

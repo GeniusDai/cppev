@@ -37,6 +37,7 @@ public:
         void *ptr = dlsym(handle_, func.c_str());
         if (ptr == nullptr)
         {
+            // errno is set in macOS, but not in linux
             throw_runtime_error(std::string("dlsym error : ").append(dlerror()));
         }
         return reinterpret_cast<Function *>(ptr);
