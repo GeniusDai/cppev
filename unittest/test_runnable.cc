@@ -6,8 +6,7 @@
 namespace cppev
 {
 
-int status = 66;
-int delay = 50;
+const int delay = 50;
 
 class runnable_tester
 : public runnable
@@ -60,7 +59,7 @@ TEST(TestRunnable, test_wait_for_ok)
     tester.join();
 }
 
-}
+}   // namespace cppev
 
 int main(int argc, char **argv)
 {

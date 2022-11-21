@@ -38,7 +38,7 @@ struct TestStructBase
     }
 };
 
-TEST_F(TestIpc, test_shm_sem_by)
+TEST_F(TestIpc, test_sem_shm_by_fork)
 {
     int shm_size = 12;
     pid_t pid = fork();
@@ -100,7 +100,7 @@ TEST_F(TestIpc, test_shm_sem_by)
     }
 }
 
-TEST_F(TestIpc, test_shm_rwlock)
+TEST_F(TestIpc, test_sem_shm_rwlock_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
@@ -158,7 +158,7 @@ TEST_F(TestIpc, test_shm_rwlock)
     }
 }
 
-TEST_F(TestIpc, test_shm_lock_cond_by_fork)
+TEST_F(TestIpc, test_sem_shm_lock_cond_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
