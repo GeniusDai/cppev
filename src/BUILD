@@ -9,8 +9,7 @@ cc_library(
     linkopts = [
         "-pthread",
         "-ldl",
-    ]
-    +
+    ] +
     select({
         "@platforms//os:linux" : [
             "-lrt"

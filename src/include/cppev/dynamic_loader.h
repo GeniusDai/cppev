@@ -29,10 +29,10 @@ public:
         return *this;
     }
 
-    ~dynamic_loader();
+    ~dynamic_loader() noexcept;
 
     template <typename Function>
-    Function *load(const std::string &func)
+    Function *load(const std::string &func) const
     {
         void *ptr = dlsym(handle_, func.c_str());
         if (ptr == nullptr)

@@ -14,7 +14,7 @@ dynamic_loader::dynamic_loader(const std::string &filename)
     }
 }
 
-dynamic_loader::~dynamic_loader()
+dynamic_loader::~dynamic_loader() noexcept
 {
     dlclose(handle_);
 }

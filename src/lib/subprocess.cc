@@ -105,7 +105,7 @@ void popen::communicate(const char *input, int len)
     }
 }
 
-void popen::send_signal(int sig) const 
+void popen::send_signal(int sig) const
 {
     if (::kill(pid(), sig) < 0)
     {
