@@ -41,11 +41,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
     }
     else
     {
-        std::shared_ptr<nio> iop = std::dynamic_pointer_cast<nio>(iopt);
-        if (iop == nullptr)
-        {
-            throw_logic_error("dynamic_pointer_cast error");
-        }
+        std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
         iopt->evlp().fd_remove(iop, false);
         iopt->evlp().fd_register(iop, fd_event::fd_writable);
     }
@@ -53,7 +49,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
 
 void safely_close(const std::shared_ptr<nsocktcp> &iopt)
 {
-    std::shared_ptr<nio> iop = std::dynamic_pointer_cast<nio>(iopt);
+    std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
     // epoll/kqueue will remove fd when it's closed
     iopt->evlp().fd_remove(iop, true, false);
     iopt->close();
@@ -177,14 +173,14 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
     for (auto &conn : conns)
     {
         log::info << "new fd " << conn->fd() << " accepted by listening socket " << iopt->fd() << log::endl;
-        dp->minloads_get_evlp()->fd_register(std::dynamic_pointer_cast<nio>(conn),
+        dp->minloads_get_evlp()->fd_register(std::static_pointer_cast<nio>(conn),
             fd_event::fd_writable, iohandler::on_acpt_writable, true);
     }
 }
 
 void acceptor::run_impl()
 {
-    evlp_->fd_register(std::dynamic_pointer_cast<nio>(sock_),
+    evlp_->fd_register(std::static_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable, true);
     evlp_->loop();
 }
@@ -239,7 +235,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
             }
             if (succeed)
             {
-                dp->minloads_get_evlp()->fd_register(std::dynamic_pointer_cast<nio>(sock),
+                dp->minloads_get_evlp()->fd_register(std::static_pointer_cast<nio>(sock),
                     fd_event::fd_writable, iohandler::on_cont_writable, true);
             }
             else
@@ -263,7 +259,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 
 void connector::run_impl()
 {
-    evlp_->fd_register(std::dynamic_pointer_cast<nio>(rdp_),
+    evlp_->fd_register(std::static_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable, true);
     evlp_->loop();
 }
