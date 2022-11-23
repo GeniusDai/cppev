@@ -34,6 +34,17 @@ static const std::string get_ld_path(const std::string &exec_path)
     return path + "lib" + "test_dyld_impl" + ld_suffix;
 }
 
+static void test_class(LoaderTestBase *base_cls)
+{
+    EXPECT_EQ(base_cls->add(66, 66), std::to_string(66 + 66));
+    EXPECT_EQ(base_cls->add("66", "66"), "6666");
+    EXPECT_EQ(base_cls->type(), "impl");
+    EXPECT_EQ(base_cls->LoaderTestBase::type(), "base");
+    EXPECT_EQ(base_cls->base(), "base");
+    EXPECT_EQ(base_cls->LoaderTestBase::base(), "base");
+    base_cls->set_var(66);
+    EXPECT_EQ(base_cls->get_var(), 66);
+}
 
 TEST(TestDynamicLoader, test_base_impl_new_delete_loader)
 {
@@ -43,9 +54,7 @@ TEST(TestDynamicLoader, test_base_impl_new_delete_loader)
 
     LoaderTestBase *base_cls = constructor();
 
-    EXPECT_EQ(base_cls->add(66, 66), std::to_string(66 + 66));
-    EXPECT_EQ(base_cls->add("66", "66"), "6666");
-    EXPECT_EQ(base_cls->type(), "impl");
+    test_class(base_cls);
 
     destructor(base_cls);
 }
@@ -55,11 +64,9 @@ TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
     dynamic_loader dyld(ld_path);
     auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
 
-    std::shared_ptr<LoaderTestBase> base_cls = shared_ptr_constructor();
+    std::shared_ptr<LoaderTestBase> shared_base_cls = shared_ptr_constructor();
 
-    EXPECT_EQ(base_cls->add(66, 66), std::to_string(66 + 66));
-    EXPECT_EQ(base_cls->add("66", "66"), "6666");
-    EXPECT_EQ(base_cls->type(), "impl");
+    test_class(shared_base_cls.get());
 }
 
 }   // namespace cppev
