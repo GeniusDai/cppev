@@ -21,7 +21,7 @@ struct enum_hash
 
 void throw_logic_error(const std::string &str);
 
-void throw_system_error(const std::string &str);
+void throw_system_error(const std::string &str, int err=0);
 
 void throw_runtime_error(const std::string &str);
 

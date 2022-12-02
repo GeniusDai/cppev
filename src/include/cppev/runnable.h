@@ -48,36 +48,40 @@ public:
             pseudo_this->prom_.set_value(true);
             return nullptr;
         };
-        if (pthread_create(&thr_, nullptr, thr_func, this) != 0)
+        int ret = pthread_create(&thr_, nullptr, thr_func, this);
+        if (ret != 0)
         {
-            throw_system_error("pthread_create error");
+            throw_system_error("pthread_create error", ret);
         }
     }
 
     // Wait until thread finish
     void join()
     {
-        if (pthread_join(thr_, nullptr) != 0)
+        int ret = pthread_join(thr_, nullptr);
+        if (ret != 0)
         {
-            throw_system_error("pthread_join error");
+            throw_system_error("pthread_join error", ret);
         }
     }
 
     // Detach thread
     void detach()
     {
-        if (pthread_detach(thr_) != 0)
+        int ret = pthread_detach(thr_);
+        if (ret != 0)
         {
-            throw_system_error("pthread_detach error");
+            throw_system_error("pthread_detach error", ret);
         }
     }
 
     // Cancel thread
     void cancel()
     {
-        if (pthread_cancel(thr_) != 0)
+        int ret = pthread_cancel(thr_);
+        if (ret != 0)
         {
-            throw_system_error("pthread_cancel error");
+            throw_system_error("pthread_cancel error", ret);
         }
     }
 
