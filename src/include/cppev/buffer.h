@@ -17,7 +17,8 @@ class buffer final
 public:
     buffer() noexcept
     : buffer(1)
-    {}
+    {
+	}
 
     explicit buffer(int cap) noexcept
     : cap_(cap), start_(0), offset_(0)

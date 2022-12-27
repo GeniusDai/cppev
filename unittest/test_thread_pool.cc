@@ -18,6 +18,26 @@ public:
     }
 };
 
+class runnable_tester_with_param
+: public runnable
+{
+public:
+    runnable_tester_with_param(
+        const std::string &,
+        std::string,
+        std::string &&,
+        const char *,
+        int64_t,
+        void *,
+        void const *)
+    {
+    }
+
+    void run_impl() override
+    {
+    }
+};
+
 TEST(TestThreadPool, test_thread_pool_by_join)
 {
     thread_pool<runnable_tester> tp(50);
@@ -36,6 +56,20 @@ TEST(TestThreadPool, test_thread_pool_by_cancel)
     tp.run();
     tp.cancel();
     tp.join();
+}
+
+TEST(TestThreadPool, test_thread_pool_compile_with_param)
+{
+    std::string str;
+    thread_pool<runnable_tester_with_param,
+        const std::string &,
+        std::string,
+        std::string &&,
+        const char *,
+        int64_t,
+        void *,
+        void const *>
+    tp(10, "", "", std::move(str), "", 0, nullptr, nullptr);
 }
 
 TEST(TestThreadPool, test_thread_pool_task_queue)

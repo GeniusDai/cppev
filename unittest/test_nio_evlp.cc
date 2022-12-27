@@ -18,10 +18,12 @@ class TestNio
 {
 protected:
     void SetUp() override
-    {}
+    {
+	}
 
     void TearDown() override
-    {}
+    {
+	}
 };
 
 TEST_F(TestNio, test_diskfile)
@@ -117,10 +119,12 @@ class TestNioSocket
 {
 protected:
     void SetUp() override
-    {}
+    {
+	}
 
     void TearDown() override
-    {}
+    {
+	}
 };
 
 TEST_P(TestNioSocket, test_tcp_socket)

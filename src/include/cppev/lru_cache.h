@@ -15,7 +15,8 @@ class lru_cache final
 public:
     explicit lru_cache(Value null, long cap = LONG_MAX) noexcept
     : null_(null), cap_(cap)
-    {}
+    {
+	}
 
     lru_cache(const lru_cache &) = delete;
     lru_cache &operator=(const lru_cache &) = delete;

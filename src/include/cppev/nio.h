@@ -148,7 +148,8 @@ class nstream
 public:
     explicit nstream(int fd)
     : nio(fd), reset_(false), eof_(false), eop_(false)
-    {}
+    {
+	}
 
     virtual ~nstream() = default;
 
@@ -207,7 +208,8 @@ class nsock
 public:
     nsock(int fd, family f)
     : nio(fd), family_(f)
-    {}
+    {
+	}
 
     virtual ~nsock() = default;
 
@@ -274,7 +276,8 @@ class nsocktcp final
 public:
     nsocktcp(int sockfd, family f)
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
-    {}
+    {
+	}
 
     void listen(int port, const char *ip = nullptr);
 
@@ -358,7 +361,8 @@ class nsockudp final
 public:
     nsockudp(int sockfd, family f) noexcept
     : nio(sockfd), nsock(sockfd, f)
-    {}
+    {
+	}
 
     void bind(int port, const char *ip = nullptr);
 

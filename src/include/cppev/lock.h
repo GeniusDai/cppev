@@ -378,7 +378,8 @@ public:
             rwlock_->unlock();
         }
         catch(...)
-        {}
+        {
+	}
     }
 
     void lock()
@@ -416,7 +417,8 @@ public:
             rwlock_->unlock();
         }
         catch(...)
-        {}
+        {
+	}
     }
 
     void lock()

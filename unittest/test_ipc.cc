@@ -14,13 +14,16 @@ class TestIpc
 protected:
     TestIpc()
     : name("/cppev_test_ipc_name")
-    {}
+    {
+	}
 
     void SetUp() override
-    {}
+    {
+	}
 
     void TearDown() override
-    {}
+    {
+	}
 
     std::string name;
 };
@@ -106,7 +109,8 @@ TEST_F(TestIpc, test_sem_shm_rwlock_by_fork)
     {
         TestStruct(int var1, double var2)
         : var1(var1), var2(var2)
-        {}
+        {
+	}
 
         pshared_rwlock lock;
         int var1;
@@ -164,7 +168,8 @@ TEST_F(TestIpc, test_sem_shm_lock_cond_by_fork)
     {
         TestStruct()
         : var(0), ready(false)
-        {}
+        {
+	}
 
         pshared_lock lock;
         pshared_cond cond;
