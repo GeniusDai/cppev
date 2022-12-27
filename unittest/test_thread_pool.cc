@@ -70,6 +70,8 @@ TEST(TestThreadPool, test_thread_pool_compile_with_param)
         void *,
         void const *>
     tp(10, "", "", std::move(str), "", 0, nullptr, nullptr);
+    tp.run();
+    tp.join();
 }
 
 TEST(TestThreadPool, test_thread_pool_task_queue)
