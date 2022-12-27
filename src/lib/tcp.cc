@@ -60,8 +60,7 @@ void *external_data(const std::shared_ptr<nsocktcp> &iopt)
     return (reinterpret_cast<tp_shared_data *>(iopt->evlp().data()))->external_data();
 }
 
-const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {
-	};
+const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
 void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {

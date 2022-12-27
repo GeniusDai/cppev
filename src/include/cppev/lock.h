@@ -379,7 +379,7 @@ public:
         }
         catch(...)
         {
-	}
+	    }
     }
 
     void lock()
@@ -418,7 +418,7 @@ public:
         }
         catch(...)
         {
-	}
+	    }
     }
 
     void lock()

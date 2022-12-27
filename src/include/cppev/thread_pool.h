@@ -19,7 +19,7 @@ template<typename Runnable, typename... Args>
 class thread_pool
 {
     static_assert(std::is_base_of<runnable, Runnable>::value, "Not runnable");
-    static_assert(std::is_constructible<Runnable, Args&&...>::value, "Not constructable");
+    static_assert(std::is_constructible<Runnable, Args&&...>::value, "Not constructible");
 public:
     thread_pool(int thr_num, Args&&... args)
     {
