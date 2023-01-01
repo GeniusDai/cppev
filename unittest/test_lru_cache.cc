@@ -10,11 +10,11 @@ class TestLRUCache
 protected:
     void SetUp() override
     {
-	}
+    }
 
     void TearDown() override
     {
-	}
+    }
 };
 
 TEST_F(TestLRUCache, test_limit_cap)

@@ -27,7 +27,7 @@ public:
     runnable()
     : fut_(prom_.get_future())
     {
-	}
+    }
 
     runnable(const runnable &) = delete;
     runnable &operator=(const runnable &) = delete;

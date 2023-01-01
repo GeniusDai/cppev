@@ -99,7 +99,7 @@ public:
     tp_task_queue() noexcept
     : stop_(false)
     {
-	}
+    }
 
     virtual ~tp_task_queue() = default;
 
@@ -137,7 +137,7 @@ public:
     tp_task_queue_runnable(tp_task_queue *tq) noexcept
     : tq_(tq)
     {
-	}
+    }
 
     void run_impl() override
     {
@@ -180,7 +180,7 @@ public:
     thread_pool_task_queue(int thr_num)
     : tp_task_queue(), thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
     {
-	}
+    }
 
     ~thread_pool_task_queue() = default;
 

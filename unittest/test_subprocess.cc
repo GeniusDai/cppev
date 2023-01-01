@@ -10,11 +10,11 @@ class TestSubprocess
 protected:
     void SetUp() override
     {
-	}
+    }
 
     void TearDown() override
     {
-	}
+    }
 };
 
 TEST_F(TestSubprocess, test_exec_cmd)

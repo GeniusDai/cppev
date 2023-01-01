@@ -71,7 +71,7 @@ public:
         on_closed(idle_handler),
         external_data_ptr(external_data_ptr)
     {
-	}
+    }
 
     tp_shared_data(const tp_shared_data &) = delete;
     tp_shared_data &operator=(const tp_shared_data &) = delete;
@@ -128,7 +128,7 @@ public:
     explicit iohandler(tp_shared_data *data)
     : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {
-	}
+    }
 
     iohandler(const iohandler &) = delete;
     iohandler &operator=(const iohandler &) = delete;
@@ -172,7 +172,7 @@ public:
     explicit acceptor(tp_shared_data *data)
     : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {
-	}
+    }
 
     acceptor(const acceptor &) = delete;
     acceptor &operator=(const acceptor &) = delete;

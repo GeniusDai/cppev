@@ -10,11 +10,11 @@ class TestBuffer
 protected:
     void SetUp() override
     {
-	}
+    }
 
     void TearDown() override
     {
-	}
+    }
 };
 
 TEST_F(TestBuffer, test_put_get)

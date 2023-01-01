@@ -10,11 +10,11 @@ class TestCommonUtils
 protected:
     void SetUp() override
     {
-	}
+    }
 
     void TearDown() override
     {
-	}
+    }
 
 };
 

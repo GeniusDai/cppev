@@ -18,7 +18,7 @@ protected:
 
     void TearDown() override
     {
-	}
+    }
 
     std::mutex lock_;
 
