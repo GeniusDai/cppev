@@ -30,7 +30,7 @@ private:
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "callback : on_read_complete" << cppev::log::endl;
+    cppev::log::info << "start callback : on_read_complete" << cppev::log::endl;
     std::string filename = iopt->rbuf().get_string(-1, false);
     if (filename[filename.size()-1] != '\n')
     {
@@ -45,19 +45,20 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
 
     iopt->wbuf().produce(bf->rawbuf(), bf->size());
     cppev::reactor::async_write(iopt);
-    cppev::log::info << "transfer file complete" << cppev::log::endl;
+    cppev::log::info << "end callback : on_read_complete" << cppev::log::endl;
 };
 
 cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "callback : on_write_complete" << cppev::log::endl;
+    cppev::log::info << "start callback : on_write_complete" << cppev::log::endl;
     cppev::reactor::safely_close(iopt);
+    cppev::log::info << "end callback : on_write_complete" << cppev::log::endl;
 };
 
 int main()
 {
     filecache cache;
-    cppev::reactor::tcp_server server(2, &cache);
+    cppev::reactor::tcp_server server(3, &cache);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
     server.listen(PORT, cppev::family::ipv4);

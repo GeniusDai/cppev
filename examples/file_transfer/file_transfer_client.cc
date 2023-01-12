@@ -50,12 +50,12 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
     auto iops = cache->getfd(iopt->fd());
     iops->wbuf().put_string(iopt->rbuf().get_string());
     iops->write_all();
-    cppev::log::info << "write chunk to file complete" << cppev::log::endl;
+    cppev::log::info << "writing chunk to file complete" << cppev::log::endl;
 };
 
 cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "receive file complete" << cppev::log::endl;
+    cppev::log::info << "receiving file complete" << cppev::log::endl;
 };
 
 int main(int argc, char **argv)

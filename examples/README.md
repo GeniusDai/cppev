@@ -22,7 +22,7 @@ In this example, tcp client sends the name of the required file, tcp server cach
         $ ./file_transfer_server        # Shell-1
         $ ./file_transfer_client        # Shell-2
         $ ls -l /tmp/test_cppev_file_transfer_6C0224787A17.file*
-        $ # Cmd diff or md5sum to check the file content is all the same #
+        $ # Cmd diff or md5sum to check the files are all the same #
 
 ### 3. Nio Event Loop
 
