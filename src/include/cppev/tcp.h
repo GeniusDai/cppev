@@ -9,6 +9,7 @@
 #include <iostream>
 #include <functional>
 #include <signal.h>
+#include "cppev/nio.h"
 #include "cppev/event_loop.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
@@ -268,13 +269,9 @@ public:
     explicit connector(tp_shared_data *data)
     : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
     {
-        int pipefd[2];
-        if (pipe(pipefd) == -1)
-        {
-            throw_system_error("pipe error");
-        }
-        rdp_ = std::make_shared<nstream>(pipefd[0]);
-        wrp_ = std::make_shared<nstream>(pipefd[1]);
+        auto pipes = nio_factory::get_pipes();
+        rdp_ = pipes[0];
+        wrp_ = pipes[1];
     }
 
     connector(const connector &) = delete;

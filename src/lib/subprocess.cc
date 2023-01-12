@@ -39,21 +39,21 @@ popen::popen(const std::string &cmd, char *const *envp)
         throw_system_error("pipe error");
     }
     zero = fds[0];
-    stdin_ = std::shared_ptr<nstream>(new nstream(fds[1]));
+    stdin_ = std::make_shared<nstream>(fds[1]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     one = fds[1];
-    stdout_ = std::shared_ptr<nstream>(new nstream(fds[0]));;
+    stdout_ = std::make_shared<nstream>(fds[0]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     two = fds[1];
-    stderr_ = std::shared_ptr<nstream>(new nstream(fds[0]));
+    stderr_ = std::make_shared<nstream>(fds[0]);
 
     pid_t pid = fork();
 

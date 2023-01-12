@@ -727,13 +727,15 @@ std::shared_ptr<nsockudp> get_nsockudp(family f)
 std::vector<std::shared_ptr<nstream> > get_pipes()
 {
     int pfds[2];
+    // pfds[0] refers to the read end of the pipe
+    // pfds[1] refers to the write end of the pipe
     if (pipe(pfds) != 0)
     {
         throw_system_error("pipe error");
     }
     std::vector<std::shared_ptr<nstream> > pipes;
-    pipes.emplace_back(new nstream(pfds[0]));
-    pipes.emplace_back(new nstream(pfds[1]));
+    pipes.push_back(std::make_shared<nstream>(pfds[0]));
+    pipes.push_back(std::make_shared<nstream>(pfds[1]));
     return pipes;
 }
 
@@ -755,8 +757,8 @@ std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &path)
         throw_system_error("open error");
     }
     std::vector<std::shared_ptr<nstream> > fifos;
-    fifos.emplace_back(new nstream(fdr));
-    fifos.emplace_back(new nstream(fdw));
+    fifos.push_back(std::make_shared<nstream>(fdr));
+    fifos.push_back(std::make_shared<nstream>(fdw));
     return fifos;
 }
 
