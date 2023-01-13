@@ -67,16 +67,22 @@ subp_open::subp_open(const std::string &cmd, char *const *envp)
         dup2(zero, STDIN_FILENO);
         dup2(one, STDOUT_FILENO);
         dup2(two, STDERR_FILENO);
-        std::vector<std::string> subs = utils::split(cmd_, " ");
-        std::vector<std::string> subs1 = utils::split(subs[0].c_str(), "/");
-        char *argv[subs.size()+1];
-        argv[subs.size()] = nullptr;
-        argv[0] = const_cast<char *>(subs1[subs1.size()-1].c_str());
-        for (int i = 1; i <= static_cast<int>(subs.size() - 1); ++i)
+        std::vector<std::string> cmd_with_args = utils::split(cmd_, " ");
+
+        char *argv[cmd_with_args.size()+1];
+        memset(argv, 0, sizeof(argv));
+
+        std::string raw_cmd = utils::split(cmd_with_args[0], "/").back();
+        char raw_cmd_arr[raw_cmd.size()+1];
+        memset(raw_cmd_arr, 0, sizeof(raw_cmd_arr));
+        argv[0] = raw_cmd_arr;
+
+        for (int i = 1; i <= static_cast<int>(cmd_with_args.size() - 1); ++i)
         {
-            argv[i] = const_cast<char *>(subs[i].c_str());
+            argv[i] = const_cast<char *>(cmd_with_args[i].c_str());
         }
-        execve(subs[0].c_str(), argv, envp_);
+
+        execve(cmd_with_args[0].c_str(), argv, envp_);
         _exit(127);
     }
 
