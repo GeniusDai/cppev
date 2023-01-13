@@ -20,17 +20,17 @@ std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char 
 
 }   // namespace subprocess
 
-class popen final
+class subp_open final
 {
 public:
-    popen(const std::string &cmd, char *const *envp=nullptr);
+    subp_open(const std::string &cmd, char *const *envp=nullptr);
 
-    popen(const popen &) = delete;
-    popen &operator=(const popen &) = delete;
-    popen(popen &&) = delete;
-    popen &operator=(popen &&) = delete;
+    subp_open(const subp_open &) = delete;
+    subp_open &operator=(const subp_open &) = delete;
+    subp_open(subp_open &&) = delete;
+    subp_open &operator=(subp_open &&) = delete;
 
-    ~popen() = default;
+    ~subp_open() = default;
 
     bool poll();
 
@@ -42,11 +42,16 @@ public:
         wait(std::chrono::milliseconds(50));
     }
 
-    void communicate(const char *input = nullptr, int len = 0);
+    void communicate(const char *input, int len);
+
+    void communicate()
+    {
+        communicate(nullptr, 0);
+    }
 
     void communicate(const std::string &input)
     {
-        communicate(input.c_str());
+        communicate(input.c_str(), input.size());
     }
 
     void terminate() const;
@@ -92,7 +97,7 @@ private:
 };
 
 template<typename Rep, typename Period>
-void popen::wait(const std::chrono::duration<Rep, Period> &interval)
+void subp_open::wait(const std::chrono::duration<Rep, Period> &interval)
 {
     while (!poll())
     {

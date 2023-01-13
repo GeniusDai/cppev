@@ -16,7 +16,7 @@ namespace subprocess
 
 std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp)
 {
-    popen subp(cmd, envp);
+    subp_open subp(cmd, envp);
     subp.wait();
     return std::make_tuple<>(subp.returncode(), subp.stdout(), subp.stderr());
 }
@@ -28,7 +28,7 @@ std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char 
 
 }   // namespace subprocess
 
-popen::popen(const std::string &cmd, char *const *envp)
+subp_open::subp_open(const std::string &cmd, char *const *envp)
 : cmd_(cmd), envp_(envp)
 {
     int fds[2];
@@ -83,7 +83,7 @@ popen::popen(const std::string &cmd, char *const *envp)
     pid_ = pid;
 }
 
-bool popen::poll()
+bool subp_open::poll()
 {
     int ret = waitpid(pid_, &returncode_, WNOHANG);
     if (ret == -1)
@@ -93,7 +93,7 @@ bool popen::poll()
     return ret != 0;
 }
 
-void popen::communicate(const char *input, int len)
+void subp_open::communicate(const char *input, int len)
 {
     stdout_->read_all();
     stderr_->read_all();
@@ -105,7 +105,7 @@ void popen::communicate(const char *input, int len)
     }
 }
 
-void popen::send_signal(int sig) const
+void subp_open::send_signal(int sig) const
 {
     if (::kill(pid(), sig) < 0)
     {
@@ -113,12 +113,12 @@ void popen::send_signal(int sig) const
     }
 }
 
-void popen::terminate() const
+void subp_open::terminate() const
 {
     send_signal(SIGTERM);
 }
 
-void popen::kill() const
+void subp_open::kill() const
 {
     send_signal(SIGKILL);
 }
