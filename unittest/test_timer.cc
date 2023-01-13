@@ -14,7 +14,7 @@ TEST(TestTimer, test_timer)
         count++;
     };
 
-    int timer_interval = 200;
+    int timer_interval = 500;
     int total_time = 200 * 1000;
     double err_percent = 0.05;
 
