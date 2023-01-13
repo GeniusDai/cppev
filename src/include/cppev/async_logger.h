@@ -80,9 +80,11 @@ private:
 
 namespace log
 {
-    extern async_logger info;
-    extern async_logger error;
-    extern async_logger endl;
+
+extern async_logger info;
+extern async_logger error;
+extern async_logger endl;
+
 }   // namespace log
 
 }   // namespace cppev

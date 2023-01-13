@@ -77,9 +77,11 @@ std::string async_logger::version()
 
 namespace log
 {
-    async_logger info(1);
-    async_logger error(2);
-    async_logger endl(-1);
+
+async_logger info(1);
+async_logger error(2);
+async_logger endl(-1);
+
 }   // namespace log
 
 }   // namespace cppev
