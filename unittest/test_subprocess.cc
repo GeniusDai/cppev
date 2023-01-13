@@ -5,20 +5,7 @@
 namespace cppev
 {
 
-class TestSubprocess
-: public testing::Test
-{
-protected:
-    void SetUp() override
-    {
-    }
-
-    void TearDown() override
-    {
-    }
-};
-
-TEST_F(TestSubprocess, test_exec_cmd)
+TEST(TestSubprocessExecCmd, test_exec_cmd)
 {
     std::tuple<int, std::string, std::string> rets;
 
@@ -38,23 +25,46 @@ TEST_F(TestSubprocess, test_exec_cmd)
     EXPECT_STRNE(std::get<2>(rets).c_str(), "");
 }
 
-TEST_F(TestSubprocess, test_subp_popen)
+class TestSubprocess
+: public testing::TestWithParam<std::tuple<std::string, int>>
 {
-    subp_open subp("/bin/cat");
-    subp.communicate("cppev");
+protected:
+    void SetUp() override
+    {
+    }
 
-    // waiting for subprocess to process the data
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    void TearDown() override
+    {
+    }
+};
+
+TEST_P(TestSubprocess, test_subp_popen)
+{
+    auto param = GetParam();
+
+    subp_open subp("/bin/cat");
+    subp.communicate(std::get<0>(param));
+
+    // wait for subprocess to process the data
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     // terminate subprocess
-    subp.terminate();
+    subp.send_signal(std::get<1>(param));
 
     // fetch output
     subp.wait();
 
-    EXPECT_EQ(subp.returncode(), SIGTERM);
-    EXPECT_STREQ(subp.stdout(), "cppev");
+    EXPECT_EQ(subp.stdout(), std::get<0>(param));
+    EXPECT_EQ(subp.stderr(), std::string(""));
+    EXPECT_NE(subp.pid(), utils::gettid());
 }
+
+INSTANTIATE_TEST_SUITE_P(CppevTest, TestSubprocess,
+    testing::Combine(
+        testing::Values("cppev", "event driven"),    // input
+        testing::Values(SIGTERM, SIGKILL, SIGABRT)   // signal
+    )
+);
 
 }   // namespace cppev
 
