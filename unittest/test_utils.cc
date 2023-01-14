@@ -41,15 +41,7 @@ const int delay = 50;
 
 void test_main_thread_signal_wait(int sig, bool block)
 {
-    // although this handler will not be executed, but you need to change
-    // the handler of signal, in linux some of the signals will cause the
-    // process terminate.
-    handle_signal(sig,
-        [](int sig)
-        {
-            std::cout << "handling signal " << sig << std::endl;
-        }
-    );
+    reset_signal(sig);
     if (block)
     {
         thread_block_signal(sig);
@@ -57,6 +49,12 @@ void test_main_thread_signal_wait(int sig, bool block)
     else
     {
         thread_unblock_signal(sig);
+        handle_signal(sig,
+            [](int sig)
+            {
+                std::cout << "handling signal " << sig << std::endl;
+            }
+        );
     }
 
     pid_t pid = fork();
@@ -82,12 +80,7 @@ void test_main_thread_signal_wait(int sig, bool block)
 
 void test_sub_thread_signal_wait(int sig, bool block)
 {
-    handle_signal(sig,
-        [](int sig)
-        {
-            std::cout << "handling signal " << sig << std::endl;
-        }
-    );
+    reset_signal(sig);
     pid_t pid = fork();
     if (pid == -1)
     {
@@ -95,7 +88,6 @@ void test_sub_thread_signal_wait(int sig, bool block)
     }
     if (pid == 0)
     {
-        thread_unblock_signal(sig);
         std::thread thr(
             [=]()
             {
@@ -104,19 +96,27 @@ void test_sub_thread_signal_wait(int sig, bool block)
                     thread_block_signal(sig);
                     EXPECT_TRUE(thread_check_signal_mask(sig));
                     thread_raise_signal(sig);
+                    thread_raise_signal(sig);
                     EXPECT_TRUE(thread_check_signal_pending(sig));
                     thread_wait_for_signal(sig);
+                    EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
                 else
                 {
                     thread_unblock_signal(sig);
+                    handle_signal(sig,
+                        [](int sig)
+                        {
+                            std::cout << "handling signal " << sig << std::endl;
+                        }
+                    );
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
                 thread_wait_for_signal(sig);
             }
         );
-        EXPECT_FALSE(thread_check_signal_mask(sig));
+
         thread_block_signal(sig);
         EXPECT_TRUE(thread_check_signal_mask(sig));
         thr.join();
@@ -143,7 +143,7 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestSignal,
     testing::Combine(
         testing::Values(test_main_thread_signal_wait, test_sub_thread_signal_wait),
         testing::Values(SIGINT, SIGABRT, SIGPIPE, SIGTERM, SIGCONT, SIGTSTP),
-        testing::Bool()
+        testing::Values(true, false)
     )
 );
 
