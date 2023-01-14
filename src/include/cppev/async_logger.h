@@ -8,7 +8,7 @@
 #include <shared_mutex>
 #include <memory>
 #include "cppev/buffer.h"
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 #include "cppev/runnable.h"
 
 // Only use hashed async logger in linux with higher version

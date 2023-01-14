@@ -1,4 +1,4 @@
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 #include <string>
 #include <cstring>
 #include <exception>
@@ -57,6 +57,17 @@ void ignore_signal(int sig)
     struct sigaction sigact;
     memset(&sigact, 0, sizeof(sigact));
     sigact.sa_handler = SIG_IGN;
+    if (sigaction(sig, &sigact, nullptr) == -1)
+    {
+        throw_system_error("sigaction error");
+    }
+}
+
+void reset_signal(int sig)
+{
+    struct sigaction sigact;
+    memset(&sigact, 0, sizeof(sigact));
+    sigact.sa_handler = SIG_DFL;
     if (sigaction(sig, &sigact, nullptr) == -1)
     {
         throw_system_error("sigaction error");

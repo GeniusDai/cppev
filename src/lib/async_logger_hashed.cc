@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <cassert>
 #include <ios>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 #include "cppev/sysconfig.h"
 
 namespace cppev

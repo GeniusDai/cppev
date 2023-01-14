@@ -3,7 +3,7 @@
 
 #include <string>
 #include <dlfcn.h>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {

@@ -4,7 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <pthread.h>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {

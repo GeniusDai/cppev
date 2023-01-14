@@ -1,6 +1,6 @@
 #include <memory>
 #include <gtest/gtest.h>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 #include "cppev/dynamic_loader.h"
 #include "test_dyld_base.h"
 

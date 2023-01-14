@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <vector>
 #include <functional>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 #include "cppev/runnable.h"
 
 namespace cppev

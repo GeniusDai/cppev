@@ -21,9 +21,9 @@ cc_test(
 )
 
 cc_test(
-    name = "test_common_utils",
+    name = "test_utils",
     srcs = [
-        "test_common_utils.cc",
+        "test_utils.cc",
     ],
     deps = [
         "//src:cppev",

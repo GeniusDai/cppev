@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <ctime>
 #include <csignal>
-#include "cppev/common_utils.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {

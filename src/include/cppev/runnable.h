@@ -2,11 +2,12 @@
 #define _runnable_h_6C0224787A17_
 
 #include <exception>
-#include <pthread.h>
 #include <future>
 #include <chrono>
 #include <cstring>
-#include "cppev/common_utils.h"
+#include <csignal>
+#include <pthread.h>
+#include "cppev/utils.h"
 
 // Q1 : Why a new thread library ?
 // A1 : std::thread doesn't support cancel.
@@ -105,6 +106,16 @@ public:
             break;
         }
         return ret;
+    }
+
+    // Send signal to thread
+    void send_signal(int sig)
+    {
+        int ret = pthread_kill(thr_, sig);
+        if (ret != 0)
+        {
+            throw_system_error("pthread_kill error", ret);
+        }
     }
 
 private:
