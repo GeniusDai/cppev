@@ -277,7 +277,7 @@ tcp_server::tcp_server(int thr_num, void *external_data)
 
 void tcp_server::run()
 {
-    utils::ignore_signal(SIGPIPE);
+    ignore_signal(SIGPIPE);
     tp_->run();
     for (auto &acpt : acpts_)
     {
@@ -343,7 +343,7 @@ void tcp_client::add_unix(const std::string &path, int t)
 
 void tcp_client::run()
 {
-    utils::ignore_signal(SIGPIPE);
+    ignore_signal(SIGPIPE);
     tp_->run();
     for (auto &cont : conts_)
     {

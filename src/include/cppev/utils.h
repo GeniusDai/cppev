@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <csignal>
 
 namespace cppev
 {
@@ -25,20 +26,48 @@ void throw_system_error(const std::string &str, int err=0);
 
 void throw_runtime_error(const std::string &str);
 
+/*
+ * Process level
+ */
+void ignore_signal(int sig);
+
+void reset_signal(int sig);
+
+void handle_signal(int sig, sig_t handler=[](int){});
+
+void block_signal(int sig);
+
+void unblock_signal(int sig);
+
+void send_signal(pid_t pid, int sig);
+
+void wait_for_signal(int sig);
+
+/*
+ * Thread level
+ */
+void thread_block_signal(int sig);
+
+void thread_unblock_signal(int sig);
+
+void thread_raise_signal(int sig);
+
+bool thread_check_signal_mask(int sig);
+
+bool thread_check_pending_signal(int sig);
+
 #ifdef __linux__
 typedef pid_t tid;
 #elif defined(__APPLE__)
 typedef uint64_t tid;
+#else
+static_assert(false, "platform not supported");
 #endif
 
 namespace utils
 {
 
 tid gettid();
-
-void ignore_signal(int sig);
-
-void reset_signal(int sig);
 
 time_t time();
 

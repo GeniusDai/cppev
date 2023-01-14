@@ -3,7 +3,6 @@
 #include <cstring>
 #include <exception>
 #include <system_error>
-#include <signal.h>
 
 #ifdef __linux__
 #include <sys/syscall.h>
@@ -35,6 +34,132 @@ void throw_runtime_error(const std::string &str)
     throw std::runtime_error( str);
 }
 
+void ignore_signal(int sig)
+{
+    handle_signal(sig, SIG_IGN);
+}
+
+void reset_signal(int sig)
+{
+    handle_signal(sig, SIG_DFL);
+}
+
+void handle_signal(int sig, sig_t handler)
+{
+    struct sigaction sigact;
+    memset(&sigact, 0, sizeof(sigact));
+    sigact.sa_handler = handler;
+    if (sigaction(sig, &sigact, nullptr) == -1)
+    {
+        throw_system_error("sigaction error");
+    }
+}
+
+void block_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    if (sigprocmask(SIG_BLOCK, &set, nullptr) != 0)
+    {
+        throw_system_error("sigprocmask error");
+    }
+}
+
+void unblock_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    if (sigprocmask(SIG_UNBLOCK, &set, nullptr) != 0)
+    {
+        throw_system_error("sigprocmask error");
+    }
+}
+
+void send_signal(pid_t pid, int sig)
+{
+    if (kill(pid, sig) != 0)
+    {
+        throw_system_error("kill error");
+    }
+}
+
+/*
+ * Q: Why not support waiting for a set of signals?
+ * A: One thread waiting for one signal. If you need to wait for several signals, just
+ *    create several threads.
+ */
+void wait_for_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+
+    // linux requires non-null
+    int ret_sig;
+    if (sigwait(&set, &ret_sig) != 0)
+    {
+        throw_system_error("sigwait error");
+    }
+}
+
+void thread_block_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    int ret = pthread_sigmask(SIG_BLOCK, &set, nullptr);
+    if (ret != 0)
+    {
+        throw_system_error("pthread_sigmask error", ret);
+    }
+}
+
+void thread_unblock_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    int ret = pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
+    if (ret != 0)
+    {
+        throw_system_error("pthread_sigmask error", ret);
+    }
+}
+
+void thread_raise_signal(int sig)
+{
+    if (raise(sig) != 0)
+    {
+        throw_system_error("raise error");
+    }
+}
+
+bool thread_check_signal_mask(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    int ret = pthread_sigmask(SIG_SETMASK, nullptr, &set);
+    if (ret != 0)
+    {
+        throw_system_error("pthread_sigmask error", ret);
+    }
+    return sigismember(&set, sig) == 1;
+}
+
+bool thread_check_pending_signal(int sig)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    if (sigpending(&set) != 0)
+    {
+        throw_system_error("sigpending error");
+    }
+    return sigismember(&set, sig) == 1;
+}
+
 namespace utils
 {
 
@@ -50,28 +175,6 @@ tid gettid()
     }
 #endif
     return thr_id;
-}
-
-void ignore_signal(int sig)
-{
-    struct sigaction sigact;
-    memset(&sigact, 0, sizeof(sigact));
-    sigact.sa_handler = SIG_IGN;
-    if (sigaction(sig, &sigact, nullptr) == -1)
-    {
-        throw_system_error("sigaction error");
-    }
-}
-
-void reset_signal(int sig)
-{
-    struct sigaction sigact;
-    memset(&sigact, 0, sizeof(sigact));
-    sigact.sa_handler = SIG_DFL;
-    if (sigaction(sig, &sigact, nullptr) == -1)
-    {
-        throw_system_error("sigaction error");
-    }
 }
 
 time_t time()

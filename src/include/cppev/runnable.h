@@ -17,7 +17,6 @@
 //      1) pthread_key : better use "thread_local".
 //      2) pthread_cleanup : just coding in "run_impl".
 //      3) pthread_exit : use "return" and add returncode to your class if needed.
-//      4) pthread_sigmask : OMG! Deep use of signal is never a good idea!
 
 namespace cppev
 {
