@@ -35,13 +35,7 @@ void reset_signal(int sig);
 
 void handle_signal(int sig, sig_t handler=[](int){});
 
-void block_signal(int sig);
-
-void unblock_signal(int sig);
-
 void send_signal(pid_t pid, int sig);
-
-void wait_for_signal(int sig);
 
 /*
  * Thread level
@@ -50,11 +44,13 @@ void thread_block_signal(int sig);
 
 void thread_unblock_signal(int sig);
 
-void thread_raise_signal(int sig);
-
 bool thread_check_signal_mask(int sig);
 
-bool thread_check_pending_signal(int sig);
+void thread_raise_signal(int sig);
+
+void thread_wait_for_signal(int sig);
+
+bool thread_check_signal_pending(int sig);
 
 #ifdef __linux__
 typedef pid_t tid;

@@ -69,7 +69,7 @@ public:
     void run_impl() override
     {
         handle_signal(sig);
-        wait_for_signal(sig);
+        thread_wait_for_signal(sig);
     }
 };
 

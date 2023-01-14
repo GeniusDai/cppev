@@ -55,28 +55,6 @@ void handle_signal(int sig, sig_t handler)
     }
 }
 
-void block_signal(int sig)
-{
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, sig);
-    if (sigprocmask(SIG_BLOCK, &set, nullptr) != 0)
-    {
-        throw_system_error("sigprocmask error");
-    }
-}
-
-void unblock_signal(int sig)
-{
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, sig);
-    if (sigprocmask(SIG_UNBLOCK, &set, nullptr) != 0)
-    {
-        throw_system_error("sigprocmask error");
-    }
-}
-
 void send_signal(pid_t pid, int sig)
 {
     if (kill(pid, sig) != 0)
@@ -90,7 +68,7 @@ void send_signal(pid_t pid, int sig)
  * A: One thread waiting for one signal. If you need to wait for several signals, just
  *    create several threads.
  */
-void wait_for_signal(int sig)
+void thread_wait_for_signal(int sig)
 {
     sigset_t set;
     sigemptyset(&set);
@@ -148,7 +126,7 @@ bool thread_check_signal_mask(int sig)
     return sigismember(&set, sig) == 1;
 }
 
-bool thread_check_pending_signal(int sig)
+bool thread_check_signal_pending(int sig)
 {
     sigset_t set;
     sigemptyset(&set);

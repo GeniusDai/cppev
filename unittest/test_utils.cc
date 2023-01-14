@@ -52,11 +52,11 @@ void test_main_thread_signal_wait(int sig, bool block)
     );
     if (block)
     {
-        block_signal(sig);
+        thread_block_signal(sig);
     }
     else
     {
-        unblock_signal(sig);
+        thread_unblock_signal(sig);
     }
 
     pid_t pid = fork();
@@ -66,8 +66,8 @@ void test_main_thread_signal_wait(int sig, bool block)
     }
     if (pid == 0)
     {
-        EXPECT_FALSE(thread_check_pending_signal(sig));
-        wait_for_signal(sig);
+        EXPECT_FALSE(thread_check_signal_pending(sig));
+        thread_wait_for_signal(sig);
         _exit(0);
     }
 
@@ -78,8 +78,6 @@ void test_main_thread_signal_wait(int sig, bool block)
     int ret = -1;
     waitpid(pid, &ret, 0);
     EXPECT_EQ(ret, 0);
-
-    unblock_signal(sig);
 }
 
 void test_sub_thread_signal_wait(int sig, bool block)
@@ -97,7 +95,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
     }
     if (pid == 0)
     {
-        unblock_signal(sig);
+        thread_unblock_signal(sig);
         std::thread thr(
             [=]()
             {
@@ -106,23 +104,23 @@ void test_sub_thread_signal_wait(int sig, bool block)
                     thread_block_signal(sig);
                     EXPECT_TRUE(thread_check_signal_mask(sig));
                     thread_raise_signal(sig);
-                    EXPECT_TRUE(thread_check_pending_signal(sig));
-                    wait_for_signal(sig);
+                    EXPECT_TRUE(thread_check_signal_pending(sig));
+                    thread_wait_for_signal(sig);
                 }
                 else
                 {
                     thread_unblock_signal(sig);
                     EXPECT_FALSE(thread_check_signal_mask(sig));
-                    EXPECT_FALSE(thread_check_pending_signal(sig));
+                    EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
-                wait_for_signal(sig);
+                thread_wait_for_signal(sig);
             }
         );
         EXPECT_FALSE(thread_check_signal_mask(sig));
         thread_block_signal(sig);
         EXPECT_TRUE(thread_check_signal_mask(sig));
         thr.join();
-        EXPECT_FALSE(thread_check_pending_signal(sig));
+        EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }
 
@@ -133,8 +131,6 @@ void test_sub_thread_signal_wait(int sig, bool block)
     int ret = -1;
     waitpid(pid, &ret, 0);
     EXPECT_EQ(ret, 0);
-
-    unblock_signal(sig);
 }
 
 TEST_P(TestSignal, test_signal_all)
