@@ -33,11 +33,16 @@ TEST(TestCommonUtils, test_split)
 typedef void (*testing_func_type)(int, bool);
 
 class TestSignal
-: public testing::TestWithParam<std::tuple<testing_func_type, int, bool>>
+: public testing::TestWithParam<
+    std::tuple<
+        std::tuple<std::string, testing_func_type>,
+        int,
+        bool
+    >>
 {
 };
 
-const int delay = 50;
+const int delay = 10;
 
 void test_main_thread_signal_wait(int sig, bool block)
 {
@@ -66,6 +71,7 @@ void test_main_thread_signal_wait(int sig, bool block)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
         thread_wait_for_signal(sig);
+        EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }
 
@@ -133,20 +139,120 @@ void test_sub_thread_signal_wait(int sig, bool block)
     EXPECT_EQ(ret, 0);
 }
 
+void test_main_thread_signal_suspend(int sig, bool block)
+{
+    handle_signal(sig,
+        [](int sig)
+        {
+            std::cout << "handling signal " << sig << std::endl;
+        }
+    );
+
+    if (block)
+    {
+        thread_block_signal(sig);
+    }
+    else
+    {
+        thread_unblock_signal(sig);
+    }
+
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        throw_system_error("fork error");
+    }
+    if (pid == 0)
+    {
+        EXPECT_FALSE(thread_check_signal_pending(sig));
+        thread_suspend_for_signal(sig);
+        EXPECT_FALSE(thread_check_signal_pending(sig));
+        _exit(0);
+    }
+
+    // waiting for subprocess waiting for signal
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    send_signal(pid, sig);
+
+    int ret = -1;
+    waitpid(pid, &ret, 0);
+    EXPECT_EQ(ret, 0);
+}
+
+void test_sub_thread_signal_suspend(int sig, bool block)
+{
+    handle_signal(sig,
+        [](int sig)
+        {
+            std::cout << "handling signal " << sig << std::endl;
+        }
+    );
+
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        throw_system_error("fork error");
+    }
+    if (pid == 0)
+    {
+        std::thread thr(
+            [=]()
+            {
+                if (block)
+                {
+                    thread_block_signal(sig);
+                    EXPECT_TRUE(thread_check_signal_mask(sig));
+                    thread_raise_signal(sig);
+                    thread_raise_signal(sig);
+                    EXPECT_TRUE(thread_check_signal_pending(sig));
+                    thread_suspend_for_signal(sig);
+                    EXPECT_FALSE(thread_check_signal_pending(sig));
+                }
+                else
+                {
+
+                    thread_unblock_signal(sig);
+                    EXPECT_FALSE(thread_check_signal_mask(sig));
+                    EXPECT_FALSE(thread_check_signal_pending(sig));
+                }
+                thread_suspend_for_signal(sig);
+            }
+        );
+
+        thread_block_signal(sig);
+        EXPECT_TRUE(thread_check_signal_mask(sig));
+        thr.join();
+        EXPECT_FALSE(thread_check_signal_pending(sig));
+        _exit(0);
+    }
+
+    // waiting for subprocess block signal
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    send_signal(pid, sig);
+
+    int ret = -1;
+    waitpid(pid, &ret, 0);
+    EXPECT_EQ(ret, 0);
+}
+
 TEST_P(TestSignal, test_signal_all)
 {
     auto param = GetParam();
-    std::get<0>(param)(std::get<1>(param), std::get<2>(param));
+    std::get<1>(std::get<0>(param))(std::get<1>(param), std::get<2>(param));
 }
 
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestSignal,
     testing::Combine(
-        testing::Values(test_main_thread_signal_wait, test_sub_thread_signal_wait),
+        testing::Values(
+            std::tuple<std::string, testing_func_type>{ "test_main_thread_signal_wait", test_main_thread_signal_wait },
+            std::tuple<std::string, testing_func_type>{ "test_sub_thread_signal_wait", test_sub_thread_signal_wait },
+            std::tuple<std::string, testing_func_type>{ "test_main_thread_signal_suspend", test_main_thread_signal_suspend },
+            std::tuple<std::string, testing_func_type>{ "test_sub_thread_signal_suspend", test_sub_thread_signal_suspend }
+        ),
         testing::Values(SIGINT, SIGABRT, SIGPIPE, SIGTERM, SIGCONT, SIGTSTP),
         testing::Values(true, false)
     )
 );
-
 
 }   // namespace cppev
 

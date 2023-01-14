@@ -82,6 +82,14 @@ void thread_wait_for_signal(int sig)
     }
 }
 
+void thread_suspend_for_signal(int sig)
+{
+    sigset_t set;
+    sigfillset(&set);
+    sigdelset(&set, sig);
+    sigsuspend(&set);
+}
+
 void thread_block_signal(int sig)
 {
     sigset_t set;

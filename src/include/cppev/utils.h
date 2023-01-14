@@ -48,6 +48,8 @@ bool thread_check_signal_mask(int sig);
 
 void thread_raise_signal(int sig);
 
+void thread_suspend_for_signal(int sig);
+
 void thread_wait_for_signal(int sig);
 
 bool thread_check_signal_pending(int sig);
