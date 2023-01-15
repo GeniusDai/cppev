@@ -37,6 +37,10 @@ void handle_signal(int sig, sig_t handler=[](int){});
 
 void send_signal(pid_t pid, int sig);
 
+bool check_process(pid_t pid);
+
+bool check_process_group(pid_t pgid);
+
 /*
  * Thread level
  */

@@ -57,10 +57,40 @@ void handle_signal(int sig, sig_t handler)
 
 void send_signal(pid_t pid, int sig)
 {
+    if (sig == 0)
+    {
+        throw_logic_error("pid or pgid check is not supported");
+    }
     if (kill(pid, sig) != 0)
     {
         throw_system_error("kill error");
     }
+}
+
+bool check_process(pid_t pid)
+{
+    if (pid == 0 || pid == -1)
+    {
+        throw_logic_error("check for 0 or -1 is always ok and not supported");
+    }
+    if (kill(pid, 0) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        if (errno == ESRCH)
+        {
+            return false;
+        }
+        throw_system_error("kill error");
+    }
+    return true;
+}
+
+bool check_process_group(pid_t pgid)
+{
+    return check_process(-1 * pgid);
 }
 
 /*

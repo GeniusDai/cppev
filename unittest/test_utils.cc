@@ -244,15 +244,43 @@ TEST_P(TestSignal, test_signal_all)
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestSignal,
     testing::Combine(
         testing::Values(
-            std::tuple<std::string, testing_func_type>{ "test_main_thread_signal_wait", test_main_thread_signal_wait },
-            std::tuple<std::string, testing_func_type>{ "test_sub_thread_signal_wait", test_sub_thread_signal_wait },
-            std::tuple<std::string, testing_func_type>{ "test_main_thread_signal_suspend", test_main_thread_signal_suspend },
-            std::tuple<std::string, testing_func_type>{ "test_sub_thread_signal_suspend", test_sub_thread_signal_suspend }
+            std::tuple<std::string, testing_func_type>{
+                "test_main_thread_signal_wait", test_main_thread_signal_wait },
+            std::tuple<std::string, testing_func_type>{
+                "test_sub_thread_signal_wait", test_sub_thread_signal_wait },
+            std::tuple<std::string, testing_func_type>{
+                "test_main_thread_signal_suspend", test_main_thread_signal_suspend },
+            std::tuple<std::string, testing_func_type>{
+                "test_sub_thread_signal_suspend", test_sub_thread_signal_suspend }
         ),
         testing::Values(SIGINT, SIGABRT, SIGPIPE, SIGTERM, SIGCONT, SIGTSTP),
         testing::Values(true, false)
     )
 );
+
+TEST(TestCheckBySignal, test_check_pid_and_pgid)
+{
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        throw_system_error("fork error");
+    }
+    if (pid == 0)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        EXPECT_FALSE(check_process_group(getpid()));
+        _exit(0);
+    }
+
+    // waiting for subprocess waiting for signal
+    EXPECT_TRUE(check_process(pid));
+    EXPECT_FALSE(check_process_group(pid));
+    EXPECT_THROW(check_process(0) && check_process(-1), std::logic_error);
+
+    int ret = -1;
+    waitpid(pid, &ret, 0);
+    EXPECT_EQ(ret, 0);
+}
 
 }   // namespace cppev
 
