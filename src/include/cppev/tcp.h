@@ -63,14 +63,13 @@ private:
 
 public:
     // All the five callbacks will be executed by worker thread
-    explicit tp_shared_data(void *reactor_ptr, void *external_data_ptr = nullptr)
+    explicit tp_shared_data(void *external_data_ptr)
     :
         on_accept(idle_handler),
         on_connect(idle_handler),
         on_read_complete(idle_handler),
         on_write_complete(idle_handler),
         on_closed(idle_handler),
-        reactor_ptr(reactor_ptr),
         external_data_ptr(external_data_ptr)
     {
     }
@@ -117,9 +116,6 @@ public:
 private:
     // Event loops of thread pool, used for task assign
     std::vector<event_loop *> evls;
-
-    // Pointer to reactor server or client
-    void *reactor_ptr;
 
     // Pointer to external data may be used by handler registered by user
     void *external_data_ptr;

@@ -265,7 +265,7 @@ void connector::run_impl()
 }
 
 tcp_server::tcp_server(int thr_num, void *external_data)
-: data_(this, external_data), tp_(thr_num, &data_)
+: data_(external_data), tp_(thr_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
@@ -289,7 +289,7 @@ void tcp_server::run()
 }
 
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
-: data_(this, external_data), tp_(thr_num, &data_)
+: data_(external_data), tp_(thr_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
