@@ -59,7 +59,7 @@ TEST_F(TestBuffer, test_copy_move)
     std::string str = "cppev";
 
     std::vector<buffer> vec;
-    vec.emplace_back(0);    // move constructor
+    vec.emplace_back(1);    // move constructor
     vec.back().put_string(str);
     vec.push_back(vec[0]);  // copy constructor
 

@@ -25,7 +25,7 @@ public:
     {
         for (int i = 0; i < thr_num; ++i)
         {
-            thrs_.push_back(std::make_shared<Runnable>(std::forward<Args>(args)...));
+            thrs_.push_back(std::make_unique<Runnable>(std::forward<Args>(args)...));
         }
     }
 
@@ -82,7 +82,7 @@ public:
     }
 
 protected:
-    std::vector<std::shared_ptr<Runnable> > thrs_;
+    std::vector<std::unique_ptr<Runnable> > thrs_;
 };
 
 namespace task_queue
@@ -106,11 +106,18 @@ public:
     void add_task(const task_handler &h) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
-        queue_.push(std::make_shared<task_handler>(h));
+        queue_.push(h);
         cond_.notify_one();
     }
 
-    void add_task(const std::vector<std::shared_ptr<task_handler> > &vh) noexcept
+    void add_task(task_handler &&h) noexcept
+    {
+        std::unique_lock<std::mutex> lock(lock_);
+        queue_.push(std::forward<task_handler>(h));
+        cond_.notify_one();
+    }
+
+    void add_task(const std::vector<task_handler> &vh) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
         for (const auto &h : vh)
@@ -121,7 +128,7 @@ public:
     }
 
 protected:
-    std::queue<std::shared_ptr<task_handler> > queue_;
+    std::queue<task_handler> queue_;
 
     std::mutex lock_;
 
@@ -141,7 +148,7 @@ public:
 
     void run_impl() override
     {
-        std::shared_ptr<task_handler> handler;
+        task_handler handler;
         while(true)
         {
             {
@@ -161,11 +168,11 @@ public:
                         break;
                     }
                 }
-                handler = tq_->queue_.front();
+                handler = std::move(tq_->queue_.front());
                 tq_->queue_.pop();
             }
             tq_->cond_.notify_all();
-            (*handler)();
+            handler();
         }
     }
 

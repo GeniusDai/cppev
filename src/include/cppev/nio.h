@@ -51,8 +51,6 @@ public:
     : fd_(fd), closed_(false)
     {
         set_nonblock();
-        rbuffer_ = std::unique_ptr<buffer>(new buffer(1));
-        wbuffer_ = std::unique_ptr<buffer>(new buffer(1));
     }
 
     nio(const nio &) = delete;
@@ -76,23 +74,23 @@ public:
     // Read buffer
     const buffer &rbuf() const noexcept
     {
-        return *rbuffer_.get();
+        return rbuffer_;
     }
 
     buffer &rbuf() noexcept
     {
-        return *rbuffer_.get();
+        return rbuffer_;
     }
 
     // Write buffer
     const buffer &wbuf() const noexcept
     {
-        return *wbuffer_.get();
+        return wbuffer_;
     }
 
     buffer &wbuf() noexcept
     {
-        return *wbuffer_.get();
+        return wbuffer_;
     }
 
     const event_loop &evlp() const noexcept
@@ -128,11 +126,11 @@ protected:
     // Whether closed
     bool closed_;
 
-    // Read buffer, should be initialized
-    std::unique_ptr<buffer> rbuffer_;
+    // Read buffer
+    buffer rbuffer_;
 
-    // Write buffer, should be initialized
-    std::unique_ptr<buffer> wbuffer_;
+    // Write buffer
+    buffer wbuffer_;
 
     // One nio belongs to one event loop
     event_loop *evlp_;

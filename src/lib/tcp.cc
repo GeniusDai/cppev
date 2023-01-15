@@ -180,9 +180,9 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
 
 void acceptor::run_impl()
 {
-    evlp_->fd_register(std::static_pointer_cast<nio>(sock_),
+    evlp_.fd_register(std::static_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable, true);
-    evlp_->loop();
+    evlp_.loop();
 }
 
 void connector::add(const std::string &ip, int port, family f, int t)
@@ -259,31 +259,29 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 
 void connector::run_impl()
 {
-    evlp_->fd_register(std::static_pointer_cast<nio>(rdp_),
+    evlp_.fd_register(std::static_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable, true);
-    evlp_->loop();
+    evlp_.loop();
 }
 
 tcp_server::tcp_server(int thr_num, void *external_data)
+: data_(this, external_data), tp_(thr_num, &data_)
 {
-    data_ = std::make_shared<tp_shared_data>(external_data);
-    tp_ = std::make_shared<thread_pool<iohandler, tp_shared_data *> >(thr_num, data_.get());
-    for (int i = 0; i < tp_->size(); ++i)
+    for (int i = 0; i < tp_.size(); ++i)
     {
-        data_->evls.push_back((*tp_)[i].evlp_.get());
+        data_.evls.push_back(&(tp_[i].evlp_));
     }
-    data_->reactor_ptr = this;
 }
 
 void tcp_server::run()
 {
     ignore_signal(SIGPIPE);
-    tp_->run();
+    tp_.run();
     for (auto &acpt : acpts_)
     {
         acpt->run();
     }
-    tp_->join();
+    tp_.join();
     for (auto &acpt : acpts_)
     {
         acpt->join();
@@ -291,18 +289,16 @@ void tcp_server::run()
 }
 
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
+: data_(this, external_data), tp_(thr_num, &data_)
 {
-    data_ = std::make_shared<tp_shared_data>(external_data);
-    tp_ = std::make_shared<thread_pool<iohandler, tp_shared_data *> >(thr_num, data_.get());
-    for (int i = 0; i < tp_->size(); ++i)
+    for (int i = 0; i < tp_.size(); ++i)
     {
-        data_->evls.push_back((*tp_)[i].evlp_.get());
+        data_.evls.push_back(&(tp_[i].evlp_));
     }
     for (int i = 0; i < cont_num; ++i)
     {
-        conts_.push_back(std::make_shared<connector>(data_.get()));
+        conts_.push_back(std::make_unique<connector>(&data_));
     }
-    data_->reactor_ptr = this;
 }
 
 void tcp_client::add(const std::string &ip, int port, family f, int t)
@@ -344,12 +340,12 @@ void tcp_client::add_unix(const std::string &path, int t)
 void tcp_client::run()
 {
     ignore_signal(SIGPIPE);
-    tp_->run();
+    tp_.run();
     for (auto &cont : conts_)
     {
         cont->run();
     }
-    tp_->join();
+    tp_.join();
     for (auto &cont : conts_)
     {
         cont->join();

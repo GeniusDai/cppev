@@ -34,11 +34,11 @@ void nio::set_nonblock()
 
 int nstream::read_chunk(int len)
 {
-    rbuffer_->resize(rbuffer_->offset_ + len);
-    int origin_offset = rbuffer_->offset_;
+    rbuf().resize(rbuf().offset_ + len);
+    int origin_offset = rbuf().offset_;
     while (len)
     {
-        int curr = read(fd_, rbuffer_->buffer_.get() + rbuffer_->offset_, len);
+        int curr = read(fd_, rbuf().buffer_.get() + rbuf().offset_, len);
         if (curr == 0)
         {
             eof_ = true; break;
@@ -63,20 +63,20 @@ int nstream::read_chunk(int len)
                 throw_system_error("read error");
             }
         }
-        rbuffer_->offset_ += curr;
+        rbuf().offset_ += curr;
         len -= curr;
     }
-    return rbuffer_->offset_ - origin_offset;
+    return rbuf().offset_ - origin_offset;
 }
 
 int nstream::write_chunk(int len)
 {
-    int origin_start = wbuffer_->start_;
-    len = std::min(len, wbuffer_->size());
+    int origin_start = wbuf().start_;
+    len = std::min(len, wbuf().size());
     while (len)
     {
-        len = std::min(len, wbuffer_->size());
-        int curr = write(fd_, wbuffer_->buffer_.get() + wbuffer_->start_, len);
+        len = std::min(len, wbuf().size());
+        int curr = write(fd_, wbuf().buffer_.get() + wbuf().start_, len);
         if (curr == -1)
         {
             if (errno == EINTR)
@@ -102,13 +102,13 @@ int nstream::write_chunk(int len)
                 throw_system_error("write error");
             }
         }
-        wbuffer_->start_ += curr;
+        wbuf().start_ += curr;
         len -= curr;
     }
-    int curr_start = wbuffer_->start_;
-    if (0 == wbuffer_->size())
+    int curr_start = wbuf().start_;
+    if (0 == wbuf().size())
     {
-        wbuffer_->clear();
+        wbuf().clear();
     }
     return curr_start - origin_start;
 }

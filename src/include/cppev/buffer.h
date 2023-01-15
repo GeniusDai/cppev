@@ -27,6 +27,10 @@ public:
     explicit buffer(int cap) noexcept
     : cap_(cap), start_(0), offset_(0)
     {
+        if (cap_ < 1)
+        {
+            throw_logic_error("buffer size shall not be less than 1 byte!");
+        }
         buffer_ = std::unique_ptr<char[]>(new char[cap_]);
         if (cap_)
         {

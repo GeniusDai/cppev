@@ -63,13 +63,14 @@ private:
 
 public:
     // All the five callbacks will be executed by worker thread
-    tp_shared_data(void *external_data_ptr = nullptr)
+    explicit tp_shared_data(void *reactor_ptr, void *external_data_ptr = nullptr)
     :
         on_accept(idle_handler),
         on_connect(idle_handler),
         on_read_complete(idle_handler),
         on_write_complete(idle_handler),
         on_closed(idle_handler),
+        reactor_ptr(reactor_ptr),
         external_data_ptr(external_data_ptr)
     {
     }
@@ -103,7 +104,12 @@ public:
     event_loop *minloads_get_evlp();
 
     // External data defined by user
-    void *external_data()
+    void *external_data() noexcept
+    {
+        return external_data_ptr;
+    }
+
+    const void *external_data() const noexcept
     {
         return external_data_ptr;
     }
@@ -120,14 +126,14 @@ private:
 };
 
 
-class iohandler
+class iohandler final
 : public runnable
 {
     friend class tcp_server;
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
     {
     }
 
@@ -136,7 +142,7 @@ public:
     iohandler(iohandler &&) =delete;
     iohandler &operator=(iohandler &&) = delete;
 
-    virtual ~iohandler() = default;
+    ~iohandler() = default;
 
     // Connected socket that has been registered to thread pool is readable
     static void on_readable(const std::shared_ptr<nio> &iop);
@@ -154,24 +160,24 @@ public:
 
     void run_impl() override
     {
-        evlp_->loop();
+        evlp_.loop();
     }
 
 private:
     // Event loop
-    std::shared_ptr<event_loop> evlp_;
+    event_loop evlp_;
 
     // Hosts failed in the SO_ERROR check
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
 
-class acceptor
+class acceptor final
 : public runnable
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
     {
     }
 
@@ -180,7 +186,7 @@ public:
     acceptor(acceptor &&) = delete;
     acceptor &operator=(acceptor &&) = delete;
 
-    virtual ~acceptor() = default;
+    ~acceptor() = default;
 
     // Specify listening socket's port and family
     void listen(int port, family f, const char *ip = nullptr);
@@ -197,10 +203,60 @@ public:
 
 private:
     // Event loop
-    std::shared_ptr<event_loop> evlp_;
+    event_loop evlp_;
 
     // Listening socket
     std::shared_ptr<nsocktcp> sock_;
+};
+
+
+class connector final
+: public runnable
+{
+public:
+    explicit connector(tp_shared_data *data)
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    {
+        auto pipes = nio_factory::get_pipes();
+        rdp_ = pipes[0];
+        wrp_ = pipes[1];
+    }
+
+    connector(const connector &) = delete;
+    connector &operator=(const connector &) = delete;
+    connector(connector &&) = delete;
+    connector &operator=(connector &&) = delete;
+
+    ~connector() = default;
+
+    // Add connection task (ip, port, family)
+    void add(const std::string &ip, int port, family f, int t = 1);
+
+    // Add connection task (path, 0, family::local)
+    void add_unix(const std::string &path, int t = 1);
+
+    // Pipe fd is readable, indicating new task added, this callback will be executed by
+    // connect thread to execute the connection task and assign connection to thread pool
+    static void on_pipe_readable(const std::shared_ptr<nio> &iop);
+
+    // Register readable to event loop and start loop
+    void run_impl() override;
+
+private:
+    // Event loop
+    event_loop evlp_;
+
+    // Pipe write end
+    std::shared_ptr<nstream> wrp_;
+
+    // Pipe read end
+    std::shared_ptr<nstream> rdp_;
+
+    // Hosts waiting for connecting
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts_;
+
+    // Hosts failed in the connect syscall
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
 
@@ -218,97 +274,48 @@ public:
 
     void listen(int port, family f, const char *ip = nullptr)
     {
-        acpts_.push_back(std::make_shared<acceptor>(data_.get()));
+        acpts_.push_back(std::make_unique<acceptor>(&data_));
         acpts_.back()->listen(port, f, ip);
     }
 
     void listen_unix(const std::string &path, bool remove = false)
     {
-        acpts_.push_back(std::make_shared<acceptor>(data_.get()));
+        acpts_.push_back(std::make_unique<acceptor>(&data_));
         acpts_.back()->listen_unix(path, remove);
     }
 
     void set_on_accept(const tcp_event_handler &handler)
     {
-        data_->on_accept = handler;
+        data_.on_accept = handler;
     }
 
     void set_on_read_complete(const tcp_event_handler &handler)
     {
-        data_->on_read_complete = handler;
+        data_.on_read_complete = handler;
     }
 
     void set_on_write_complete(const tcp_event_handler &handler)
     {
-        data_->on_write_complete = handler;
+        data_.on_write_complete = handler;
     }
 
     void set_on_closed(const tcp_event_handler &handler)
     {
-        data_->on_closed = handler;
+        data_.on_closed = handler;
     }
 
     void run();
 
 private:
     // Thread pool shared data
-    std::shared_ptr<tp_shared_data> data_;
-
-    // Listening threads
-    std::vector<std::shared_ptr<acceptor> > acpts_;
+    tp_shared_data data_;
 
     // Worker threads
-    std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
-};
+    thread_pool<iohandler, tp_shared_data *> tp_;
 
+    // Listening threads
+    std::vector<std::unique_ptr<acceptor>> acpts_;
 
-class connector
-: public runnable
-{
-public:
-    explicit connector(tp_shared_data *data)
-    : evlp_(std::make_shared<event_loop>(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)))
-    {
-        auto pipes = nio_factory::get_pipes();
-        rdp_ = pipes[0];
-        wrp_ = pipes[1];
-    }
-
-    connector(const connector &) = delete;
-    connector &operator=(const connector &) = delete;
-    connector(connector &&) = delete;
-    connector &operator=(connector &&) = delete;
-
-    virtual ~connector() = default;
-
-    // Add connection task (ip, port, family)
-    void add(const std::string &ip, int port, family f, int t = 1);
-
-    // Add connection task (path, 0, family::local)
-    void add_unix(const std::string &path, int t = 1);
-
-    // Pipe fd is readable, indicating new task added, this callback will be executed by
-    // connect thread to execute the connection task and assign connection to thread pool
-    static void on_pipe_readable(const std::shared_ptr<nio> &iop);
-
-    // Register readable to event loop and start loop
-    void run_impl() override;
-
-private:
-    // Event loop
-    std::shared_ptr<event_loop> evlp_;
-
-    // Pipe write end
-    std::shared_ptr<nstream> wrp_;
-
-    // Pipe read end
-    std::shared_ptr<nstream> rdp_;
-
-    // Hosts waiting for connecting
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts_;
-
-    // Hosts failed in the connect syscall
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
 
 
@@ -330,35 +337,35 @@ public:
 
     void set_on_connect(const tcp_event_handler &handler)
     {
-        data_->on_connect = handler;
+        data_.on_connect = handler;
     }
 
     void set_on_read_complete(const tcp_event_handler &handler)
     {
-        data_->on_read_complete = handler;
+        data_.on_read_complete = handler;
     }
 
     void set_on_write_complete(const tcp_event_handler &handler)
     {
-        data_->on_write_complete = handler;
+        data_.on_write_complete = handler;
     }
 
     void set_on_closed(const tcp_event_handler &handler)
     {
-        data_->on_closed = handler;
+        data_.on_closed = handler;
     }
 
     void run();
 
 private:
     // Thread pool shared data
-    std::shared_ptr<tp_shared_data> data_;
-
-    // Connecting threads
-    std::vector<std::shared_ptr<connector> > conts_;
+    tp_shared_data data_;
 
     // Worker threads
-    std::shared_ptr<thread_pool<iohandler, tp_shared_data *> > tp_;
+    thread_pool<iohandler, tp_shared_data *> tp_;
+
+    // Connecting threads
+    std::vector<std::unique_ptr<connector>> conts_;
 };
 
 }   // namespace reactor
