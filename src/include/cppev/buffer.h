@@ -12,8 +12,12 @@ namespace cppev
 
 class buffer final
 {
+    // Q: Why the two classes should be friend?
+    // A: To save a memory copy.
     friend class nstream;
     friend class nsockudp;
+
+    static_assert(sizeof(char) == 1, "basic data of buffer is not ok!");
 public:
     buffer() noexcept
     : buffer(1)
@@ -161,15 +165,15 @@ public:
     }
 
     // Produce string to buffer
-    // param str : string to put
+    // @param str : string to put
     void put_string(const std::string &str) noexcept
     {
         produce(str.c_str(), str.size());
     }
 
     // Get string from buffer
-    // param len: Char array length that consumes, -1 means all.
-    // param remove : whether consumes the char array.
+    // @param len: Char array length that consumes, -1 means all.
+    // @param remove : whether consumes the char array.
     std::string get_string(int len = -1, bool remove = true) noexcept
     {
         if (len == -1)
