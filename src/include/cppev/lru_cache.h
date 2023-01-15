@@ -25,9 +25,9 @@ public:
 
     ~lru_cache() = default;
 
-    Value get(Key key) noexcept;
+    Value get(const Key &key) noexcept;
 
-    void put(Key key, Value value) noexcept;
+    void put(const Key &key, const Value &value) noexcept;
 
 private:
     std::list<std::pair<Key, Value>> cache_;
@@ -40,7 +40,7 @@ private:
 };
 
 template<typename Key, typename Value>
-Value lru_cache<Key, Value>::get(Key key) noexcept
+Value lru_cache<Key, Value>::get(const Key &key) noexcept
 {
     if (hash_.count(key) == 0)
     {
@@ -53,7 +53,7 @@ Value lru_cache<Key, Value>::get(Key key) noexcept
 }
 
 template<typename Key, typename Value>
-void lru_cache<Key, Value>::put(Key key, Value value) noexcept
+void lru_cache<Key, Value>::put(const Key &key, const Value &value) noexcept
 {
     if (hash_.count(key) != 0)
     {
