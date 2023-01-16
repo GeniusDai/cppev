@@ -268,17 +268,9 @@ public:
 
     ~tcp_server() = default;
 
-    void listen(int port, family f, const char *ip = nullptr)
-    {
-        acpts_.push_back(std::make_unique<acceptor>(&data_));
-        acpts_.back()->listen(port, f, ip);
-    }
+    void listen(int port, family f, const char *ip = nullptr);
 
-    void listen_unix(const std::string &path, bool remove = false)
-    {
-        acpts_.push_back(std::make_unique<acceptor>(&data_));
-        acpts_.back()->listen_unix(path, remove);
-    }
+    void listen_unix(const std::string &path, bool remove = false);
 
     void set_on_accept(const tcp_event_handler &handler)
     {

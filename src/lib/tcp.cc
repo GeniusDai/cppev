@@ -273,6 +273,18 @@ tcp_server::tcp_server(int thr_num, void *external_data)
     }
 }
 
+void tcp_server::listen(int port, family f, const char *ip)
+{
+    acpts_.push_back(std::make_unique<acceptor>(&data_));
+    acpts_.back()->listen(port, f, ip);
+}
+
+void tcp_server::listen_unix(const std::string &path, bool remove)
+{
+    acpts_.push_back(std::make_unique<acceptor>(&data_));
+    acpts_.back()->listen_unix(path, remove);
+}
+
 void tcp_server::run()
 {
     ignore_signal(SIGPIPE);
