@@ -205,7 +205,8 @@ time_t time()
 
 std::string timestamp(time_t t, const char *format)
 {
-    if (t == 0)
+    static_assert(std::is_signed<time_t>::value, "time_t is not signed!");
+    if (t < 0)
     {
         t = time();
     }
