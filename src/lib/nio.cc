@@ -41,7 +41,8 @@ int nstream::read_chunk(int len)
         int curr = read(fd_, rbuf().buffer_.get() + rbuf().offset_, len);
         if (curr == 0)
         {
-            eof_ = true; break;
+            eof_ = true;
+            break;
         }
         if (curr == -1)
         {
