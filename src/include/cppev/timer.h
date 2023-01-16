@@ -41,7 +41,7 @@ private:
 
     std::chrono::nanoseconds span_;
 
-    std::unique_ptr<std::thread> thr_;
+    std::thread thr_;
 #endif
 };
 
@@ -86,14 +86,14 @@ timer::timer(const std::chrono::duration<Rep, Period> &span, const timer_handler
             handler_();
         }
     };
-    thr_ = std::make_unique<std::thread>(thr_func);
+    thr_ = std::thread(thr_func);
 #endif
 }
 
 timer::~timer() noexcept
 {
 #ifndef __linux__
-    thr_->join();
+    thr_.join();
 #endif
 }
 
