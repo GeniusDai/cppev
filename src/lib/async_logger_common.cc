@@ -44,7 +44,7 @@ async_logger &async_logger::operator<<(float x)
     return (*this) << std::to_string(x).c_str();
 }
 
-void async_logger::write_debug(buffer *buf)
+void async_logger::write_debug(buffer &buf)
 {
     std::stringstream ss;
     tid thr_id = utils::gettid();
@@ -63,7 +63,7 @@ void async_logger::write_debug(buffer *buf)
 #elif defined(__APPLE__)
     ss << "] [TID 0x" << std::hex << thr_id << "] ";
 #endif
-    buf->put_string(ss.str());
+    buf.put_string(ss.str());
 }
 
 std::string async_logger::version()

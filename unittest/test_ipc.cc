@@ -57,8 +57,10 @@ TEST_F(TestIpc, test_sem_shm_by_fork)
         shared_memory shm(name, shm_size);
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
         EXPECT_FALSE(sem.try_acquire());
-        sem.release();
+        sem.release(3);
         EXPECT_TRUE(sem.try_acquire());
+        sem.acquire(2);
+        EXPECT_FALSE(sem.try_acquire());
 
         std::cout << "shared memory ptr : " << shm.ptr() << std::endl;
 

@@ -90,18 +90,18 @@ namespace task_queue
 
 using task_handler = std::function<void()>;
 
-class tp_task_queue_runnable;
+class thread_pool_task_queue_runnable;
 
-class tp_task_queue
+class task_queue
 {
-    friend class tp_task_queue_runnable;
+    friend class thread_pool_task_queue_runnable;
 public:
-    tp_task_queue() noexcept
+    task_queue() noexcept
     : stop_(false)
     {
     }
 
-    virtual ~tp_task_queue() = default;
+    virtual ~task_queue() = default;
 
     void add_task(const task_handler &h) noexcept
     {
@@ -137,12 +137,12 @@ protected:
     bool stop_;
 };
 
-class tp_task_queue_runnable final
+class thread_pool_task_queue_runnable final
 : public runnable
 {
 public:
-    tp_task_queue_runnable(tp_task_queue *tq) noexcept
-    : tq_(tq)
+    thread_pool_task_queue_runnable(task_queue *task_queue) noexcept
+    : task_queue_(task_queue)
     {
     }
 
@@ -152,40 +152,40 @@ public:
         while(true)
         {
             {
-                std::unique_lock<std::mutex> lock(tq_->lock_);
-                if (tq_->queue_.empty())
+                std::unique_lock<std::mutex> lock(task_queue_->lock_);
+                if (task_queue_->queue_.empty())
                 {
-                    if (tq_->stop_)
+                    if (task_queue_->stop_)
                     {
                         break;
                     }
-                    tq_->cond_.wait(lock, [this]()->bool
+                    task_queue_->cond_.wait(lock, [this]()->bool
                     {
-                        return tq_->queue_.size() || tq_->stop_;
+                        return task_queue_->queue_.size() || task_queue_->stop_;
                     });
-                    if (tq_->queue_.empty() && tq_->stop_)
+                    if (task_queue_->queue_.empty() && task_queue_->stop_)
                     {
                         break;
                     }
                 }
-                handler = std::move(tq_->queue_.front());
-                tq_->queue_.pop();
+                handler = std::move(task_queue_->queue_.front());
+                task_queue_->queue_.pop();
             }
-            tq_->cond_.notify_all();
+            task_queue_->cond_.notify_all();
             handler();
         }
     }
 
 private:
-    tp_task_queue *tq_;
+    task_queue *task_queue_;
 };
 
 class thread_pool_task_queue final
-: public tp_task_queue, public thread_pool<tp_task_queue_runnable, tp_task_queue *>
+: public task_queue, public thread_pool<thread_pool_task_queue_runnable, task_queue *>
 {
 public:
     thread_pool_task_queue(int thr_num)
-    : tp_task_queue(), thread_pool<tp_task_queue_runnable, tp_task_queue *>(thr_num, this)
+    : task_queue(), thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
     {
     }
 

@@ -64,7 +64,7 @@ shared_memory::~shared_memory() noexcept
     munmap(ptr_, size_);
 }
 
-void shared_memory::unlink() const
+void shared_memory::unlink()
 {
     if (shm_unlink(name_.c_str()) == -1)
     {
@@ -115,7 +115,7 @@ semaphore::~semaphore() noexcept
     sem_close(sem_);
 }
 
-bool semaphore::try_acquire() const
+bool semaphore::try_acquire()
 {
     if(sem_trywait(sem_) == -1)
     {
@@ -131,23 +131,29 @@ bool semaphore::try_acquire() const
     return true;
 }
 
-void semaphore::acquire() const
+void semaphore::acquire(int count)
 {
-    if (sem_wait(sem_) == -1)
+    for (int i = 0; i < count; ++i)
     {
-        throw_system_error("sem_wait error");
+        if (sem_wait(sem_) == -1)
+        {
+            throw_system_error("sem_wait error");
+        }
     }
 }
 
-void semaphore::release() const
+void semaphore::release(int count)
 {
-    if (sem_post(sem_) == -1)
+    for (int i = 0; i < count; ++i)
     {
-        throw_system_error("sem_post error");
+        if (sem_post(sem_) == -1)
+        {
+            throw_system_error("sem_post error");
+        }
     }
 }
 
-void semaphore::unlink() const
+void semaphore::unlink()
 {
     if (sem_unlink(name_.c_str()) == -1)
     {

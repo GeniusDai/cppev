@@ -31,7 +31,7 @@ public:
         return object;
     }
 
-    void unlink() const;
+    void unlink();
 
     void *ptr() const noexcept
     {
@@ -70,13 +70,13 @@ public:
 
     ~semaphore() noexcept;
 
-    bool try_acquire() const;
+    bool try_acquire();
 
-    void acquire() const;
+    void acquire(int count = 1);
 
-    void release() const;
+    void release(int count = 1);
 
-    void unlink() const;
+    void unlink();
 
     bool creator() const noexcept
     {
