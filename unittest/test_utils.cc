@@ -30,6 +30,22 @@ TEST(TestCommonUtils, test_split)
     EXPECT_STREQ(subs[3].c_str(), "");
 }
 
+TEST(TestCommonUtils, test_join)
+{
+    std::vector<std::tuple<std::vector<std::string>, std::string, std::string>> cases =
+    {
+        { {"hi"}, "\n", "hi" },
+        { {"cppev", "nice"}, "\t", "cppev\tnice" },
+        { {""}, "", "" },
+        { {"", ""}, "\t", "\t"},
+    };
+
+    for (const auto &tc : cases)
+    {
+        EXPECT_EQ(std::get<2>(tc), utils::join(std::get<0>(tc), std::get<1>(tc)));
+    }
+}
+
 typedef void (*testing_func_type)(int, bool);
 
 class TestSignal

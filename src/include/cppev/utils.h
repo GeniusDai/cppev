@@ -79,6 +79,8 @@ std::vector<std::string> split(const char *str, const char *sep);
 
 std::vector<std::string> split(const std::string &str, const std::string &sep);
 
+std::string join(const std::vector<std::string> &str_arr, const std::string &sep);
+
 }   // namespace utils
 
 }   // namespace cppev

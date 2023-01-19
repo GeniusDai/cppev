@@ -284,6 +284,27 @@ std::vector<std::string> split(const char *str, const char *sep)
     return subs;
 }
 
+std::string join(const std::vector<std::string> &str_arr, const std::string &sep)
+{
+    std::string ret = "";
+    size_t size = 0;
+    for (size_t i = 0; i < str_arr.size(); ++i)
+    {
+        size += str_arr[i].size();
+    }
+    size += sep.size() * (str_arr.size() - 1);
+    ret.reserve(size);
+    for (size_t i = 0; i < str_arr.size(); ++i)
+    {
+        ret += str_arr[i];
+        if (i != str_arr.size() - 1)
+        {
+            ret += sep;
+        }
+    }
+    return ret;
+}
+
 }   // namespace utils
 
 }   // namespace cppev
