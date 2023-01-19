@@ -68,10 +68,7 @@ void async_logger::run_impl()
         }
         if (buffer_.size())
         {
-            {
-                std::unique_lock<std::mutex> gl(global_lock_);
-                write(level_, buffer_.rawbuf(), buffer_.size());
-            }
+            write(level_, buffer_.rawbuf(), buffer_.size());
             buffer_.clear();
         }
     }

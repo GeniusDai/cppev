@@ -86,7 +86,6 @@ void async_logger::run_impl()
                     lock(*(std::get<1>(iter->second).get()));
                 if (std::get<0>(iter->second).size())
                 {
-                    std::unique_lock<std::mutex> glock(global_lock_);
                     buffer &buf = std::get<0>(iter->second);
                     write(level_, buf.rawbuf(), buf.size());
                     buf.clear();
@@ -109,7 +108,6 @@ void async_logger::run_impl()
                     if (stop_)
                     {
                         assert(0 == std::get<2>(iter->second));
-                        std::unique_lock<std::mutex> glock(global_lock_);
                         buffer &buf = std::get<0>(iter->second);
                         write(level_, buf.rawbuf(), buf.size());
                         buf.clear();

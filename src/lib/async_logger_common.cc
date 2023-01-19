@@ -6,8 +6,6 @@
 namespace cppev
 {
 
-std::mutex async_logger::global_lock_;
-
 async_logger::~async_logger()
 {
     if (level_ < 0)

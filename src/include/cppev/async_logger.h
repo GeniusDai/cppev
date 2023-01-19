@@ -74,8 +74,6 @@ private:
 #endif  // __CPPEV_USE_HASHED_LOGGER__
 
     std::condition_variable_any cond_;
-
-    static std::mutex global_lock_;
 };
 
 namespace log
