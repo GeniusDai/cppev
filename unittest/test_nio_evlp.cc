@@ -35,11 +35,11 @@ TEST_F(TestNio, test_diskfile)
     fd = open(file, O_RDONLY);
     std::shared_ptr<nstream> iofr(new nstream(fd));
 
-    iofw->wbuf().put_string(str);
+    iofw->wbuffer().put_string(str);
     iofw->write_all();
     iofw->close();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuf().rawbuf(), str);
+    EXPECT_STREQ(iofr->rbuffer().rawbuf(), str);
 
     unlink(file);
 }
@@ -50,10 +50,10 @@ TEST_F(TestNio, test_pipe)
     auto iopr = pipes[0];
     auto iopw = pipes[1];
 
-    iopw->wbuf().put_string(str);
+    iopw->wbuffer().put_string(str);
     iopw->write_all();
     iopr->read_all();
-    EXPECT_STREQ(str, iopr->rbuf().rawbuf());
+    EXPECT_STREQ(str, iopr->rbuffer().rawbuf());
 }
 
 TEST_F(TestNio, test_fifo)
@@ -61,10 +61,10 @@ TEST_F(TestNio, test_fifo)
     auto fifos = nio_factory::get_fifos(fifo);
     auto iofr = fifos[0];
     auto iofw = fifos[1];
-    iofw->wbuf().put_string(str);
+    iofw->wbuffer().put_string(str);
     iofw->write_all();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuf().rawbuf(), str);
+    EXPECT_STREQ(iofr->rbuffer().rawbuf(), str);
 
     unlink(fifo);
 }

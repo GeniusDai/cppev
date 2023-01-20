@@ -8,7 +8,7 @@ cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppe
     cppev::log::info << "tcp connection readable --> fd " << iops->fd() << " --> ";
     auto sock = iops->sockname();
     auto peer = iops->peername();
-    cppev::log::info << iops->rbuf().size() << " " << iops->rbuf().get_string() << " --> ";
+    cppev::log::info << iops->rbuffer().size() << " " << iops->rbuffer().get_string() << " --> ";
     cppev::log::info << "sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << " | ";
     cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << cppev::log::endl;
     iop->evlp().fd_remove(iop);

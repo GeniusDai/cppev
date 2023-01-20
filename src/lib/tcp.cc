@@ -35,7 +35,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
 {
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
     iopt->write_all(sysconfig::buffer_io_step);
-    if (0 == iopt->wbuf().size())
+    if (0 == iopt->wbuffer().size())
     {
         dp->on_write_complete(iopt);
     }
@@ -72,7 +72,7 @@ void iohandler::on_readable(const std::shared_ptr<nio> &iop)
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
     iopt->read_all(sysconfig::buffer_io_step);
     dp->on_read_complete(iopt);
-    iopt->rbuf().clear();
+    iopt->rbuffer().clear();
     if (iopt->eof() || iopt->is_reset())
     {
         dp->on_closed(iopt);
@@ -89,7 +89,7 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
     iopt->write_all(sysconfig::buffer_io_step);
-    if (0 == iopt->wbuf().size())
+    if (0 == iopt->wbuffer().size())
     {
         iopt->evlp().fd_remove(iop, false);
         dp->on_write_complete(iopt);
@@ -200,7 +200,7 @@ void connector::add(const std::string &ip, int port, family f, int t)
     {
         hosts_[h] = t;
     }
-    wrp_->wbuf().put_string("0");
+    wrp_->wbuffer().put_string("0");
     wrp_->write_all(1);
 }
 

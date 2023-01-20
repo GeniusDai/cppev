@@ -26,8 +26,8 @@ cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::n
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     cppev::log::info << "[fd] " << iopt->fd() << " | [callback] read_complete" << cppev::log::endl;
-    cppev::log::info << "[fd] " << iopt->fd() << " | [message] " << iopt->rbuf().rawbuf() << cppev::log::endl;
-    iopt->wbuf().put_string(iopt->rbuf().get_string());
+    cppev::log::info << "[fd] " << iopt->fd() << " | [message] " << iopt->rbuffer().rawbuf() << cppev::log::endl;
+    iopt->wbuffer().put_string(iopt->rbuffer().get_string());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     cppev::reactor::async_write(iopt);
 };

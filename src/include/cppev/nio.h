@@ -55,8 +55,17 @@ public:
 
     nio(const nio &) = delete;
     nio &operator=(const nio &) = delete;
-    nio(nio &&) = delete;
-    nio &operator=(nio &&) = delete;
+
+    nio(nio &&other) noexcept
+    {
+        move(std::forward<nio>(other));
+    }
+
+    nio &operator=(nio &&other) noexcept
+    {
+        move(std::forward<nio>(other));
+        return *this;
+    }
 
     virtual ~nio() noexcept
     {
@@ -72,23 +81,23 @@ public:
     }
 
     // Read buffer
-    const buffer &rbuf() const noexcept
+    const buffer &rbuffer() const noexcept
     {
         return rbuffer_;
     }
 
-    buffer &rbuf() noexcept
+    buffer &rbuffer() noexcept
     {
         return rbuffer_;
     }
 
     // Write buffer
-    const buffer &wbuf() const noexcept
+    const buffer &wbuffer() const noexcept
     {
         return wbuffer_;
     }
 
-    buffer &wbuf() noexcept
+    buffer &wbuffer() noexcept
     {
         return wbuffer_;
     }
@@ -138,6 +147,19 @@ protected:
 private:
     // Set fd to nonblock
     void set_nonblock();
+
+    void move(nio &&other) noexcept
+    {
+        this->fd_ = other.fd_;
+        this->closed_ = other.closed_;
+        this->rbuffer_ = std::move(other.rbuffer_);
+        this->wbuffer_ = std::move(other.rbuffer_);
+        this->evlp_ = other.evlp_;
+
+        other.fd_ = -1;
+        other.closed_ = true;
+        other.evlp_ = nullptr;
+    }
 };
 
 class nstream

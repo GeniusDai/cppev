@@ -34,11 +34,11 @@ void nio::set_nonblock()
 
 int nstream::read_chunk(int len)
 {
-    rbuf().resize(rbuf().offset_ + len);
-    int origin_offset = rbuf().offset_;
+    rbuffer().resize(rbuffer().offset_ + len);
+    int origin_offset = rbuffer().offset_;
     while (len)
     {
-        int curr = read(fd_, rbuf().buffer_.get() + rbuf().offset_, len);
+        int curr = read(fd_, rbuffer().buffer_.get() + rbuffer().offset_, len);
         if (curr == 0)
         {
             eof_ = true;
@@ -64,20 +64,20 @@ int nstream::read_chunk(int len)
                 throw_system_error("read error");
             }
         }
-        rbuf().offset_ += curr;
+        rbuffer().offset_ += curr;
         len -= curr;
     }
-    return rbuf().offset_ - origin_offset;
+    return rbuffer().offset_ - origin_offset;
 }
 
 int nstream::write_chunk(int len)
 {
-    int origin_start = wbuf().start_;
-    len = std::min(len, wbuf().size());
+    int origin_start = wbuffer().start_;
+    len = std::min(len, wbuffer().size());
     while (len)
     {
-        len = std::min(len, wbuf().size());
-        int curr = write(fd_, wbuf().buffer_.get() + wbuf().start_, len);
+        len = std::min(len, wbuffer().size());
+        int curr = write(fd_, wbuffer().buffer_.get() + wbuffer().start_, len);
         if (curr == -1)
         {
             if (errno == EINTR)
@@ -103,13 +103,13 @@ int nstream::write_chunk(int len)
                 throw_system_error("write error");
             }
         }
-        wbuf().start_ += curr;
+        wbuffer().start_ += curr;
         len -= curr;
     }
-    int curr_start = wbuf().start_;
-    if (0 == wbuf().size())
+    int curr_start = wbuffer().start_;
+    if (0 == wbuffer().size())
     {
-        wbuf().clear();
+        wbuffer().clear();
     }
     return curr_start - origin_start;
 }
@@ -657,13 +657,13 @@ std::tuple<std::string, int, family> nsockudp::recv()
 {
     sockaddr_storage addr;
     socklen_t len = faddr_len_.at(family_);
-    int ret = recvfrom(fd_, rbuf().buffer_.get() + rbuf().offset_,
-        rbuf().cap_ - rbuf().offset_, 0, (sockaddr *)&addr, &len);
+    int ret = recvfrom(fd_, rbuffer().buffer_.get() + rbuffer().offset_,
+        rbuffer().cap_ - rbuffer().offset_, 0, (sockaddr *)&addr, &len);
     if (ret == 0)
     {
         throw_system_error("recvfrom error");
     }
-    rbuf().offset_ += ret;
+    rbuffer().offset_ += ret;
     if (family_ == family::local)
     {
         return std::make_tuple<>(unix_listen_path_, -1, family::local);
@@ -676,13 +676,13 @@ void nsockudp::send(const char *ip, int port)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    int ret = sendto(fd_, wbuf().buffer_.get() + wbuf().start_, wbuf().size(),
+    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_, wbuffer().size(),
         0, (sockaddr *)&addr, faddr_len_.at(family_));
     if (ret == 0)
     {
         throw_system_error("sendto error");
     }
-    wbuf().consume(ret);
+    wbuffer().consume(ret);
 }
 
 void nsockudp::send_unix(const char *path)
@@ -690,13 +690,13 @@ void nsockudp::send_unix(const char *path)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
-    int ret = sendto(fd_, wbuf().buffer_.get() + wbuf().start_, wbuf().size(),
+    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_, wbuffer().size(),
         0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
     if (ret == 0)
     {
         throw_system_error("sendto error");
     }
-    wbuf().consume(ret);
+    wbuffer().consume(ret);
 }
 
 namespace nio_factory
@@ -720,8 +720,8 @@ std::shared_ptr<nsockudp> get_nsockudp(family f)
         throw_system_error("socket error");
     }
     std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
-    sock->rbuf().resize(sysconfig::udp_buffer_size);
-    sock->wbuf().resize(sysconfig::udp_buffer_size);
+    sock->rbuffer().resize(sysconfig::udp_buffer_size);
+    sock->wbuffer().resize(sysconfig::udp_buffer_size);
     return sock;
 }
 

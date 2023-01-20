@@ -23,14 +23,14 @@
  */
 cppev::reactor::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    iopt->wbuf().put_string("Cppev is a C++ event driven library");
+    iopt->wbuffer().put_string("Cppev is a C++ event driven library");
     cppev::reactor::async_write(iopt);
     cppev::log::info << "Connection " << iopt->fd() << " arrived" << cppev::log::endl;
 };
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    iopt->wbuf().put_string(iopt->rbuf().get_string());
+    iopt->wbuffer().put_string(iopt->rbuffer().get_string());
     cppev::reactor::async_write(iopt);
 };
 
