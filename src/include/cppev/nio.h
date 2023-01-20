@@ -144,10 +144,6 @@ protected:
     // One nio belongs to one event loop
     event_loop *evlp_;
 
-private:
-    // Set fd to nonblock
-    void set_nonblock();
-
     void move(nio &&other) noexcept
     {
         this->fd_ = other.fd_;
@@ -160,6 +156,10 @@ private:
         other.closed_ = true;
         other.evlp_ = nullptr;
     }
+
+private:
+    // Set fd to nonblock
+    void set_nonblock();
 };
 
 class nstream
@@ -169,6 +169,18 @@ public:
     explicit nstream(int fd)
     : nio(fd), reset_(false), eof_(false), eop_(false)
     {
+    }
+
+    nstream(nstream &&other) noexcept
+    : nio(std::forward<nstream>(other))
+    {
+        move(std::forward<nstream>(other), false);
+    }
+
+    nstream &operator=(nstream &&other) noexcept
+    {
+        move(std::forward<nstream>(other), true);
+        return *this;
     }
 
     virtual ~nstream() = default;
@@ -218,6 +230,16 @@ protected:
     // Error Of Pipe: Used by tcp-socket, pipe, fifo
     bool eop_;
 
+    void move(nstream &&other, bool move_base) noexcept
+    {
+        if (move_base)
+        {
+            nio::move(std::forward<nstream>(other));
+        }
+        this->reset_ = other.reset_;
+        this->eof_ = other.eof_;
+        this->eop_ = other.eop_;
+    }
 };
 
 class nsock
@@ -229,6 +251,18 @@ public:
     nsock(int fd, family f)
     : nio(fd), family_(f)
     {
+    }
+
+    nsock(nsock &&other) noexcept
+    : nio(std::forward<nsock>(other))
+    {
+        move(std::forward<nsock>(other), false);
+    }
+
+    nsock &operator=(nsock &&other) noexcept
+    {
+        move(std::forward<nsock>(other), true);
+        return *this;
     }
 
     virtual ~nsock() = default;
@@ -281,6 +315,15 @@ protected:
     static const std::unordered_map<family, int, enum_hash> fmap_;
 
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
+
+    void move(nsock &&other, bool move_base) noexcept
+    {
+        if (move_base)
+        {
+            nio::move(std::forward<nsock>(other));
+        }
+        this->family_ = other.family_;
+    }
 };
 
 enum class shut_mode
@@ -298,6 +341,22 @@ public:
     : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
     {
     }
+
+    nsocktcp(nsocktcp &&other) noexcept
+    : nio(std::forward<nsocktcp>(other)),
+      nsock(std::forward<nsocktcp>(other)),
+      nstream(std::forward<nsocktcp>(other))
+    {
+        move(std::forward<nsocktcp>(other), false);
+    }
+
+    nsocktcp &operator=(nsocktcp &&other) noexcept
+    {
+        move(std::forward<nsocktcp>(other), true);
+        return *this;
+    }
+
+    ~nsocktcp() = default;
 
     void listen(int port, const char *ip = nullptr);
 
@@ -372,6 +431,17 @@ private:
     // Unix   : Record sockpath in listen_unix()/connect_unix()
     //        : Return by sockname()/peername()/connpeer()
     std::tuple<std::string, int> peer_;
+
+    void move(nsocktcp &&other, bool move_base) noexcept
+    {
+        if (move_base)
+        {
+            nio::move(std::forward<nsocktcp>(other));
+            nsock::move(std::forward<nsocktcp>(other), false);
+            nstream::move(std::forward<nsocktcp>(other), false);
+        }
+        this->peer_ = other.peer_;
+    }
 };
 
 
@@ -383,6 +453,20 @@ public:
     : nio(sockfd), nsock(sockfd, f)
     {
     }
+
+    nsockudp(nsockudp &&other) noexcept
+    : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
+    {
+        move(std::forward<nsockudp>(other), false);
+    }
+
+    nsockudp &operator=(nsockudp &&other) noexcept
+    {
+        move(std::forward<nsockudp>(other), true);
+        return *this;
+    }
+
+    ~nsockudp() = default;
 
     void bind(int port, const char *ip = nullptr);
 
@@ -422,6 +506,17 @@ public:
 
 private:
     std::string unix_listen_path_;
+
+    void move(nsockudp &&other, bool move_base) noexcept
+    {
+        if (move_base)
+        {
+            nsock::move(std::forward<nsockudp>(other), true);
+        }
+
+        this->unix_listen_path_ = other.unix_listen_path_;
+        other.unix_listen_path_ = "";
+    }
 };
 
 }   // namespace cppev
