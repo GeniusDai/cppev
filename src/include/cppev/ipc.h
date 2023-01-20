@@ -15,8 +15,17 @@ public:
 
     shared_memory(const shared_memory &) = delete;
     shared_memory &operator=(const shared_memory &) = delete;
-    shared_memory(shared_memory &&) = delete;
-    shared_memory &operator=(shared_memory &&) = delete;
+
+    shared_memory(shared_memory &&other) noexcept
+    {
+        move(std::forward<shared_memory>(other));
+    }
+
+    shared_memory &operator=(shared_memory &&other) noexcept
+    {
+        move(std::forward<shared_memory>(other));
+        return *this;
+    }
 
     ~shared_memory() noexcept;
 
@@ -49,6 +58,19 @@ public:
     }
 
 private:
+    void move(shared_memory &&other) noexcept
+    {
+        this->name_ = other.name_;
+        this->size_ = other.size_;
+        this->ptr_ = other.ptr_;
+        this->creator_ = other.creator_;
+
+        other.name_ = "";
+        other.size_ = 0;
+        other.ptr_ = nullptr;
+        other.creator_ = false;
+    }
+
     std::string name_;
 
     int size_;
@@ -61,12 +83,21 @@ private:
 class semaphore final
 {
 public:
-    semaphore(const std::string &name, mode_t mode = 0600);
+    explicit semaphore(const std::string &name, mode_t mode = 0600);
 
     semaphore(const semaphore &) = delete;
     semaphore &operator=(const semaphore &) = delete;
-    semaphore(semaphore &&) = delete;
-    semaphore &operator=(semaphore &&) = delete;
+
+    semaphore(semaphore &&other) noexcept
+    {
+        move(std::forward<semaphore>(other));
+    }
+
+    semaphore &operator=(semaphore &&other) noexcept
+    {
+        move(std::forward<semaphore>(other));
+        return *this;
+    }
 
     ~semaphore() noexcept;
 
@@ -84,6 +115,17 @@ public:
     }
 
 private:
+    void move(semaphore &&other) noexcept
+    {
+        this->name_ = other.name_;
+        this->sem_ = other.sem_;
+        this->creator_ = other.creator_;
+
+        other.name_ = "";
+        other.sem_ = SEM_FAILED;
+        other.creator_ = false;
+    }
+
     std::string name_;
 
     sem_t *sem_;

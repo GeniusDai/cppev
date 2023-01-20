@@ -61,12 +61,15 @@ shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
 
 shared_memory::~shared_memory() noexcept
 {
-    munmap(ptr_, size_);
+    if (ptr_ != nullptr && size_ != 0)
+    {
+        munmap(ptr_, size_);
+    }
 }
 
 void shared_memory::unlink()
 {
-    if (shm_unlink(name_.c_str()) == -1)
+    if (name_.size() && (shm_unlink(name_.c_str()) == -1))
     {
         throw_system_error("shm_unlink error");
     }
@@ -112,7 +115,10 @@ semaphore::semaphore(const std::string &name, mode_t mode)
 
 semaphore::~semaphore() noexcept
 {
-    sem_close(sem_);
+    if (sem_ != SEM_FAILED)
+    {
+        sem_close(sem_);
+    }
 }
 
 bool semaphore::try_acquire()
@@ -155,7 +161,7 @@ void semaphore::release(int count)
 
 void semaphore::unlink()
 {
-    if (sem_unlink(name_.c_str()) == -1)
+    if (name_.size() && (sem_unlink(name_.c_str()) == -1))
     {
         throw_system_error("sem_unlink error");
     }

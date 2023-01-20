@@ -361,24 +361,39 @@ class rdlockguard final
 {
 public:
     explicit rdlockguard(pshared_rwlock &lock)
+    : rwlock_(&lock)
     {
-        rwlock_ = &lock;
         rwlock_->rdlock();
     }
 
     rdlockguard(const rdlockguard &) = delete;
     rdlockguard &operator=(const rdlockguard &) = delete;
-    rdlockguard(rdlockguard &&) = delete;
-    rdlockguard &operator=(rdlockguard &&) = delete;
+
+    rdlockguard(rdlockguard &&other) noexcept
+    {
+        this->rwlock_ = other.rwlock_;
+        other.rwlock_ = nullptr;
+    }
+
+    rdlockguard &operator=(rdlockguard &&other) noexcept
+    {
+        this->rwlock_ = other.rwlock_;
+        other.rwlock_ = nullptr;
+
+        return *this;
+    }
 
     ~rdlockguard() noexcept
     {
-        try
+        if (rwlock_ != nullptr)
         {
-            rwlock_->unlock();
-        }
-        catch(...)
-        {
+            try
+            {
+                rwlock_->unlock();
+            }
+            catch(...)
+            {
+            }
         }
     }
 
@@ -400,24 +415,39 @@ class wrlockguard final
 {
 public:
     explicit wrlockguard(pshared_rwlock &lock)
+    : rwlock_(&lock)
     {
-        rwlock_ = &lock;
         rwlock_->wrlock();
     }
 
     wrlockguard(const wrlockguard &) = delete;
     wrlockguard &operator=(const wrlockguard &) = delete;
-    wrlockguard(wrlockguard &&) = delete;
-    wrlockguard &operator=(wrlockguard &&) = delete;
+
+    wrlockguard(wrlockguard &&other) noexcept
+    {
+        this->rwlock_ = other.rwlock_;
+        other.rwlock_ = nullptr;
+    }
+
+    wrlockguard &operator=(wrlockguard &&other) noexcept
+    {
+        this->rwlock_ = other.rwlock_;
+        other.rwlock_ = nullptr;
+
+        return *this;
+    }
 
     ~wrlockguard() noexcept
     {
-        try
+        if (rwlock_ != nullptr)
         {
-            rwlock_->unlock();
-        }
-        catch(...)
-        {
+            try
+            {
+                rwlock_->unlock();
+            }
+            catch(...)
+            {
+            }
         }
     }
 

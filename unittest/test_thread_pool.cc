@@ -61,15 +61,18 @@ TEST(TestThreadPool, test_thread_pool_by_cancel)
 TEST(TestThreadPool, test_thread_pool_compile_with_param)
 {
     std::string str;
-    thread_pool<runnable_tester_with_param,
+    using tp_tester = thread_pool<runnable_tester_with_param,
         const std::string &,
         std::string,
         std::string &&,
         const char *,
         int64_t,
         void *,
-        void const *>
-    tp(10, "", "", std::move(str), "", 0, nullptr, nullptr);
+        void const *>;
+    std::vector<tp_tester> tp_vec;
+    tp_vec.emplace_back(10, "", "", std::move(str), "", 0, nullptr, nullptr);
+    thread_pool tp1 = std::move(tp_vec[0]);
+    thread_pool tp(std::move(tp1));
     tp.run();
     tp.join();
 }

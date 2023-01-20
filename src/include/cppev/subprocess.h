@@ -23,12 +23,21 @@ std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char 
 class subp_open final
 {
 public:
-    subp_open(const std::string &cmd, char *const *envp=nullptr);
+    explicit subp_open(const std::string &cmd, char *const *envp=nullptr);
 
     subp_open(const subp_open &) = delete;
     subp_open &operator=(const subp_open &) = delete;
-    subp_open(subp_open &&) = delete;
-    subp_open &operator=(subp_open &&) = delete;
+
+    subp_open(subp_open &&other) noexcept
+    {
+        move(std::forward<subp_open>(other));
+    }
+
+    subp_open &operator=(subp_open &&other) noexcept
+    {
+        move(std::forward<subp_open>(other));
+        return *this;
+    }
 
     ~subp_open() = default;
 
@@ -81,6 +90,25 @@ public:
     }
 
 private:
+    void move(subp_open &&other) noexcept
+    {
+        this->cmd_ = other.cmd_;
+        this->envp_ = other.envp_;
+        this->stdin_ = other.stdin_;
+        this->stdout_ = other.stdout_;
+        this->stderr_ = other.stderr_;
+        this->pid_ = other.pid_;
+        this->returncode_ = other.returncode_;
+
+        other.cmd_ = "";
+        other.envp_ = nullptr;
+        other.stdin_ = nullptr;
+        other.stdout_ = nullptr;
+        other.stderr_ = nullptr;
+        other.pid_ = 0;
+        other.returncode_ = -1;
+    }
+
     std::string cmd_;
 
     char *const *envp_;

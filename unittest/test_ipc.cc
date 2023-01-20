@@ -44,6 +44,19 @@ struct TestStructBase
 TEST_F(TestIpc, test_sem_shm_by_fork)
 {
     int shm_size = 12;
+
+    std::vector<semaphore> sem_vec;
+    sem_vec.emplace_back(name);
+    EXPECT_TRUE(sem_vec[0].creator());
+    sem_vec[0].unlink();
+    sem_vec.pop_back();
+
+    std::vector<shared_memory> shm_vec;
+    shm_vec.emplace_back(name, shm_size);
+    EXPECT_TRUE(shm_vec[0].creator());
+    shm_vec[0].unlink();
+    shm_vec.clear();
+
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -58,8 +71,10 @@ TEST_F(TestIpc, test_sem_shm_by_fork)
         EXPECT_EQ(std::string(reinterpret_cast<char *>(shm.ptr())), "cppev");
         EXPECT_FALSE(sem.try_acquire());
         sem.release(3);
-        EXPECT_TRUE(sem.try_acquire());
-        sem.acquire(2);
+        semaphore sem1(std::move(sem));
+        EXPECT_TRUE(sem1.try_acquire());
+        sem1.acquire(2);
+        sem = std::move(sem1);
         EXPECT_FALSE(sem.try_acquire());
 
         std::cout << "shared memory ptr : " << shm.ptr() << std::endl;
@@ -83,7 +98,9 @@ TEST_F(TestIpc, test_sem_shm_by_fork)
         std::this_thread::sleep_for(std::chrono::microseconds(200));
 
         shared_memory shm(name, shm_size);
-        memcpy(shm.ptr(), "cppev", 5);
+        shared_memory shm1(std::move(shm));
+        memcpy(shm1.ptr(), "cppev", 5);
+        shm = std::move(shm1);
 
         semaphore sem(name);
         sem.release();

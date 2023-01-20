@@ -21,7 +21,7 @@ class thread_pool
     static_assert(std::is_base_of<runnable, Runnable>::value, "Not runnable");
     static_assert(std::is_constructible<Runnable, Args&&...>::value, "Not constructible");
 public:
-    thread_pool(int thr_num, Args&&... args)
+    explicit thread_pool(int thr_num, Args&&... args)
     {
         for (int i = 0; i < thr_num; ++i)
         {
@@ -31,8 +31,17 @@ public:
 
     thread_pool(const thread_pool &) = delete;
     thread_pool &operator=(const thread_pool &) = delete;
-    thread_pool(thread_pool &&) = delete;
-    thread_pool &operator=(thread_pool &&) = delete;
+
+    thread_pool(thread_pool &&other) noexcept
+    {
+        this->thrs_.swap(other.thrs_);
+    }
+
+    thread_pool &operator=(thread_pool &&other) noexcept
+    {
+        this->thrs_.swap(other.thrs_);
+        return *this;
+    }
 
     virtual ~thread_pool() = default;
 
@@ -82,7 +91,7 @@ public:
     }
 
 protected:
-    std::vector<std::unique_ptr<Runnable> > thrs_;
+    std::vector<std::unique_ptr<Runnable>> thrs_;
 };
 
 namespace task_queue

@@ -45,6 +45,9 @@ TEST_P(TestSubprocess, test_subp_popen)
     subp_open subp("/bin/cat");
     subp.communicate(std::get<0>(param));
 
+    subp_open subp1(std::move(subp));
+    subp = std::move(subp1);
+
     // wait for subprocess to process the data
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 

@@ -27,6 +27,27 @@ protected:
     bool ready_;
 };
 
+TEST_F(TestLock, test_rwlock_guard_movable)
+{
+    pshared_rwlock rwlck;
+
+    {
+        rdlockguard lg(rwlck);
+        rdlockguard lg1(std::move(lg));
+        lg = std::move(lg1);
+    }
+    EXPECT_TRUE(rwlck.try_rdlock());
+    rwlck.unlock();
+
+    {
+        wrlockguard lg(rwlck);
+        wrlockguard lg1(std::move(lg));
+        lg = std::move(lg1);
+    }
+    EXPECT_TRUE(rwlck.try_wrlock());
+    rwlck.unlock();
+}
+
 TEST_F(TestLock, test_rwlock_rdlocked)
 {
     pshared_rwlock rwlck;
