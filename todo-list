@@ -1,5 +1,3 @@
 P2:
-    More support for operation of std::string
-    Implement move constructor for available classes
     DNS Resolution
     Application layer protocol
