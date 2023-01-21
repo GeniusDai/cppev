@@ -72,7 +72,8 @@ TEST_F(TestNio, test_fifo)
 
 TEST_F(TestNio, test_tcp_connect_with_evlp)
 {
-    std::vector<std::tuple<family, int, std::string > > vec = {
+    std::vector<std::tuple<family, int, std::string>> vec =
+    {
         { family::ipv4, 8884, "127.0.0.1" },
         { family::ipv6, 8886, "::1"       },
     };
@@ -82,7 +83,8 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
     event_loop acpt_evlp(&acpt_count);
     event_loop cont_evlp(&cont_count);
 
-    fd_event_handler cb = [](const std::shared_ptr<nio> &iop) -> void {
+    fd_event_handler callback = [](const std::shared_ptr<nio> &iop) -> void
+    {
         (*reinterpret_cast<int *>(iop->evlp().data()))++;
     };
 
@@ -93,13 +95,13 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
         auto listensock1 = std::make_shared<nsocktcp>(std::move(*listensock));
         *listensock = std::move(*listensock1);
         acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock), 
-            fd_event::fd_readable, cb);
+            fd_event::fd_readable, callback);
 
         std::thread thr_cont([&]() {
             auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
             EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
             cont_evlp.fd_register(std::dynamic_pointer_cast<nio>(connsock), 
-                fd_event::fd_writable, cb);
+                fd_event::fd_writable, callback);
         });
         thr_cont.join();
     }
