@@ -594,9 +594,9 @@ bool nsocktcp::connect_unix(const char *path)
     return true;
 }
 
-std::vector<std::shared_ptr<nsocktcp> > nsocktcp::accept(int batch)
+std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
 {
-    std::vector<std::shared_ptr<nsocktcp> > sockfds;
+    std::vector<std::shared_ptr<nsocktcp>> sockfds;
     for(int i = 0; i < batch; ++i)
     {
         int sockfd = ::accept(fd_, nullptr, nullptr);
@@ -725,7 +725,7 @@ std::shared_ptr<nsockudp> get_nsockudp(family f)
     return sock;
 }
 
-std::vector<std::shared_ptr<nstream> > get_pipes()
+std::vector<std::shared_ptr<nstream>> get_pipes()
 {
     int pfds[2];
     // pfds[0] refers to the read end of the pipe
@@ -734,13 +734,13 @@ std::vector<std::shared_ptr<nstream> > get_pipes()
     {
         throw_system_error("pipe error");
     }
-    std::vector<std::shared_ptr<nstream> > pipes;
+    std::vector<std::shared_ptr<nstream>> pipes;
     pipes.push_back(std::make_shared<nstream>(pfds[0]));
     pipes.push_back(std::make_shared<nstream>(pfds[1]));
     return pipes;
 }
 
-std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &path)
+std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &path)
 {
     if (mkfifo(path.c_str(), S_IRWXU) == -1 && errno != EEXIST)
     {
@@ -757,7 +757,7 @@ std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &path)
     {
         throw_system_error("open error");
     }
-    std::vector<std::shared_ptr<nstream> > fifos;
+    std::vector<std::shared_ptr<nstream>> fifos;
     fifos.push_back(std::make_shared<nstream>(fdr));
     fifos.push_back(std::make_shared<nstream>(fdw));
     return fifos;

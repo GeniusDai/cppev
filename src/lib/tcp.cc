@@ -167,7 +167,7 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
     {
         throw_logic_error("dynamic_pointer_cast error");
     }
-    std::vector<std::shared_ptr<nsocktcp> > conns = iopt->accept();
+    std::vector<std::shared_ptr<nsocktcp>> conns = iopt->accept();
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
 
     for (auto &conn : conns)

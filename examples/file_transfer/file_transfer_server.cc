@@ -25,7 +25,7 @@ public:
 private:
     std::mutex lock_;
 
-    std::unordered_map<std::string, std::shared_ptr<cppev::nstream> > hash_;
+    std::unordered_map<std::string, std::shared_ptr<cppev::nstream>> hash_;
 };
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void

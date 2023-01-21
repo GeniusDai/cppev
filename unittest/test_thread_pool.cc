@@ -46,7 +46,7 @@ TEST(TestThreadPool, test_thread_pool_by_join)
     tp.join();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> d = std::chrono::duration_cast
-        <std::chrono::duration<double> >(end - start);
+        <std::chrono::duration<double>>(end - start);
     ASSERT_GT(d.count(), (delay * 0.9) / 1000.0);
 }
 

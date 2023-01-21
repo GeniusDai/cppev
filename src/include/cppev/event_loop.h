@@ -137,10 +137,10 @@ private:
     void *back_;
 
     // Tuple : priority, nio, callback, event
-    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event> > fds_;
+    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event>> fds_;
 
     // Tuple : priority, nio, callback
-    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler> > > fd_cbs_;
+    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_cbs_;
 
     // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;

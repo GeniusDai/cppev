@@ -119,7 +119,7 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
 
 
 class TestNioSocket
-: public testing::TestWithParam<std::tuple<family, bool, int, int> >
+: public testing::TestWithParam<std::tuple<family, bool, int, int>>
 {
 protected:
     void SetUp() override

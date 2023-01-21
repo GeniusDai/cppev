@@ -21,7 +21,7 @@ public:
     }
 
 private:
-    std::unordered_map<int, std::shared_ptr<cppev::nstream> > hash_;
+    std::unordered_map<int, std::shared_ptr<cppev::nstream>> hash_;
 
     std::mutex lock_;
 };

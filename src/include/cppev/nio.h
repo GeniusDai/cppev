@@ -38,9 +38,9 @@ std::shared_ptr<nsocktcp> get_nsocktcp(family f);
 
 std::shared_ptr<nsockudp> get_nsockudp(family f);
 
-std::vector<std::shared_ptr<nstream> > get_pipes();
+std::vector<std::shared_ptr<nstream>> get_pipes();
 
-std::vector<std::shared_ptr<nstream> > get_fifos(const std::string &str);
+std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &str);
 
 };
 
@@ -391,7 +391,7 @@ public:
         return get_so_error() == 0;
     }
 
-    std::vector<std::shared_ptr<nsocktcp> > accept(int batch = INT_MAX);
+    std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
 
     std::tuple<std::string, int, family> sockname() const;
 
