@@ -338,7 +338,7 @@ class nsocktcp final
 {
 public:
     nsocktcp(int sockfd, family f)
-    : nio(sockfd), nsock(sockfd, f), nstream(sockfd)
+    : nio(sockfd), nsock(-1, f), nstream(-1)
     {
     }
 
@@ -450,7 +450,7 @@ class nsockudp final
 {
 public:
     nsockudp(int sockfd, family f) noexcept
-    : nio(sockfd), nsock(sockfd, f)
+    : nio(sockfd), nsock(-1, f)
     {
     }
 
@@ -513,7 +513,6 @@ private:
         {
             nsock::move(std::forward<nsockudp>(other), true);
         }
-
         this->unix_listen_path_ = other.unix_listen_path_;
         other.unix_listen_path_ = "";
     }
