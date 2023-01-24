@@ -7,27 +7,20 @@ namespace cppev
 
 TEST(TestCommonUtils, test_split)
 {
-    std::vector<std::string> subs;
+    std::vector<std::tuple<std::string, std::string, std::vector<std::string>>> cases =
+    {
+        { "hello, cppev", ",", { "hello", " cppev"} },
+        { ", hello, cppev, ", ", ", {"", "hello", "cppev", ""} },
+        { "hello", "invalid", { "hello" } },
+        { "hellohello", "invalid", { "hellohello" } },
+        { "***", "*", { "", "", "", "" } },
+        { "**cppev**", "*", { "", "", "cppev", "", "" } },
+    };
 
-    subs = utils::split("hello, cppev", ",");
-    EXPECT_EQ(subs.size(), 2);
-
-    subs = utils::split("hello, cppev", ", ");
-    EXPECT_EQ(subs.size(), 2);
-
-    subs = utils::split(", hello, cppev, ", ", ");
-    EXPECT_EQ(subs.size(), 4);
-    EXPECT_STREQ(subs[0].c_str(), "");
-    EXPECT_STREQ(subs[1].c_str(), "hello");
-    EXPECT_STREQ(subs[2].c_str(), "cppev");
-    EXPECT_STREQ(subs[3].c_str(), "");
-
-    subs = utils::split(",hello,cppev,", ",");
-    EXPECT_EQ(subs.size(), 4);
-    EXPECT_STREQ(subs[0].c_str(), "");
-    EXPECT_STREQ(subs[1].c_str(), "hello");
-    EXPECT_STREQ(subs[2].c_str(), "cppev");
-    EXPECT_STREQ(subs[3].c_str(), "");
+    for (const auto &tc : cases)
+    {
+        EXPECT_EQ(std::get<2>(tc), utils::split(std::get<0>(tc), std::get<1>(tc)));
+    }
 }
 
 TEST(TestCommonUtils, test_join)

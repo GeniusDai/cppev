@@ -232,14 +232,22 @@ std::vector<std::string> split(const std::string &str, const std::string &sep)
 
 std::vector<std::string> split(const char *str, const char *sep)
 {
-    int str_len = strlen(str);
-    int sep_len = strlen(sep);
+    size_t str_len = strlen(str);
+    size_t sep_len = strlen(sep);
+
+    if (sep_len > str_len)
+    {
+        return { str };
+    }
+
     std::vector<int> sep_index;
 
-    for (int i = 0; i <= str_len - sep_len; )
+    sep_index.push_back(0 - sep_len);
+
+    for (size_t i = 0; i <= str_len - sep_len; )
     {
         bool is_sep = true;
-        for (int j = i; j < i + sep_len; ++j)
+        for (size_t j = i; j < i + sep_len; ++j)
         {
             if (str[j] != sep[j-i])
             {
@@ -249,39 +257,32 @@ std::vector<std::string> split(const char *str, const char *sep)
         }
         if (is_sep)
         {
-            sep_index.push_back(i);
+            sep_index.push_back(static_cast<int>(i));
             i += sep_len;
         }
         else
         {
-            i++;
+            ++i;
         }
     }
-    if (sep_index.empty())
+
+    sep_index.push_back(str_len);
+
+    if (sep_index.size() == 2)
     {
         return { str };
     }
-    std::vector<std::string> subs;
-    for (int i = 0; i < static_cast<int>(sep_index.size()); ++i)
+
+    std::vector<std::string> substrs;
+
+    for (size_t i = 1; i < sep_index.size(); ++i)
     {
-        int begin, end = sep_index[i];
-        if (i == 0)
-        {
-            begin = 0;
-        }
-        else
-        {
-            begin = sep_index[i-1] + sep_len;
-        }
-        subs.push_back(std::string(str, begin, end - begin));
-        if (i == static_cast<int>(sep_index.size() - 1))
-        {
-            begin = sep_index[i] + sep_len;
-            end = str_len;
-            subs.push_back(std::string(str, begin, end - begin));
-        }
+        int begin = sep_index[i-1] + sep_len;
+        int end = sep_index[i];
+
+        substrs.push_back(std::string(str, begin, end - begin));
     }
-    return subs;
+    return substrs;
 }
 
 std::string join(const std::vector<std::string> &str_arr, const std::string &sep)
