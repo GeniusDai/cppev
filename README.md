@@ -2,15 +2,15 @@
 
 # Architecture
 
-### IO Handling
+### IO
 
-Support disk-file / pipe / fifo / socket.
+Support nonblocking-io of disk-file / pipe / fifo / socket.
 
 Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain.
 
 Support readable / writable event handling by io-multiplexing.
 
-### Concurrency Handling
+### Concurrency
 
 Support thread / thread-pool.
 
