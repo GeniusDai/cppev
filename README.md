@@ -22,7 +22,7 @@ Support reactor / timer / dynamic-loader / signal-handing / async-logger.
 
 # Usage
 
-### Prerequirement
+### Prerequisite
 
         OS           :  Linux / macOS
         Dependency   :  googletest
