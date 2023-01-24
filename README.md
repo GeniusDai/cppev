@@ -16,9 +16,9 @@ Support thread / thread-pool.
 
 Support subprocess / semaphore / shared-memory / pshared-locks.
 
-### Massive Tcp Connection Handling
+### Others
 
-Support reactor pattern and registering callbacks.
+Support reactor / timer / dynamic-loader / signal-handing / async-logger.
 
 # Usage
 
@@ -53,7 +53,7 @@ Run Unittest
 
         $ bazel test //...
 
-### Validated platform
+### Validated platforms
 
 Ubuntu-20.04 / CentOS-8 / macOS-Monterey.
 
