@@ -75,6 +75,11 @@ time_t time();
 
 std::string timestamp(time_t t = -1, const char *format = nullptr);
 
+/*
+ * split : doesn't support string contains '\0'
+ * join  : support string contains '\0'
+ */
+
 std::vector<std::string> split(const char *str, const char *sep);
 
 std::vector<std::string> split(const std::string &str, const std::string &sep);

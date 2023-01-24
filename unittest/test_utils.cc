@@ -31,6 +31,7 @@ TEST(TestCommonUtils, test_join)
         { {"cppev", "nice"}, "\t", "cppev\tnice" },
         { {""}, "", "" },
         { {"", ""}, "\t", "\t"},
+        { {"", "cppev", "cppev", ""}, std::string("\0", 1), std::string("\0cppev\0cppev\0", 13) },
     };
 
     for (const auto &tc : cases)
