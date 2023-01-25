@@ -18,7 +18,7 @@ std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const 
 {
     subp_open subp(cmd, envp);
     subp.wait();
-    return std::make_tuple<>(subp.returncode(), subp.stdout(), subp.stderr());
+    return std::make_tuple(subp.returncode(), subp.stdout(), subp.stderr());
 }
 
 std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char *const *envp)
@@ -39,21 +39,21 @@ subp_open::subp_open(const std::string &cmd, char *const *envp)
         throw_system_error("pipe error");
     }
     zero = fds[0];
-    stdin_ = std::make_shared<nstream>(fds[1]);
+    stdin_ = std::make_unique<nstream>(fds[1]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     one = fds[1];
-    stdout_ = std::make_shared<nstream>(fds[0]);
+    stdout_ = std::make_unique<nstream>(fds[0]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     two = fds[1];
-    stderr_ = std::make_shared<nstream>(fds[0]);
+    stderr_ = std::make_unique<nstream>(fds[0]);
 
     pid_t pid = fork();
 

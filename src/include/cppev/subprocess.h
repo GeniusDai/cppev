@@ -94,17 +94,14 @@ private:
     {
         this->cmd_ = other.cmd_;
         this->envp_ = other.envp_;
-        this->stdin_ = other.stdin_;
-        this->stdout_ = other.stdout_;
-        this->stderr_ = other.stderr_;
+        this->stdin_ = std::move(other.stdin_);
+        this->stdout_ = std::move(other.stdout_);
+        this->stderr_ = std::move(other.stderr_);
         this->pid_ = other.pid_;
         this->returncode_ = other.returncode_;
 
         other.cmd_ = "";
         other.envp_ = nullptr;
-        other.stdin_ = nullptr;
-        other.stdout_ = nullptr;
-        other.stderr_ = nullptr;
         other.pid_ = 0;
         other.returncode_ = -1;
     }
@@ -113,11 +110,11 @@ private:
 
     char *const *envp_;
 
-    std::shared_ptr<nstream> stdin_;
+    std::unique_ptr<nstream> stdin_;
 
-    std::shared_ptr<nstream> stdout_;
+    std::unique_ptr<nstream> stdout_;
 
-    std::shared_ptr<nstream> stderr_;
+    std::unique_ptr<nstream> stderr_;
 
     pid_t pid_;
 
