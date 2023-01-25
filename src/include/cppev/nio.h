@@ -399,7 +399,7 @@ public:
 
     std::tuple<std::string, int, family> connpeer() const noexcept
     {
-        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family_);
+        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
     }
 
     void shutdown(shut_mode howto) noexcept;

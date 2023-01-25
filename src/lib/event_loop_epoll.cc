@@ -91,7 +91,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
     if (handler)
     {
         std::unique_lock<std::mutex> lock(lock_);
-        fds_.emplace(iop->fd(), std::make_tuple<>(prio, iop, std::make_shared<fd_event_handler>(handler), ev_type));
+        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(handler), ev_type));
     }
     if (activate)
     {

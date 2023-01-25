@@ -254,7 +254,7 @@ static std::tuple<std::string, int, family> query_ip_port_family(sockaddr_storag
         throw_logic_error("unknown socket family");
     }
     }
-    return std::make_tuple<>(ip, port, f);
+    return std::make_tuple(ip, port, f);
 }
 
 void nsock::set_so_reuseaddr(bool enable)
@@ -493,7 +493,7 @@ std::tuple<std::string, int, family> nsocktcp::sockname() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family::local);
+        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -508,7 +508,7 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple<>(std::get<0>(peer_), std::get<1>(peer_), family::local);
+        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -542,7 +542,7 @@ void nsocktcp::listen_unix(const char *path, bool remove)
     {
         ::unlink(path);
     }
-    peer_ = std::make_tuple<>(path, -1);
+    peer_ = std::make_tuple(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -559,7 +559,7 @@ void nsocktcp::listen_unix(const char *path, bool remove)
 
 bool nsocktcp::connect(const char *ip, int port)
 {
-    peer_ = std::make_tuple<>(ip, port);
+    peer_ = std::make_tuple(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -577,7 +577,7 @@ bool nsocktcp::connect(const char *ip, int port)
 
 bool nsocktcp::connect_unix(const char *path)
 {
-    peer_ = std::make_tuple<>(path, -1);
+    peer_ = std::make_tuple(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
@@ -666,7 +666,7 @@ std::tuple<std::string, int, family> nsockudp::recv()
     rbuffer().offset_ += ret;
     if (family_ == family::local)
     {
-        return std::make_tuple<>(unix_listen_path_, -1, family::local);
+        return std::make_tuple(unix_listen_path_, -1, family::local);
     }
     return query_ip_port_family(addr);
 }

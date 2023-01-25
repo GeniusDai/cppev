@@ -46,7 +46,7 @@ async_logger &async_logger::operator<<(const char *str)
         }
     }
     std::unique_lock<std::shared_mutex> wrlock(lock_);
-    logs_[thr_id] = std::make_tuple<>(buffer(),
+    logs_[thr_id] = std::make_tuple(buffer(),
         std::make_unique<std::recursive_mutex>(), 1, utils::time());
     write_debug(std::get<0>(logs_[thr_id]));
     std::get<1>(logs_[thr_id])->lock();

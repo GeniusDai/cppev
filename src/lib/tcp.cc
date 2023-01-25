@@ -191,7 +191,7 @@ void connector::add(const std::string &ip, int port, family f, int t)
     {
         return;
     }
-    auto h = std::make_tuple<>(ip, port, f);
+    auto h = std::make_tuple(ip, port, f);
     if (hosts_.count(h))
     {
         hosts_[h] += t;
