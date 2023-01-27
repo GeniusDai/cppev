@@ -33,7 +33,7 @@ async_logger &async_logger::operator<<(const char *str)
     lock_.lock();
     if (0 == recur_level_++)
     {
-        write_debug(buffer_);
+        write_header(buffer_);
     }
     buffer_.put_string(str);
     return *this;

@@ -42,7 +42,7 @@ async_logger &async_logger::operator<<(float x)
     return (*this) << std::to_string(x).c_str();
 }
 
-void async_logger::write_debug(buffer &buf)
+void async_logger::write_header(buffer &buf)
 {
     std::stringstream ss;
     tid thr_id = utils::gettid();
@@ -62,15 +62,6 @@ void async_logger::write_debug(buffer &buf)
     ss << "] [TID 0x" << std::hex << thr_id << "] ";
 #endif
     buf.put_string(ss.str());
-}
-
-std::string async_logger::version()
-{
-#if defined(__CPPEV_USE_HASHED_LOGGER__)
-    return "hashed";
-#else
-    return "buffered";
-#endif
 }
 
 namespace log

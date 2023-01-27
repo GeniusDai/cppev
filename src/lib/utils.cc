@@ -31,7 +31,7 @@ void throw_logic_error(const std::string &str)
 
 void throw_runtime_error(const std::string &str)
 {
-    throw std::runtime_error( str);
+    throw std::runtime_error(str);
 }
 
 void ignore_signal(int sig)

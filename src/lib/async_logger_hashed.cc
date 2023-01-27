@@ -39,7 +39,7 @@ async_logger &async_logger::operator<<(const char *str)
             std::get<1>(logs_[thr_id])->lock();
             if (++std::get<2>(logs_[thr_id]) == 1)
             {
-                write_debug(std::get<0>(logs_[thr_id]));
+                write_header(std::get<0>(logs_[thr_id]));
             }
             std::get<0>(logs_[thr_id]).put_string(str);
             return *this;
@@ -48,7 +48,7 @@ async_logger &async_logger::operator<<(const char *str)
     std::unique_lock<std::shared_mutex> wrlock(lock_);
     logs_[thr_id] = std::make_tuple(buffer(),
         std::make_unique<std::recursive_mutex>(), 1, utils::time());
-    write_debug(std::get<0>(logs_[thr_id]));
+    write_header(std::get<0>(logs_[thr_id]));
     std::get<1>(logs_[thr_id])->lock();
     std::get<0>(logs_[thr_id]).put_string(str);
     return *this;
