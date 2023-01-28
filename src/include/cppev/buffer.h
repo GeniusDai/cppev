@@ -77,7 +77,7 @@ public:
         return offset_ - start_;
     }
 
-    int cap() const noexcept
+    int capacity() const noexcept
     {
         return cap_;
     }
