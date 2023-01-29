@@ -449,7 +449,7 @@ class nsockudp final
 : public nsock
 {
 public:
-    nsockudp(int sockfd, family f) noexcept
+    nsockudp(int sockfd, family f)
     : nio(sockfd), nsock(-1, f)
     {
     }
