@@ -45,6 +45,14 @@ public:
         auto thr_func = [](void *arg) -> void *
         {
             runnable *pseudo_this = static_cast<runnable *>(arg);
+            if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr) != 0)
+            {
+                throw_logic_error("pthread_setcancelstate error");
+            }
+            if (pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr) != 0)
+            {
+                throw_logic_error("pthread_setcanceltype error");
+            }
             pseudo_this->run_impl();
             pseudo_this->prom_.set_value(true);
             return nullptr;
