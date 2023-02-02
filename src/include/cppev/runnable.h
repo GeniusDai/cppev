@@ -85,13 +85,9 @@ public:
     }
 
     // Cancel thread
-    void cancel()
+    bool cancel()
     {
-        int ret = pthread_cancel(thr_);
-        if (ret != 0)
-        {
-            throw_system_error("pthread_cancel error", ret);
-        }
+        return 0 == pthread_cancel(thr_);
     }
 
     // Wait for thread

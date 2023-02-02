@@ -23,7 +23,7 @@ TEST(TestRunnable, test_cancel)
 {
     runnable_tester tester;
     tester.run();
-    tester.cancel();
+    EXPECT_TRUE(tester.cancel());
     tester.join();
 }
 
