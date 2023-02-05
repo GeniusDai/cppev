@@ -170,6 +170,7 @@ TEST_F(TestLock, test_one_time_fence_wait_first)
     auto func = [&]() -> void
     {
         one_time_fence.wait();
+        one_time_fence.wait();
     };
 
     std::thread thr(func);
@@ -184,6 +185,7 @@ TEST_F(TestLock, test_one_time_fence_notify_first)
     auto func = [&]() -> void
     {
         one_time_fence.wait();
+        one_time_fence.wait();
     };
 
     one_time_fence.notify();
@@ -194,7 +196,7 @@ TEST_F(TestLock, test_one_time_fence_notify_first)
 TEST_F(TestLock, test_barrier_throw)
 {
     pshared_barrier barrier(1);
-    barrier.wait();
+    EXPECT_NO_THROW(barrier.wait());
     EXPECT_THROW(barrier.wait(), std::logic_error);
 }
 
