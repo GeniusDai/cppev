@@ -246,7 +246,8 @@ public:
         auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(span).count();
 
         timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
+        // CLOCK_REALTIME is essential here, pthread_cond_timedwait will use absolute time
+        clock_gettime(CLOCK_REALTIME, &ts);
         ts.tv_sec += nanos / 1'000'000'000;
         ts.tv_nsec += nanos % 1'000'000'000;
 

@@ -164,6 +164,24 @@ TEST_F(TestLock, test_cond_wait_timeout)
     EXPECT_FALSE(cond.timedwait(lk, std::chrono::milliseconds(1)));
 }
 
+TEST_F(TestLock, test_cond_wait_in_time)
+{
+    pshared_lock lock;
+    pshared_cond cond;
+
+    auto func = [&]() -> void
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        cond.notify_one();
+    };
+    std::thread thr(func);
+
+    std::unique_lock<pshared_lock> lk(lock);
+    EXPECT_TRUE(cond.timedwait(lk, std::chrono::milliseconds(20)));
+
+    thr.join();
+}
+
 TEST_F(TestLock, test_one_time_fence_wait_first)
 {
     pshared_one_time_fence one_time_fence;
