@@ -12,6 +12,8 @@ namespace cppev
 class spinlock;
 class pshared_lock;
 class pshared_cond;
+class pshared_one_time_fence;
+class pshared_barrier;
 class pshared_rwlock;
 class rdlockguard;
 class wrlockguard;
@@ -235,6 +237,38 @@ public:
         }
     }
 
+    template <typename Rep, typename Period>
+    bool timedwait(std::unique_lock<pshared_lock> &lock, const std::chrono::duration<Rep, Period> &span,
+        const condition &cond = []{ return true; })
+    {
+        int ret = 0;
+
+        auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(span).count();
+
+        timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        ts.tv_sec += nanos / 1'000'000'000;
+        ts.tv_nsec += nanos % 1'000'000'000;
+
+        while (true)
+        {
+            ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
+            if (ret != 0)
+            {
+                if (ret == ETIMEDOUT)
+                {
+                    return false;
+                }
+                throw_system_error("pthread_cond_timedwait error", ret);
+            }
+            if (cond())
+            {
+                break;
+            }
+        }
+        return true;
+    }
+
     void notify_one()
     {
         int ret = pthread_cond_signal(&cond_);
@@ -255,6 +289,92 @@ public:
 
 private:
     pthread_cond_t cond_;
+};
+
+class pshared_one_time_fence final
+{
+public:
+    pshared_one_time_fence()
+    : ok_(false)
+    {
+    }
+
+    pshared_one_time_fence(const pshared_one_time_fence &) = delete;
+    pshared_one_time_fence &operator=(const pshared_one_time_fence &) = delete;
+    pshared_one_time_fence(pshared_one_time_fence &&) = delete;
+    pshared_one_time_fence &operator=(pshared_one_time_fence &&) = delete;
+
+    ~pshared_one_time_fence() = default;
+
+    void wait()
+    {
+        if (!ok_)
+        {
+            std::unique_lock<pshared_lock> lock(lock_);
+            if (!ok_)
+            {
+                cond_.wait(lock, [this](){ return ok_; });
+            }
+        }
+    }
+
+    void notify()
+    {
+        if (!ok_)
+        {
+            std::unique_lock<pshared_lock> lock(lock_);
+            ok_ = true;
+            cond_.notify_one();
+        }
+    }
+
+private:
+    bool ok_;
+
+    pshared_lock lock_;
+
+    pshared_cond cond_;
+};
+
+class pshared_barrier final
+{
+public:
+    pshared_barrier(int count)
+    : count_(count)
+    {
+    }
+
+    pshared_barrier(const pshared_barrier &) = delete;
+    pshared_barrier &operator=(const pshared_barrier &) = delete;
+    pshared_barrier(pshared_barrier &&) = delete;
+    pshared_barrier &operator=(pshared_barrier &&) = delete;
+
+    ~pshared_barrier() = default;
+
+    void wait()
+    {
+        std::unique_lock<pshared_lock> lock(lock_);
+        --count_;
+        if (count_ == 0)
+        {
+            cond_.notify_all();
+        }
+        else if (count_ > 0)
+        {
+            cond_.wait(lock, [this]() { return count_ == 0; });
+        }
+        else
+        {
+            throw_logic_error("too many threads waited in the barrier");
+        }
+    }
+
+private:
+    int count_;
+
+    pshared_lock lock_;
+
+    pshared_cond cond_;
 };
 
 class pshared_rwlock final

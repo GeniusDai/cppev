@@ -94,7 +94,8 @@ public:
 
     // Wait for thread
     // @return  whether thread finishes
-    bool wait_for(const std::chrono::milliseconds &span)
+    template <typename Rep, typename Period>
+    bool wait_for(const std::chrono::duration<Rep, Period> &span)
     {
         std::future_status stat = fut_.wait_for(span);
         bool ret = false;

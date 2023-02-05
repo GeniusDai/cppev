@@ -156,6 +156,78 @@ TEST_F(TestLock, test_spinlock)
     thr.join();
 }
 
+TEST_F(TestLock, test_cond_wait_timeout)
+{
+    pshared_lock lock;
+    pshared_cond cond;
+    std::unique_lock<pshared_lock> lk(lock);
+    EXPECT_FALSE(cond.timedwait(lk, std::chrono::milliseconds(1)));
+}
+
+TEST_F(TestLock, test_one_time_fence_wait_first)
+{
+    pshared_one_time_fence one_time_fence;
+    auto func = [&]() -> void
+    {
+        one_time_fence.wait();
+    };
+
+    std::thread thr(func);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    one_time_fence.notify();
+    thr.join();
+}
+
+TEST_F(TestLock, test_one_time_fence_notify_first)
+{
+    pshared_one_time_fence one_time_fence;
+    auto func = [&]() -> void
+    {
+        one_time_fence.wait();
+    };
+
+    one_time_fence.notify();
+    std::thread thr(func);
+    thr.join();
+}
+
+TEST_F(TestLock, test_barrier_throw)
+{
+    pshared_barrier barrier(1);
+    barrier.wait();
+    EXPECT_THROW(barrier.wait(), std::logic_error);
+}
+
+TEST_F(TestLock, test_barrier_multithread)
+{
+    const int num = 10;
+    pshared_barrier barrier(num + 1);
+    std::vector<std::thread> thrs;
+    bool shall_throw = true;
+
+    auto func = [&]() -> void
+    {
+        barrier.wait();
+        if (shall_throw)
+        {
+            throw_runtime_error("test not ok!");
+        }
+    };
+
+    for (int i = 0; i < num; ++i)
+    {
+        thrs.push_back(std::thread(func));
+    }
+
+    shall_throw = false;
+    barrier.wait();
+
+    for (int i = 0; i < num; ++i)
+    {
+        thrs[i].join();
+    }
+}
+
 }   // namespace cppev
 
 int main(int argc, char **argv)

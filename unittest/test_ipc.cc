@@ -229,7 +229,6 @@ TEST_F(TestIpc, test_sem_shm_lock_cond_by_fork)
     }
     else
     {
-
         shared_memory shm(name, sizeof(TestStruct));
         TestStruct *ptr = shm.construct<TestStruct>();
         EXPECT_EQ(ptr, reinterpret_cast<TestStruct *>(shm.ptr()));
