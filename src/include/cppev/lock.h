@@ -329,6 +329,11 @@ public:
         }
     }
 
+    bool ok() const noexcept
+    {
+        return ok_;
+    }
+
 private:
     bool ok_;
 

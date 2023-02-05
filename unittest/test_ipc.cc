@@ -284,6 +284,7 @@ TEST_F(TestIpc, test_shm_one_time_fence_barrier_by_fork)
         }
 
         ptr->one_time_fence.wait();
+        EXPECT_TRUE(ptr->one_time_fence.ok());
         ptr->one_time_fence.wait();
         EXPECT_EQ(ptr->var, 100);
         ptr->barrier.wait();
@@ -304,8 +305,11 @@ TEST_F(TestIpc, test_shm_one_time_fence_barrier_by_fork)
         }
 
         ptr->var = 100;
+        EXPECT_FALSE(ptr->one_time_fence.ok());
         ptr->one_time_fence.notify();
+        EXPECT_TRUE(ptr->one_time_fence.ok());
         ptr->one_time_fence.wait();
+        EXPECT_TRUE(ptr->one_time_fence.ok());
 
         ptr->barrier.wait();
         EXPECT_THROW(ptr->barrier.wait(), std::logic_error);
