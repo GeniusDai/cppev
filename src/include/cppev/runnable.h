@@ -10,13 +10,15 @@
 #include "cppev/utils.h"
 
 // Q1 : Why a new thread library ?
-// A1 : std::thread doesn't support cancel.
+// A1 : std::thread doesn't support pthread_cancel and pthread_kill.
 
 // Q2 : Is runnable a full encapsulation of pthread ?
 // A2 : Remain components of pthread:
-//      1) pthread_key : better use "thread_local".
-//      2) pthread_cleanup : just coding in "run_impl".
-//      3) pthread_exit : use "return" and add returncode to your class if needed.
+//      1) Per-Thread Context Routines : better use "thread_local".
+//      2) Cleanup Routines : just coding in "run_impl".
+//      3) Thread Routines : These routines are not essential
+//         pthread_exit / pthread_once / pthread_self / pthread_equal
+//         pthread_testcancel
 
 namespace cppev
 {
@@ -85,13 +87,13 @@ public:
     }
 
     // Cancel thread
-    virtual bool cancel()
+    virtual bool cancel() noexcept
     {
         return 0 == pthread_cancel(thr_);
     }
 
     // Wait for thread
-    // @Ret: whether thread finishes
+    // @return  whether thread finishes
     bool wait_for(const std::chrono::milliseconds &span)
     {
         std::future_status stat = fut_.wait_for(span);
@@ -112,13 +114,9 @@ public:
     }
 
     // Send signal to thread
-    void send_signal(int sig)
+    void send_signal(int sig) noexcept
     {
-        int ret = pthread_kill(thr_, sig);
-        if (ret != 0)
-        {
-            throw_system_error("pthread_kill error", ret);
-        }
+        pthread_kill(thr_, sig);
     }
 
 private:
