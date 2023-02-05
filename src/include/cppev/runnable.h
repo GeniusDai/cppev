@@ -49,7 +49,7 @@ public:
             {
                 throw_logic_error("pthread_setcancelstate error");
             }
-            if (pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr) != 0)
+            if (pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr) != 0)
             {
                 throw_logic_error("pthread_setcanceltype error");
             }
@@ -85,7 +85,7 @@ public:
     }
 
     // Cancel thread
-    bool cancel()
+    virtual bool cancel()
     {
         return 0 == pthread_cancel(thr_);
     }

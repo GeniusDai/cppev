@@ -19,7 +19,7 @@
 namespace cppev
 {
 
-void nio::set_nonblock()
+void nio::set_io_nonblock()
 {
     int flags = fcntl(fd_, F_GETFL);
     if (flags < 0)
@@ -27,6 +27,19 @@ void nio::set_nonblock()
         throw_system_error("fcntl error");
     }
     if (fcntl(fd_, F_SETFL, flags | O_NONBLOCK) < 0)
+    {
+        throw_system_error("fcntl error");
+    }
+}
+
+void nio::set_io_block()
+{
+    int flags = fcntl(fd_, F_GETFL);
+    if (flags < 0)
+    {
+        throw_system_error("fcntl error");
+    }
+    if (fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK) < 0)
     {
         throw_system_error("fcntl error");
     }

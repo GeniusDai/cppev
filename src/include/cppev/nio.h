@@ -50,7 +50,7 @@ public:
     explicit nio(int fd)
     : fd_(fd), closed_(false)
     {
-        set_nonblock();
+        set_io_nonblock();
     }
 
     nio(const nio &) = delete;
@@ -128,6 +128,12 @@ public:
         closed_ = true;
     }
 
+    // Set fd to nonblock
+    void set_io_nonblock();
+
+    // Set fd to block
+    void set_io_block();
+
 protected:
     // File descriptor
     int fd_;
@@ -156,10 +162,6 @@ protected:
         other.closed_ = true;
         other.evlp_ = nullptr;
     }
-
-private:
-    // Set fd to nonblock
-    void set_nonblock();
 };
 
 class nstream
