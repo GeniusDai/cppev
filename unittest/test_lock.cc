@@ -189,10 +189,12 @@ TEST_F(TestLock, test_one_time_fence_wait_first)
     {
         one_time_fence.wait();
         one_time_fence.wait();
+        one_time_fence.wait();
     };
 
     std::thread thr(func);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    one_time_fence.notify();
     one_time_fence.notify();
     thr.join();
 }
@@ -239,13 +241,16 @@ TEST_F(TestLock, test_barrier_multithread)
         thrs.push_back(std::thread(func));
     }
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     shall_throw = false;
-    barrier.wait();
+    EXPECT_NO_THROW(barrier.wait());
 
     for (int i = 0; i < num; ++i)
     {
         thrs[i].join();
     }
+
+    EXPECT_THROW(barrier.wait(), std::logic_error);
 }
 
 }   // namespace cppev
