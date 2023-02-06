@@ -116,7 +116,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
         EV_SET(&ev,  iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0,      0,    nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
         {
-            throw_system_error("kevent error");
+            throw_system_error(std::string("kevent add error for fd ").append(std::to_string(iop->fd())));
         }
     }
 }
@@ -167,7 +167,7 @@ void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool dea
             EV_SET(&ev,  iop->fd(), fd_map_to_sys(all_events[i]), EV_DELETE, 0,      0,    nullptr);
             if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
             {
-                throw_system_error("kevent error");
+                throw_system_error(std::string("kevent del error for fd ").append(std::to_string(iop->fd())));
             }
         }
     }

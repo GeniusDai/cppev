@@ -14,11 +14,13 @@ public:
         {
             return &(hash_[filename]->rbuffer());
         }
+        cppev::log::info << "start loading file" << cppev::log::endl;
         int fd = open(filename.c_str(), O_RDONLY);
         std::shared_ptr<cppev::nstream> iops = std::make_shared<cppev::nstream>(fd);
         iops->read_all(CHUNK_SIZE);
         close(fd);
         hash_[filename] = iops;
+        cppev::log::info << "finish loading file" << cppev::log::endl;
         return &(iops->rbuffer());
     }
 
