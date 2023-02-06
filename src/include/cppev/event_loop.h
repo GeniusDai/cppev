@@ -90,7 +90,7 @@ public:
     // @param iop       nio smart pointer
     // @param ev_type   event type
     // @param handler   fd event handler
-    // @param activate  whether register to os io-multiplexing api
+    // @param activate  whether register fd to os io-multiplexing api
     // @param prio      event priority
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
         const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = low);
@@ -98,7 +98,8 @@ public:
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer
     // @param clean         whether clean callbacks stored in eventloop
-    // @param deactivate    whether remove from os io-multiplexing api
+    // @param deactivate    whether remove fd from os io-multiplexing api (parameter is provided due to
+    //                      the io-multiplexing api may cause program get killed when fd is closed)
     void fd_remove(const std::shared_ptr<nio> &iop, bool clean = true, bool deactivate = true);
 
     // Wait for events, only loop once, timeout unit is millisecond

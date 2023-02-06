@@ -124,6 +124,13 @@ private:
 template<typename Rep, typename Period>
 void subp_open::wait(const std::chrono::duration<Rep, Period> &interval)
 {
+    /*
+     * Q : Why polling is essential ?
+     * A : Buffer size of pipe is limited, so if you just wait for the subprocess terminates,
+     *     subprocess may block at writing to stdout or stderr. So that means you need to
+     *     simultaneously deal with the io and query the subprocess termination. Of course you
+     *     can use SIGCHLD but this will make the program too complicated.
+     */
     while (!poll())
     {
         communicate();
