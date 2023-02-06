@@ -9,7 +9,7 @@ class filecache final
 public:
     cppev::buffer *lazyload(const std::string &filename) noexcept
     {
-        std::unique_lock<std::mutex> lock;
+        std::unique_lock<std::mutex> lock(lock_);
         if (hash_.count(filename) != 0)
         {
             return &(hash_[filename]->rbuffer());
