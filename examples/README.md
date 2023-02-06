@@ -21,8 +21,7 @@ In this example, tcp client sends the name of the required file, tcp server cach
         $ # Write to the file to make it large such as 20MB or more #
         $ ./file_transfer_server        # Shell-1
         $ ./file_transfer_client        # Shell-2
-        $ ls -l /tmp/test_cppev_file_transfer_6C0224787A17.file*
-        $ # Cmd diff or md5sum to check the files are all the same #
+        $ openssl dgst -md5 /tmp/test_cppev_file_transfer_6C0224787A17.file*
 
 ### 3. Nio Event Loop
 

@@ -7,7 +7,7 @@
 class filecache final
 {
 public:
-    cppev::buffer *lazyload(const std::string &filename) noexcept
+    const cppev::buffer *lazyload(const std::string &filename)
     {
         std::unique_lock<std::mutex> lock(lock_);
         if (hash_.count(filename) != 0)
@@ -42,8 +42,7 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
     filename = filename.substr(0, filename.size()-1);
     cppev::log::info << "client request file : " << filename << cppev::log::endl;
 
-    filecache *fc =reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt));
-    cppev::buffer *bf = fc->lazyload(filename);
+    const cppev::buffer *bf = reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt))->lazyload(filename);
 
     iopt->wbuffer().produce(bf->rawbuf(), bf->size());
     cppev::reactor::async_write(iopt);
