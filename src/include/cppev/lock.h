@@ -116,6 +116,16 @@ public:
         {
             throw_system_error("pthread_mutexattr_init error", ret);
         }
+        ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+        if (ret != 0)
+        {
+            throw_system_error("pthread_mutexattr_settype error", ret);
+        }
+        ret = pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_NONE);
+        if (ret != 0)
+        {
+            throw_system_error("pthread_mutexattr_setprotocol error", ret);
+        }
         ret = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
         if (ret != 0)
         {
