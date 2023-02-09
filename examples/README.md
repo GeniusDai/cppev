@@ -2,7 +2,11 @@
 
 ### 1. Tcp Stress Test
 
-In this example, tcp server initiates 3 listening threads to support ipc4 / ipv6 /unix protocol family, tcp client initiates N connecting threads to connect to server. Both server and client initiates thread pool to handle connected socket after tcp connection established.
+Tcp server initiates 3 listening threads to support ipc4 / ipv6 /unix protocol family.
+
+Tcp client initiates N connecting threads to connect to server.
+
+Both server and client initiates thread pool to handle connected socket after tcp connection established.
 
 * Usage
 
@@ -12,7 +16,11 @@ In this example, tcp server initiates 3 listening threads to support ipc4 / ipv6
 
 ### 2. Large File Transfer
 
-In this example, tcp client sends the name of the required file, tcp server caches and transfers the required file, then client receives and stores the file to disk.
+Tcp client sends the name of the required file.
+
+Tcp server caches and transfers the required file.
+
+Tcp client receives and stores the file to disk.
 
 * Usage
 
@@ -25,7 +33,7 @@ In this example, tcp client sends the name of the required file, tcp server cach
 
 ### 3. Nio Event Loop
 
-In this example, use the original event loop (not reactor) to connect via tcp / udp.
+Use the original event loop (not reactor) to connect via tcp / udp.
 
 * Usage
 
