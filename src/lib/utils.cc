@@ -179,17 +179,17 @@ bool thread_check_signal_pending(int sig)
 namespace utils
 {
 
-tid gettid()
+tid_t gettid()
 {
-#ifdef __linux__
-    static thread_local tid thr_id = syscall(SYS_gettid);
-#elif defined(__APPLE__)
-    static thread_local tid thr_id = 0;
+    thread_local tid_t thr_id = 0;
     if (thr_id == 0)
     {
+#ifdef __linux__
+        thr_id = syscall(SYS_gettid);
+#elif defined(__APPLE__)
         pthread_threadid_np(0, &thr_id);
+#endif  // __linux__
     }
-#endif
     return thr_id;
 }
 

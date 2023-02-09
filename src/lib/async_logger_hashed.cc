@@ -31,7 +31,7 @@ async_logger::async_logger(int level)
 
 async_logger &async_logger::operator<<(const char *str)
 {
-    tid thr_id = utils::gettid();
+    tid_t thr_id = utils::gettid();
     {
         std::shared_lock<std::shared_mutex> rdlock(lock_);
         if (logs_.count(thr_id) != 0)
@@ -57,7 +57,7 @@ async_logger &async_logger::operator<<(const char *str)
 async_logger &async_logger::operator<<(const async_logger &)
 {
     (*this) << "\n";
-    tid thr_id = utils::gettid();
+    tid_t thr_id = utils::gettid();
     {
         std::shared_lock<std::shared_mutex> rdlock(lock_);
         int lock_count = std::get<2>(logs_[thr_id]);
@@ -76,7 +76,7 @@ void async_logger::run_impl()
 {
     while (true)
     {
-        std::unordered_set<tid> outdate_list;
+        std::unordered_set<tid_t> outdate_list;
         bool delay = true;
         {
             std::shared_lock<std::shared_mutex> rdlock(lock_);

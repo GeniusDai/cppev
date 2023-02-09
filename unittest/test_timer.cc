@@ -7,7 +7,7 @@ namespace cppev
 TEST(TestTimer, test_timer)
 {
     int count = 0;
-    std::vector<tid> tids;
+    std::vector<tid_t> tids;
     timer::timer_handler handler = [&count, &tids]()
     {
         tids.push_back(cppev::utils::gettid());

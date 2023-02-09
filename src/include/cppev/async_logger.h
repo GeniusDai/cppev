@@ -65,7 +65,7 @@ private:
 #if defined(__CPPEV_USE_HASHED_LOGGER__)
 
     // thread_id --> < buffer, recursive_mutex, recursive_level, utils::timestamp >
-    std::unordered_map<tid, std::tuple<buffer,
+    std::unordered_map<tid_t, std::tuple<buffer,
         std::unique_ptr<std::recursive_mutex>, int, time_t>> logs_;
 
     std::shared_mutex lock_;

@@ -59,9 +59,9 @@ void thread_wait_for_signal(int sig);
 bool thread_check_signal_pending(int sig);
 
 #ifdef __linux__
-typedef pid_t tid;
+typedef pid_t tid_t;
 #elif defined(__APPLE__)
-typedef uint64_t tid;
+typedef uint64_t tid_t;
 #else
 static_assert(false, "platform not supported");
 #endif
@@ -69,7 +69,7 @@ static_assert(false, "platform not supported");
 namespace utils
 {
 
-tid gettid();
+tid_t gettid();
 
 time_t time();
 
