@@ -69,10 +69,6 @@ void send_signal(pid_t pid, int sig)
 
 bool check_process(pid_t pid)
 {
-    if (pid == 0 || pid == -1)
-    {
-        throw_logic_error("check for 0 or -1 is always ok and not supported");
-    }
     if (kill(pid, 0) == 0)
     {
         return true;

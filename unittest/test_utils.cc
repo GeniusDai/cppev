@@ -285,7 +285,7 @@ TEST(TestCheckBySignal, test_check_pid_and_pgid)
     // waiting for subprocess waiting for signal
     EXPECT_TRUE(check_process(pid));
     EXPECT_FALSE(check_process_group(pid));
-    EXPECT_THROW(check_process(0) && check_process(-1), std::logic_error);
+    EXPECT_TRUE(check_process(getpid()));
 
     int ret = -1;
     waitpid(pid, &ret, 0);
