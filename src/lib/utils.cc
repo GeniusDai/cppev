@@ -176,6 +176,20 @@ bool thread_check_signal_pending(int sig)
     return sigismember(&set, sig) == 1;
 }
 
+void thread_yield()
+{
+#ifdef __linux__
+    pthread_yield();
+#else
+    pthread_yield_np();
+#endif
+}
+
+void thread_cancel_point()
+{
+    pthread_testcancel();
+}
+
 namespace utils
 {
 

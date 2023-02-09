@@ -18,7 +18,6 @@
 //      2) Cleanup Routines : just coding in "run_impl".
 //      3) Thread Routines : These routines are not essential
 //         pthread_exit / pthread_once / pthread_self / pthread_equal
-//         pthread_testcancel
 
 namespace cppev
 {
