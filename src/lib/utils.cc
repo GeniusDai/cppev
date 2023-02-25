@@ -113,6 +113,7 @@ void thread_suspend_for_signal(int sig)
     sigset_t set;
     sigfillset(&set);
     sigdelset(&set, sig);
+    // sigsuspend always returns -1
     sigsuspend(&set);
 }
 
@@ -172,7 +173,7 @@ bool thread_check_signal_pending(int sig)
     return sigismember(&set, sig) == 1;
 }
 
-void thread_yield()
+void thread_yield() noexcept
 {
 #ifdef __linux__
     pthread_yield();
@@ -189,7 +190,7 @@ void thread_cancel_point()
 namespace utils
 {
 
-tid_t gettid()
+tid_t gettid() noexcept
 {
     thread_local tid_t thr_id = 0;
     if (thr_id == 0)
@@ -235,12 +236,12 @@ std::string timestamp(time_t t, const char *format)
     return buf;
 }
 
-std::vector<std::string> split(const std::string &str, const std::string &sep)
+std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept
 {
     return split(str.c_str(), sep.c_str());
 }
 
-std::vector<std::string> split(const char *str, const char *sep)
+std::vector<std::string> split(const char *str, const char *sep) noexcept
 {
     size_t str_len = strlen(str);
     size_t sep_len = strlen(sep);
@@ -295,7 +296,7 @@ std::vector<std::string> split(const char *str, const char *sep)
     return substrs;
 }
 
-std::string join(const std::vector<std::string> &str_arr, const std::string &sep)
+std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept
 {
     std::string ret = "";
     size_t size = 0;

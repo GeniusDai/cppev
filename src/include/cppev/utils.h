@@ -64,7 +64,7 @@ bool thread_check_signal_pending(int sig);
 /*
  * Thread controlling
  */
-void thread_yield();
+void thread_yield() noexcept;
 
 void thread_cancel_point();
 
@@ -79,7 +79,7 @@ static_assert(false, "platform not supported");
 namespace utils
 {
 
-tid_t gettid();
+tid_t gettid() noexcept;
 
 time_t time();
 
@@ -89,11 +89,11 @@ std::string timestamp(time_t t = -1, const char *format = nullptr);
  * split : doesn't support string contains '\0'
  * join  : support string contains '\0'
  */
-std::vector<std::string> split(const char *str, const char *sep);
+std::vector<std::string> split(const char *str, const char *sep) noexcept;
 
-std::vector<std::string> split(const std::string &str, const std::string &sep);
+std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept;
 
-std::string join(const std::vector<std::string> &str_arr, const std::string &sep);
+std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
 
 }   // namespace utils
 

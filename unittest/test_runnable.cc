@@ -26,11 +26,18 @@ class runnable_tester_cancel_point
 public:
     void run_impl() override
     {
+        sum_ = 0;
         while (true)
         {
             thread_cancel_point();
+            for (int i = 0; i < 10000000; ++i)
+            {
+                sum_ += i;
+            }
         }
     }
+private:
+    int sum_;
 };
 
 const int sig = SIGTERM;
