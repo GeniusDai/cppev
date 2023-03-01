@@ -34,12 +34,6 @@ constexpr fd_event operator|(fd_event a, fd_event b)
     return static_cast<fd_event>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-enum priority
-{
-    low = 10,
-    high = 20
-};
-
 class event_loop;
 
 using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;

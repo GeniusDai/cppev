@@ -55,7 +55,7 @@ void async_logger::write_header(buffer &buf)
     {
         ss << "ERROR] [";
     }
-    ss << utils::timestamp();
+    ss << timestamp();
 #ifdef __linux__
     ss << "] [LWP " << thr_id << "] ";
 #elif defined(__APPLE__)

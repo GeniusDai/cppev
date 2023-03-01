@@ -47,7 +47,7 @@ async_logger &async_logger::operator<<(const char *str)
     }
     std::unique_lock<std::shared_mutex> wrlock(lock_);
     logs_[thr_id] = std::make_tuple(buffer(),
-        std::make_unique<std::recursive_mutex>(), 1, utils::time());
+        std::make_unique<std::recursive_mutex>(), 1, time());
     write_header(std::get<0>(logs_[thr_id]));
     std::get<1>(logs_[thr_id])->lock();
     std::get<0>(logs_[thr_id]).put_string(str);
@@ -62,7 +62,7 @@ async_logger &async_logger::operator<<(const async_logger &)
         std::shared_lock<std::shared_mutex> rdlock(lock_);
         int lock_count = std::get<2>(logs_[thr_id]);
         std::get<2>(logs_[thr_id]) = 0;
-        std::get<3>(logs_[thr_id]) = utils::time();
+        std::get<3>(logs_[thr_id]) = time();
         while(lock_count--)
         {
             std::get<1>(logs_[thr_id])->unlock();
@@ -91,7 +91,7 @@ void async_logger::run_impl()
                     buf.clear();
                     delay = false;
                 } else {
-                    if (utils::time() - std::get<3>(iter->second) > sysconfig::buffer_outdate)
+                    if (time() - std::get<3>(iter->second) > sysconfig::buffer_outdate)
                     {
                         outdate_list.insert(iter->first);
                     }

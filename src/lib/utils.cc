@@ -14,6 +14,38 @@
 namespace cppev
 {
 
+time_t time()
+{
+    time_t t = ::time(nullptr);
+    if (t == -1)
+    {
+        throw_system_error("time error");
+    }
+    return t;
+}
+
+std::string timestamp(time_t t, const char *format)
+{
+    static_assert(std::is_signed<time_t>::value, "time_t is not signed!");
+    if (t < 0)
+    {
+        t = time();
+    }
+    if (format == nullptr)
+    {
+        format = "%F %T %Z";
+    }
+    tm s_tm;
+    localtime_r(&t, &s_tm);
+    char buf[1024];
+    memset(buf, 0, 1024);
+    if (0 == strftime(buf, 1024, format, &s_tm))
+    {
+        throw_system_error("strftime error");
+    }
+    return buf;
+}
+
 int64_t least_common_multiple(int64_t p, int64_t r)
 {
     assert(p != 0 && r != 0);
@@ -247,38 +279,6 @@ tid_t gettid() noexcept
 #endif  // __linux__
     }
     return thr_id;
-}
-
-time_t time()
-{
-    time_t t = ::time(nullptr);
-    if (t == -1)
-    {
-        throw_system_error("time error");
-    }
-    return t;
-}
-
-std::string timestamp(time_t t, const char *format)
-{
-    static_assert(std::is_signed<time_t>::value, "time_t is not signed!");
-    if (t < 0)
-    {
-        t = time();
-    }
-    if (format == nullptr)
-    {
-        format = "%F %T %Z";
-    }
-    tm s_tm;
-    localtime_r(&t, &s_tm);
-    char buf[1024];
-    memset(buf, 0, 1024);
-    if (0 == strftime(buf, 1024, format, &s_tm))
-    {
-        throw_system_error("strftime error");
-    }
-    return buf;
 }
 
 std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept

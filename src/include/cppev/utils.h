@@ -2,14 +2,23 @@
 #define _utils_h_6C0224787A17_
 
 #include <functional>
-#include <ctime>
+#include <chrono>
 #include <string>
 #include <thread>
 #include <vector>
+#include <ctime>
 #include <csignal>
+#include <cassert>
 
 namespace cppev
 {
+
+enum priority
+{
+    low = 10,
+    mid = 15,
+    high = 20,
+};
 
 struct enum_hash
 {
@@ -19,6 +28,19 @@ struct enum_hash
         return std::hash<int>()((int)t);
     }
 };
+
+/*
+ * Chrono
+ */
+time_t time();
+
+std::string timestamp(time_t t = -1, const char *format = nullptr);
+
+template<typename Clock = std::chrono::system_clock>
+void sleep_until(const std::chrono::nanoseconds &stamp)
+{
+    std::this_thread::sleep_until(std::chrono::duration_cast<Clock::duration>(stamp));
+}
 
 /*
  * Algorithm
@@ -91,10 +113,6 @@ namespace utils
 {
 
 tid_t gettid() noexcept;
-
-time_t time();
-
-std::string timestamp(time_t t = -1, const char *format = nullptr);
 
 /*
  * split : doesn't support string contains '\0'

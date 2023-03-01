@@ -8,7 +8,7 @@ TEST(TestTimer, test_timer)
 {
     int count = 0;
     std::vector<tid_t> tids;
-    timer::timer_handler handler = [&count, &tids]()
+    timer_handler handler = [&count, &tids](const std::chrono::nanoseconds &)
     {
         tids.push_back(cppev::utils::gettid());
         count++;
