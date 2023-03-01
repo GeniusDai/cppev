@@ -14,6 +14,51 @@
 namespace cppev
 {
 
+int64_t least_common_multiple(int64_t p, int64_t r)
+{
+    assert(p != 0 && r != 0);
+    return (p / greatest_common_divisor(p ,r)) * r;
+}
+
+int64_t least_common_multiple(const std::vector<int64_t> &nums)
+{
+    assert(nums.size() >= 2);
+    int64_t prev = nums[0];
+    for (size_t i = 1; i < nums.size(); ++i)
+    {
+        prev = least_common_multiple(prev, nums[i]);
+    }
+    return prev;
+}
+
+int64_t greatest_common_divisor(int64_t p, int64_t r)
+{
+    assert(p != 0 && r != 0);
+    int64_t remain;
+    while (true)
+    {
+        remain = p % r;
+        p = r;
+        r = remain;
+        if (remain == 0)
+        {
+            break;
+        }
+    }
+    return p;
+}
+
+int64_t greatest_common_divisor(const std::vector<int64_t> &nums)
+{
+    assert(nums.size() >= 2);
+    int64_t prev = nums[0];
+    for (size_t i = 1; i < nums.size(); ++i)
+    {
+        prev = greatest_common_divisor(prev, nums[i]);
+    }
+    return prev;
+}
+
 void throw_system_error(const std::string &str, int err)
 {
     if (err == 0)

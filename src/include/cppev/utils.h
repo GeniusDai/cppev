@@ -21,6 +21,17 @@ struct enum_hash
 };
 
 /*
+ * Algorithm
+ */
+int64_t least_common_multiple(int64_t p, int64_t r);
+
+int64_t least_common_multiple(const std::vector<int64_t> &nums);
+
+int64_t greatest_common_divisor(int64_t p, int64_t r);
+
+int64_t greatest_common_divisor(const std::vector<int64_t> &nums);
+
+/*
  * Exception handling
  */
 void throw_logic_error(const std::string &str);

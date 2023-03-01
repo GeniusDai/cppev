@@ -5,6 +5,43 @@
 namespace cppev
 {
 
+TEST(TestCommonUtils, test_greatest_common_divisor)
+{
+    std::vector<std::tuple<std::vector<int64_t>, int64_t>> cases =
+    {
+        { { 1, 2, 3, 4, 5 }, 1 },
+        { { 2, 5 }, 1 },
+        { { 100 ,99 }, 1 },
+        { { 15, 150, 15000 }, 15 },
+        { { 3, 5, 6 }, 1 },
+        { { 3, 9, 27, 81}, 3 },
+    };
+
+    for (const auto &tc : cases)
+    {
+        EXPECT_EQ(std::get<1>(tc), greatest_common_divisor(std::get<0>(tc)));
+    }
+}
+
+TEST(TestCommonUtils, test_least_common_multiple)
+{
+    std::vector<std::tuple<std::vector<int64_t>, int64_t>> cases =
+    {
+        { { 1, 2, 3, 4, 5 }, 60 },
+        { { 2, 5 }, 10 },
+        { { 100 ,99 }, 9900 },
+        { { 15, 150, 15000 }, 15000 },
+        { { 3, 5, 6 }, 30 },
+        { { 3, 9, 27, 81}, 81 },
+    };
+
+    for (const auto &tc : cases)
+    {
+        EXPECT_EQ(std::get<1>(tc), least_common_multiple(std::get<0>(tc)));
+    }
+
+}
+
 TEST(TestCommonUtils, test_split)
 {
     std::vector<std::tuple<std::string, std::string, std::vector<std::string>>> cases =
