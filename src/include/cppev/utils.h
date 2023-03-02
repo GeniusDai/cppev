@@ -1,6 +1,7 @@
 #ifndef _utils_h_6C0224787A17_
 #define _utils_h_6C0224787A17_
 
+#include <cstdint>
 #include <functional>
 #include <chrono>
 #include <string>
@@ -36,10 +37,20 @@ time_t time();
 
 std::string timestamp(time_t t = -1, const char *format = nullptr);
 
-template<typename Clock = std::chrono::system_clock>
+template <typename Clock = std::chrono::system_clock>
 void sleep_until(const std::chrono::nanoseconds &stamp)
 {
     std::this_thread::sleep_until(std::chrono::duration_cast<Clock::duration>(stamp));
+}
+
+template <typename Clock = std::chrono::system_clock>
+typename Clock::time_point ceil_time_point(const typename Clock::time_point &point)
+{
+    auto stamp = std::chrono::nanoseconds(point.time_since_epoch()).count();
+    int64_t ceil_stamp_nsec = (stamp / 1'000'000'000 + 1) * 1'000'000'000;
+    auto ceil_stamp = std::chrono::duration_cast<typename Clock::duration>(
+        std::chrono::nanoseconds(ceil_stamp_nsec));
+    return typename Clock::time_point(ceil_stamp);
 }
 
 /*

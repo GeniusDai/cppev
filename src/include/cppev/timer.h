@@ -1,9 +1,11 @@
 #ifndef _timer_h_6C0224787A17_
 #define _timer_h_6C0224787A17_
 
+#include <cstddef>
 #include <functional>
 #include <tuple>
 #include <vector>
+#include <queue>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -73,11 +75,11 @@ class timed_multitask_executor
 {
 private:
     template<typename T, std::size_t I>
-    struct tasks_greater_cmp
+    struct tasks_less_cmp
     {
         bool operator()(const T &lhs, const T &rhs) const noexcept
         {
-            return static_cast<int>(std::get<I>(lhs)) > static_cast<int>(std::get<I>(rhs));
+            return static_cast<int>(std::get<I>(lhs)) < static_cast<int>(std::get<I>(rhs));
         }
     };
 public:
@@ -89,15 +91,26 @@ public:
     // @param safety_factor : discrete tasks will not be executed if time before next trigger
     //                        is shorter than the interval * safety_factor
     // @param align : whether start time align to 1s.
-    timed_multitask_executor(std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
-        std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks,
-        double safety_factor = 0.1, bool align = true)
+    timed_multitask_executor(
+        const std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
+        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks,
+        double safety_factor = 0.1,
+        bool align = true
+    )
     : stop_(false)
     {
-        std::sort(timer_tasks.begin(), timer_tasks.end(),
-            tasks_greater_cmp<std::tuple<double, priority, timer_handler>, 1>());
-        std::sort(discrete_tasks.begin(), discrete_tasks.end(),
-            tasks_greater_cmp<std::tuple<priority, discrete_handler>, 0>());
+        std::priority_queue<std::tuple<priority, size_t>, std::vector<std::tuple<priority, size_t>>,
+            tasks_less_cmp<std::tuple<priority, size_t>, 0>> timer_tasks_heap, discrete_tasks_heap;
+        for (size_t i = 0; i < timer_tasks.size(); ++i)
+        {
+            timer_tasks_heap.push({ std::get<1>(timer_tasks[i]) , i });
+        }
+
+        for (size_t i = 0; i < discrete_tasks.size(); ++i)
+        {
+            discrete_tasks_heap.push({ std::get<0>(discrete_tasks[i]) , i });
+        }
+
         std::vector<int64_t> intervals;
         for (size_t i = 0; i < timer_tasks.size(); ++i)
         {
@@ -105,28 +118,32 @@ public:
         }
         int64_t lcm = intervals[0];
         int64_t gcd = intervals[0];
-        interval_ = lcm;
         if (intervals.size() >= 2)
         {
             lcm = least_common_multiple(intervals);
             gcd = greatest_common_divisor(intervals);
         }
+        interval_ = lcm;
 
-        for (size_t i = 0; i < timer_tasks.size(); ++i)
+        while (!timer_tasks_heap.empty())
         {
-            timer_handlers_.push_back(std::get<2>(timer_tasks[i]));
+            size_t idx = std::get<1>(timer_tasks_heap.top());
+            timer_tasks_heap.pop();
+            timer_handlers_.push_back(std::get<2>(timer_tasks[idx]));
             for (int64_t stamp = 0; stamp < lcm; stamp += gcd)
             {
-                if (stamp % intervals[i] == 0)
+                if (stamp % intervals[idx] == 0)
                 {
-                    tasks_[stamp].push_back(i);
+                    tasks_[stamp].push_back(timer_handlers_.size() - 1);
                 }
             }
         }
 
-        for (size_t i = 0; i < discrete_tasks.size(); ++i)
+        while (!discrete_tasks_heap.empty())
         {
-            discrete_handlers_.push_back(std::get<1>(discrete_tasks[i]));
+            size_t idx = std::get<1>(discrete_tasks_heap.top());
+            discrete_tasks_heap.pop();
+            discrete_handlers_.push_back(std::get<1>(discrete_tasks[idx]));
         }
 
         thr_ = std::thread(
@@ -135,10 +152,7 @@ public:
                 auto tp_curr = Clock::now();
                 if (align)
                 {
-                    tp_curr = Clock::time_point(std::chrono::duration_cast<
-                        Clock::duration>(std::chrono::nanoseconds(
-                            (tp_curr.time_since_epoch().count() / 1'000'000'000 + 1) * 1'000'000'000)));
-                    std::this_thread::sleep_until(tp_curr);
+                    tp_curr = ceil_time_point(tp_curr);
                 }
                 while(!this->stop_)
                 {
@@ -176,7 +190,10 @@ public:
                             h(tp_curr.time_since_epoch(), tp_next.time_since_epoch());
                         }
 
-                        tp_curr = std::chrono::time_point_cast<decltype(tp_curr)::duration>(tp_next);
+                        std::this_thread::sleep_until(tp_next);
+
+                        tp_curr = std::chrono::time_point_cast<
+                            typename decltype(tp_curr)::duration>(tp_next);
                     }
                 }
             }
@@ -209,7 +226,7 @@ private:
 
     // tasks :
     //    timepoint -> timed_task_executor handler index
-    std::map<int64_t, std::vector<int>> tasks_;
+    std::map<int64_t, std::vector<size_t>> tasks_;
 
     // backend thread execute tasks
     std::thread thr_;

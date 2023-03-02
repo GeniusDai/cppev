@@ -4,13 +4,11 @@
 namespace cppev
 {
 
-TEST(TestTimer, test_timer)
+TEST(TestTimer, test_timed_task_executor)
 {
     int count = 0;
-    std::vector<tid_t> tids;
-    timer_handler handler = [&count, &tids](const std::chrono::nanoseconds &)
+    timer_handler handler = [&count](const std::chrono::nanoseconds &)
     {
-        tids.push_back(cppev::utils::gettid());
         count++;
     };
 
@@ -27,14 +25,30 @@ TEST(TestTimer, test_timer)
     EXPECT_GE(count, (int)(total_time / timer_interval * (1 - err_percent)));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+}
 
-    std::cout << "main-tid : " << utils::gettid() << std::endl;
-    std::cout << "sub-tid : " << std::endl;
-    for (auto t : tids)
+TEST(TestTimer, test_timed_multitask_executor)
+{
+    auto task1 = [](const std::chrono::nanoseconds &stamp)
     {
-        std::cout << t << "\t";
-    }
-    std::cout << std::endl;
+        std::cout << "task 1 : " << stamp.count() << std::endl;
+    };
+    auto task2 = [](const std::chrono::nanoseconds &stamp)
+    {
+        std::cout << "task 2 : " << stamp.count() << std::endl;
+    };
+    auto task3 = [](const std::chrono::nanoseconds &stamp)
+    {
+        std::cout << "task 3 : " << stamp.count() << std::endl;
+    };
+
+    timed_multitask_executor executor({
+        { 5, priority::low, task1 },
+        { 2, priority::mid, task2 },
+        { 0.5, priority::mid, task3 },
+    }, {});
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 }
 
 }   // namespace cppev
