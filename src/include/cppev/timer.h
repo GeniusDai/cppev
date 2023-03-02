@@ -24,10 +24,10 @@ using discrete_handler = std::function<void(const std::chrono::nanoseconds &ts_c
     const std::chrono::nanoseconds &ts_next)>;
 
 template<typename Clock = std::chrono::system_clock>
-class timer final
+class timed_task_executor final
 {
 public:
-    explicit timer(const std::chrono::nanoseconds &span, const timer_handler &handler)
+    explicit timed_task_executor(const std::chrono::nanoseconds &span, const timer_handler &handler)
     : handler_(handler), span_(span), curr_(Clock::now()), stop_ (false)
     {
         auto thr_func = [this]()
@@ -42,12 +42,12 @@ public:
         thr_ = std::thread(thr_func);
     }
 
-    timer(const timer &) = delete;
-    timer &operator=(const timer &) = delete;
-    timer(timer &&) = delete;
-    timer &operator=(timer &&) = delete;
+    timed_task_executor(const timed_task_executor &) = delete;
+    timed_task_executor &operator=(const timed_task_executor &) = delete;
+    timed_task_executor(timed_task_executor &&) = delete;
+    timed_task_executor &operator=(timed_task_executor &&) = delete;
 
-    ~timer() noexcept
+    ~timed_task_executor() noexcept
     {
         thr_.join();
     }
@@ -72,7 +72,7 @@ private:
 
 
 template<typename Clock = std::chrono::system_clock>
-class timer_task_executor
+class timed_multitask_executor
 {
 private:
     template<typename T, std::size_t I>
@@ -87,12 +87,12 @@ public:
     // Create backend thread to execute tasks
     // @param timer_tasks : tasks that will be triggered regularly according to frequency.
     //                      tuple : <frequency, priority, callback>
-    // @param discrete_tasks : tasks that will be triggered between timer tasks.
+    // @param discrete_tasks : tasks that will be triggered between timed_task_executor tasks.
     //                         tuple : <priority, callback>
     // @param safety_factor : discrete tasks will not be executed if time before next trigger
     //                        is shorter than the interval * safety_factor
     // @param align : whether start time align to 1s.
-    timer_task_executor(std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
+    timed_multitask_executor(std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
         std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks,
         double safety_factor = 0.1, bool align = true)
     : stop_(false)
@@ -186,10 +186,19 @@ public:
         );
     }
 
-    ~timer_task_executor()
+    timed_multitask_executor(const timed_multitask_executor &) = delete;
+    timed_multitask_executor &operator=(const timed_multitask_executor &) = delete;
+    timed_multitask_executor(timed_multitask_executor &&) = delete;
+    timed_multitask_executor &operator=(timed_multitask_executor &&) = delete;
+
+    ~timed_multitask_executor()
+    {
+        thr_.join();
+    }
+
+    void stop()
     {
         stop_ = true;
-        thr_.join();
     }
 
 private:
@@ -199,14 +208,14 @@ private:
     // time interval in nanoseconds
     int64_t interval_;
 
-    // timer task handlers
+    // timed_task_executor task handlers
     std::vector<timer_handler> timer_handlers_;
 
     // discrete task handlers
     std::vector<discrete_handler> discrete_handlers_;
 
     // tasks :
-    //    timepoint -> timer handler index
+    //    timepoint -> timed_task_executor handler index
     std::map<int64_t, std::vector<int>> tasks_;
 
     // backend thread execute tasks
@@ -216,4 +225,4 @@ private:
 
 }   // namespace cppev
 
-#endif  // timer.h
+#endif  // timed_task_executor.h

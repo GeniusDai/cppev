@@ -18,7 +18,7 @@ TEST(TestTimer, test_timer)
     int total_time = 200 * 1000;
     double err_percent = 0.05;
 
-    timer tim(std::chrono::microseconds(timer_interval), handler);
+    timed_task_executor tim(std::chrono::microseconds(timer_interval), handler);
     std::this_thread::sleep_for(std::chrono::microseconds(total_time));
     tim.stop();
 
