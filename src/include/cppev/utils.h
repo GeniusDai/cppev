@@ -16,9 +16,13 @@ namespace cppev
 
 enum priority
 {
-    low = 10,
-    mid = 15,
-    high = 20,
+    p0 = 20,
+    p1 = 19,
+    p2 = 18,
+    p3 = 17,
+    p4 = 16,
+    p5 = 15,
+    p6 = 14,
 };
 
 struct enum_hash
@@ -27,6 +31,24 @@ struct enum_hash
     std::size_t operator()(const T &t) const
     {
         return std::hash<int>()((int)t);
+    }
+};
+
+template <typename T, size_t I>
+struct cmp_tuple_less
+{
+    bool operator()(const T& lhs, const T &rhs) const noexcept
+    {
+        return std::get<I>(lhs) < std::get<I>(rhs);
+    }
+};
+
+template <typename T, size_t I>
+struct cmp_tuple_greater
+{
+    bool operator()(const T& lhs, const T &rhs) const noexcept
+    {
+        return std::get<I>(lhs) > std::get<I>(rhs);
     }
 };
 

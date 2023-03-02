@@ -30,19 +30,32 @@ template<typename Clock = std::chrono::system_clock>
 class timed_task_executor final
 {
 public:
-    explicit timed_task_executor(const std::chrono::nanoseconds &span, const timer_handler &handler)
-    : handler_(handler), span_(span), curr_(Clock::now()), stop_ (false)
+    timed_task_executor(const std::chrono::nanoseconds &span, const timer_handler &handler,
+        const bool align = true)
+    : span_(span), handler_(handler), stop_ (false)
     {
-        auto thr_func = [this]()
+        auto thr_func = [this, align]()
         {
+            auto tp_curr = Clock::now();
+            if (align)
+            {
+                tp_curr = ceil_time_point(tp_curr);
+                std::this_thread::sleep_until(tp_curr);
+            }
             while(!stop_)
             {
-                curr_ += std::chrono::duration_cast<typename decltype(curr_)::duration>(span_);
-                std::this_thread::sleep_until(curr_);
-                handler_(curr_.time_since_epoch());
+                tp_curr += std::chrono::duration_cast<typename decltype(tp_curr)::duration>(span_);
+                std::this_thread::sleep_until(tp_curr);
+                handler_(tp_curr.time_since_epoch());
             }
         };
         thr_ = std::thread(thr_func);
+    }
+
+    timed_task_executor(double freq, const timer_handler &handler, const bool align = true)
+    : timed_task_executor(std::chrono::nanoseconds(static_cast<int64_t>(1'000'000'000 / freq)),
+        handler, align)
+    {
     }
 
     timed_task_executor(const timed_task_executor &) = delete;
@@ -57,11 +70,9 @@ public:
     }
 
 private:
-    timer_handler handler_;
-
     std::chrono::nanoseconds span_;
 
-    std::chrono::time_point<Clock> curr_;
+    timer_handler handler_;
 
     bool stop_;
 
@@ -73,15 +84,6 @@ private:
 template<typename Clock = std::chrono::system_clock>
 class timed_multitask_executor
 {
-private:
-    template<typename T, std::size_t I>
-    struct tasks_less_cmp
-    {
-        bool operator()(const T &lhs, const T &rhs) const noexcept
-        {
-            return static_cast<int>(std::get<I>(lhs)) < static_cast<int>(std::get<I>(rhs));
-        }
-    };
 public:
     // Create backend thread to execute tasks
     // @param timer_tasks : tasks that will be triggered regularly according to frequency.
@@ -89,18 +91,21 @@ public:
     // @param discrete_tasks : tasks that will be triggered between timed_task_executor tasks.
     //                         tuple : <priority, callback>
     // @param safety_factor : discrete tasks will not be executed if time before next trigger
-    //                        is shorter than the interval * safety_factor
+    //                        is shorter than interval * safety_factor
+    // @param safety_span : discrete task will not be executed if timer before next trigger
+    //                      is shorter than safety_span
     // @param align : whether start time align to 1s.
     timed_multitask_executor(
         const std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
-        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks,
-        double safety_factor = 0.1,
-        bool align = true
+        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
+        const double safety_factor = 0.1,
+        const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
+        const bool align = true
     )
     : stop_(false)
     {
         std::priority_queue<std::tuple<priority, size_t>, std::vector<std::tuple<priority, size_t>>,
-            tasks_less_cmp<std::tuple<priority, size_t>, 0>> timer_tasks_heap, discrete_tasks_heap;
+            cmp_tuple_less<std::tuple<priority, size_t>, 0>> timer_tasks_heap, discrete_tasks_heap;
         for (size_t i = 0; i < timer_tasks.size(); ++i)
         {
             timer_tasks_heap.push({ std::get<1>(timer_tasks[i]) , i });
@@ -147,12 +152,13 @@ public:
         }
 
         thr_ = std::thread(
-            [this, align, safety_factor]()
+            [this, align, safety_factor, safety_span]()
             {
                 auto tp_curr = Clock::now();
                 if (align)
                 {
                     tp_curr = ceil_time_point(tp_curr);
+                    std::this_thread::sleep_until(tp_curr);
                 }
                 while(!this->stop_)
                 {
@@ -176,10 +182,12 @@ public:
                             this->timer_handlers_[idx](tp_curr.time_since_epoch());
                         }
 
-                        auto safety_time_point = tp_curr.time_since_epoch() +
-                            std::chrono::nanoseconds((int64_t)(span * (1 - safety_factor)));
-
                         auto tp_next = tp_curr + std::chrono::nanoseconds(span);
+
+                        auto safety_interval = std::max(safety_span, std::chrono::nanoseconds(
+                            static_cast<int64_t>(span * safety_factor)));
+
+                        auto safety_time_point = tp_next.time_since_epoch() - safety_interval;
 
                         for (const auto &h : this->discrete_handlers_)
                         {
@@ -198,6 +206,18 @@ public:
                 }
             }
         );
+    }
+
+    timed_multitask_executor(
+        const double freq, const timer_handler &handler,
+        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
+        const double safety_factor = 0.1,
+        const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
+        const bool align = true
+    )
+    : timed_multitask_executor({{ freq, priority::p0, handler }}, discrete_tasks,
+        safety_factor, safety_span, align)
+    {
     }
 
     timed_multitask_executor(const timed_multitask_executor &) = delete;

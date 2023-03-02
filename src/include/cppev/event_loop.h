@@ -87,7 +87,7 @@ public:
     // @param activate  whether register fd to os io-multiplexing api
     // @param prio      event priority
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = low);
+        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = p0);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer

@@ -17,7 +17,7 @@ TEST(TestTimer, test_timed_task_executor)
     double err_percent = 0.05;
 
     {
-        timed_task_executor tim(std::chrono::microseconds(timer_interval), handler);
+        timed_task_executor tim(std::chrono::microseconds(timer_interval), handler, false);
         std::this_thread::sleep_for(std::chrono::microseconds(total_time));
     }
 
@@ -43,9 +43,9 @@ TEST(TestTimer, test_timed_multitask_executor)
     };
 
     timed_multitask_executor executor({
-        { 5, priority::low, task1 },
-        { 2, priority::mid, task2 },
-        { 0.5, priority::mid, task3 },
+        { 5, priority::p6, task1 },
+        { 2, priority::p1, task2 },
+        { 0.5, priority::p1, task3 },
     }, {});
 
     std::this_thread::sleep_for(std::chrono::seconds(3));
