@@ -1,6 +1,7 @@
 #ifndef _timer_h_6C0224787A17_
 #define _timer_h_6C0224787A17_
 
+#include <functional>
 #include <tuple>
 #include <vector>
 #include <chrono>
@@ -49,12 +50,8 @@ public:
 
     ~timed_task_executor() noexcept
     {
-        thr_.join();
-    }
-
-    void stop()
-    {
         stop_ = true;
+        thr_.join();
     }
 
 private:
@@ -193,12 +190,8 @@ public:
 
     ~timed_multitask_executor()
     {
-        thr_.join();
-    }
-
-    void stop()
-    {
         stop_ = true;
+        thr_.join();
     }
 
 private:

@@ -18,9 +18,10 @@ TEST(TestTimer, test_timer)
     int total_time = 200 * 1000;
     double err_percent = 0.05;
 
-    timed_task_executor tim(std::chrono::microseconds(timer_interval), handler);
-    std::this_thread::sleep_for(std::chrono::microseconds(total_time));
-    tim.stop();
+    {
+        timed_task_executor tim(std::chrono::microseconds(timer_interval), handler);
+        std::this_thread::sleep_for(std::chrono::microseconds(total_time));
+    }
 
     EXPECT_LE(count, (int)(total_time / timer_interval * (1 + err_percent)));
     EXPECT_GE(count, (int)(total_time / timer_interval * (1 - err_percent)));
