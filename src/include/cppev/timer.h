@@ -160,17 +160,17 @@ public:
                     tp_curr = ceil_time_point(tp_curr);
                     std::this_thread::sleep_until(tp_curr);
                 }
-                while(!this->stop_)
+                while(!stop_)
                 {
-                    for (auto iter = this->tasks_.cbegin(); iter != this->tasks_.cend(); )
+                    for (auto iter = tasks_.cbegin(); !stop_ && (iter != tasks_.cend()); )
                     {
                         auto curr = iter;
                         auto next = ++iter;
 
                         int64_t span;
-                        if (next == this->tasks_.cend())
+                        if (next == tasks_.cend())
                         {
-                            span = this->interval_ - curr->first;
+                            span = interval_ - curr->first;
                         }
                         else
                         {
@@ -179,7 +179,7 @@ public:
 
                         for (auto idx : curr->second)
                         {
-                            this->timer_handlers_[idx](tp_curr.time_since_epoch());
+                            timer_handlers_[idx](tp_curr.time_since_epoch());
                         }
 
                         auto tp_next = tp_curr + std::chrono::nanoseconds(span);
@@ -189,9 +189,9 @@ public:
 
                         auto safety_time_point = tp_next.time_since_epoch() - safety_interval;
 
-                        for (const auto &h : this->discrete_handlers_)
+                        for (const auto &h : discrete_handlers_)
                         {
-                            if (Clock::now().time_since_epoch() > safety_time_point)
+                            if (stop_ || (Clock::now().time_since_epoch() > safety_time_point))
                             {
                                 break;
                             }
