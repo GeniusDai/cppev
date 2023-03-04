@@ -52,7 +52,7 @@ public:
         thr_ = std::thread(thr_func);
     }
 
-    timed_task_executor(double freq, const timer_handler &handler, const bool align = true)
+    timed_task_executor(const double freq, const timer_handler &handler, const bool align = true)
     : timed_task_executor(std::chrono::nanoseconds(static_cast<int64_t>(1'000'000'000 / freq)),
         handler, align)
     {
@@ -207,7 +207,8 @@ public:
     }
 
     timed_multitask_executor(
-        const double freq, const timer_handler &handler,
+        const double freq,
+        const timer_handler &handler,
         const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
         const double safety_factor = 0.1,
         const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
