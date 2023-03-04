@@ -32,9 +32,9 @@ class timed_task_executor final
 public:
     timed_task_executor(const std::chrono::nanoseconds &span, const timer_handler &handler,
         const bool align = true)
-    : span_(span), handler_(handler), stop_ (false)
+    : handler_(handler), stop_ (false)
     {
-        auto thr_func = [this, align]()
+        auto thr_func = [this, span, align]()
         {
             auto tp_curr = Clock::now();
             if (align)
@@ -44,7 +44,7 @@ public:
             }
             while(!stop_)
             {
-                tp_curr += std::chrono::duration_cast<typename decltype(tp_curr)::duration>(span_);
+                tp_curr += std::chrono::duration_cast<typename decltype(tp_curr)::duration>(span);
                 std::this_thread::sleep_until(tp_curr);
                 handler_(tp_curr.time_since_epoch());
             }
@@ -70,8 +70,6 @@ public:
     }
 
 private:
-    std::chrono::nanoseconds span_;
-
     timer_handler handler_;
 
     bool stop_;
@@ -152,7 +150,7 @@ public:
         }
 
         thr_ = std::thread(
-            [this, align, safety_factor, safety_span]()
+            [this, safety_factor, safety_span, align]()
             {
                 auto tp_curr = Clock::now();
                 if (align)
@@ -238,10 +236,10 @@ private:
     // time interval in nanoseconds
     int64_t interval_;
 
-    // timed_task_executor task handlers
+    // timed_task_executor task handlers, discending priority order
     std::vector<timer_handler> timer_handlers_;
 
-    // discrete task handlers
+    // discrete task handlers, discending priority order
     std::vector<discrete_handler> discrete_handlers_;
 
     // tasks :

@@ -1,3 +1,4 @@
+#include <ratio>
 #include <unordered_map>
 #include <chrono>
 #include <gtest/gtest.h>
@@ -14,19 +15,17 @@ protected:
     {
         count = 0;
         discrete_count = 0;
+        total_time_ms = 200;
+        freq = 500;
     }
 
     int count;
 
     int discrete_count;
 
-    int freq = 500;
+    int total_time_ms;
 
-    int discrete_count_per_trigger = 100;
-
-    int total_time_ms = 200;
-
-    int total_time_ms_longer = 500;
+    int freq;
 
     double err_percent = 0.05;
 
@@ -38,12 +37,18 @@ protected:
     discrete_handler discrete_task = [this](const std::chrono::nanoseconds &,
         const std::chrono::nanoseconds &)
     {
-        for (int i = 0; i < discrete_count_per_trigger; ++i)
-        {
-            ++this->discrete_count;
-        }
+        ++this->discrete_count;
     };
 };
+
+
+#define CHEKC_ALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
+    EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
+    EXPECT_GE(count, static_cast<int>((1 + (total_time_ms / 1'000.0 - 1) * freq) * (1 - err_percent)))
+
+#define CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
+    EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
+    EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0* freq) * (1 - err_percent)))
 
 
 TEST_F(TestTimer, test_timed_task_executor)
@@ -53,8 +58,7 @@ TEST_F(TestTimer, test_timed_task_executor)
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    EXPECT_LE(count, (int)(total_time_ms * freq / 1'000 * (1 + err_percent)));
-    EXPECT_GE(count, (int)(total_time_ms * freq / 1'000 * (1 - err_percent)));
+    CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 }
 
 
@@ -65,30 +69,24 @@ TEST_F(TestTimer, test_timed_multitask_executor_single_task)
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    EXPECT_LE(count, (int)(total_time_ms * freq / 1'000 * (1 + err_percent)));
-    EXPECT_GE(count, (int)(total_time_ms * freq / 1'000 * (1 - err_percent)));
+    CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 }
 
 
 TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
 {
     {
-        timed_multitask_executor executor(freq, task, { { priority::p0, discrete_task}},
+        timed_multitask_executor executor(freq, task, { { priority::p0, discrete_task }, },
             0, std::chrono::nanoseconds(1), false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    EXPECT_LE(count, (int)(total_time_ms * freq / 1'000 * (1 + err_percent)));
-    EXPECT_GE(count, (int)(total_time_ms * freq / 1'000 * (1 - err_percent)));
+    CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 
-    EXPECT_LE(discrete_count, (int)(total_time_ms * freq / 1'000 * (1 + err_percent))
-        * discrete_count_per_trigger);
-    EXPECT_GE(discrete_count, (int)(total_time_ms * freq / 1'000 * (1 - err_percent))
-        * discrete_count_per_trigger);
+    CHECK_UNALIGNED_TRIGGER_COUNT(discrete_count, freq, total_time_ms, err_percent);
 }
 
-
-TEST_F(TestTimer, test_timed_multitask_executor)
+TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
 {
     std::map<int64_t, std::vector<int>> kvmap;
     int count1 = 0;
@@ -99,36 +97,38 @@ TEST_F(TestTimer, test_timed_multitask_executor)
     {
         ++count1;
         kvmap[stamp.count()].push_back(1);
-        std::cout << "task 1 : " << stamp.count() << std::endl;
     };
     auto task2 = [&](const std::chrono::nanoseconds &stamp)
     {
         ++count2;
         kvmap[stamp.count()].push_back(2);
-        std::cout << "task 2 : " << stamp.count() << std::endl;
     };
     auto task3 = [&](const std::chrono::nanoseconds &stamp)
     {
         ++count3;
         kvmap[stamp.count()].push_back(3);
-        std::cout << "task 3 : " << stamp.count() << std::endl;
     };
 
-    int total_time_sec = 3;
-    int freq1 = 50;
+    total_time_ms = 3000;
+    double freq1 = 50;
+    double freq2 = 20;
+    double freq3 = 0.5;
 
     {
         timed_multitask_executor executor({
             { freq1, priority::p6, task1 },
-            { 20, priority::p0, task2 },
-            { 0.5, priority::p1, task3 },
+            { freq2, priority::p0, task2 },
+            { freq3, priority::p1, task3 },
         }, {});
 
-        std::this_thread::sleep_for(std::chrono::seconds(total_time_sec));
+        std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    EXPECT_LE(count1, (int)(total_time_sec * freq1 * (1 + err_percent)));
-    EXPECT_GE(count1, (int)((total_time_sec - 1) * freq1 * (1 - err_percent)));
+    CHEKC_ALIGNED_TRIGGER_COUNT(count1, freq1, total_time_ms, err_percent);
+
+    CHEKC_ALIGNED_TRIGGER_COUNT(count2, freq2, total_time_ms, err_percent);
+
+    CHEKC_ALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
 
     for (auto iter = kvmap.cbegin(); iter != kvmap.cend(); ++iter)
     {
@@ -141,7 +141,6 @@ TEST_F(TestTimer, test_timed_multitask_executor)
             }
         }
     }
-
 }
 
 }   // namespace cppev
