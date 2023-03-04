@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <ratio>
 #include <unordered_map>
 #include <chrono>
@@ -86,12 +87,33 @@ TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
     CHECK_UNALIGNED_TRIGGER_COUNT(discrete_count, freq, total_time_ms, err_percent);
 }
 
+bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
+{
+    size_t p = 0;
+    size_t r = 0;
+    assert(!t.empty());
+    if (s.size() == 0)
+    {
+        return true;
+    }
+    while (p != s.size() && r != t.size())
+    {
+        if (s[p] == t[r])
+        {
+            ++p;
+        }
+        ++r;
+    }
+    return p == s.size();
+}
+
 TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
 {
     std::map<int64_t, std::vector<int>> kvmap;
     int count1 = 0;
     int count2 = 0;
     int count3 = 0;
+    int count4 = 0;
 
     auto task1 = [&](const std::chrono::nanoseconds &stamp)
     {
@@ -108,17 +130,24 @@ TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
         ++count3;
         kvmap[stamp.count()].push_back(3);
     };
+    auto task4 = [&](const std::chrono::nanoseconds &stamp)
+    {
+        ++count4;
+        kvmap[stamp.count()].push_back(4);
+    };
 
     total_time_ms = 3000;
     double freq1 = 50;
     double freq2 = 20;
     double freq3 = 0.5;
+    double freq4 = 40;
 
     {
         timed_multitask_executor executor({
             { freq1, priority::p6, task1 },
             { freq2, priority::p0, task2 },
-            { freq3, priority::p1, task3 },
+            { freq3, priority::p4, task3 },
+            { freq4, priority::p3, task4 },
         }, {});
 
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
@@ -130,16 +159,13 @@ TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
 
     CHEKC_ALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
 
+    CHEKC_ALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
+
+    std::vector<int> res{ 2, 4, 3, 1 };
+
     for (auto iter = kvmap.cbegin(); iter != kvmap.cend(); ++iter)
     {
-        if (iter->second.size() == 3)
-        {
-            std::vector<int> res{ 2, 3, 1 };
-            for (size_t i = 0; i < iter->second.size(); ++i)
-            {
-                EXPECT_EQ(iter->second[i], res[i]);
-            }
-        }
+        EXPECT_TRUE(is_sub_sequence(iter->second, res));
     }
 }
 
