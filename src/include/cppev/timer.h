@@ -60,8 +60,8 @@ public:
 
     timed_task_executor(const timed_task_executor &) = delete;
     timed_task_executor &operator=(const timed_task_executor &) = delete;
-    timed_task_executor(timed_task_executor &&) = delete;
-    timed_task_executor &operator=(timed_task_executor &&) = delete;
+    timed_task_executor(timed_task_executor &&) = default;
+    timed_task_executor &operator=(timed_task_executor &&) = default;
 
     ~timed_task_executor() noexcept
     {
@@ -209,20 +209,20 @@ public:
     timed_multitask_executor(
         const double freq,
         const timer_handler &handler,
-        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
+        const discrete_handler &discrete_tasks,
         const double safety_factor = 0.1,
         const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
         const bool align = true
     )
-    : timed_multitask_executor({{ freq, priority::p0, handler }}, discrete_tasks,
+    : timed_multitask_executor({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_tasks }},
         safety_factor, safety_span, align)
     {
     }
 
     timed_multitask_executor(const timed_multitask_executor &) = delete;
     timed_multitask_executor &operator=(const timed_multitask_executor &) = delete;
-    timed_multitask_executor(timed_multitask_executor &&) = delete;
-    timed_multitask_executor &operator=(timed_multitask_executor &&) = delete;
+    timed_multitask_executor(timed_multitask_executor &&) = default;
+    timed_multitask_executor &operator=(timed_multitask_executor &&) = default;
 
     ~timed_multitask_executor()
     {
@@ -243,8 +243,7 @@ private:
     // discrete task handlers, discending priority order
     std::vector<discrete_handler> discrete_handlers_;
 
-    // tasks :
-    //    timepoint -> timed_task_executor handler index
+    // timepoint -> timed_task_executor handler index
     std::map<int64_t, std::vector<size_t>> tasks_;
 
     // backend thread execute tasks

@@ -62,22 +62,10 @@ TEST_F(TestTimer, test_timed_task_executor)
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 }
 
-
-TEST_F(TestTimer, test_timed_multitask_executor_single_task)
-{
-    {
-        timed_multitask_executor executor(freq, task, {}, 0, std::chrono::nanoseconds(1), false);
-        std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
-    }
-
-    CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
-}
-
-
 TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
 {
     {
-        timed_multitask_executor executor(freq, task, { { priority::p0, discrete_task }, },
+        timed_multitask_executor executor(freq, task, discrete_task,
             0, std::chrono::nanoseconds(1), false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
