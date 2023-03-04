@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <pthread.h>
+#include <atomic>
 #include "cppev/utils.h"
 
 namespace cppev
@@ -18,20 +19,24 @@ class pshared_rwlock;
 class rdlockguard;
 class wrlockguard;
 
+#ifdef __linux__
+// pthread implementation is about two times faster than atomic implementation
+#define CPPEV_SPINLOCK_USE_PTHREAD
+#endif
 
 class spinlock final
 {
 public:
     spinlock()
     {
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
         int ret = pthread_spin_init(&lock_, PTHREAD_PROCESS_PRIVATE);
         if (ret != 0)
         {
             throw_system_error("pthread_spin_init error", ret);
         }
 #else
-        unlock();
+        lock_.clear(std::memory_order_release);
 #endif
     }
 
@@ -42,27 +47,27 @@ public:
 
     ~spinlock() noexcept
     {
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
         pthread_spin_destroy(&lock_);
 #endif
     }
 
     void lock()
     {
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
         int ret = pthread_spin_lock(&lock_);
         if (ret != 0)
         {
             throw_system_error("pthread_spin_lock error", ret);
         }
 #else
-        while (lock_.test_and_set(std::memory_order_acquire)) ;
+        while (lock_.test_and_set(std::memory_order_acq_rel)) ;
 #endif
     }
 
     void unlock()
     {
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
         int ret = pthread_spin_unlock(&lock_);
         if (ret != 0)
         {
@@ -75,7 +80,7 @@ public:
 
     bool trylock()
     {
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
         int ret = pthread_spin_trylock(&lock_);
         if (ret == 0)
         {
@@ -91,12 +96,12 @@ public:
         }
         return true;
 #else
-        return !lock_.test_and_set(std::memory_order_acquire);
+        return !lock_.test_and_set(std::memory_order_acq_rel);
 #endif
     }
 
 private:
-#ifdef __linux__
+#ifdef CPPEV_SPINLOCK_USE_PTHREAD
     pthread_spinlock_t lock_;
 #else
     std::atomic_flag lock_;

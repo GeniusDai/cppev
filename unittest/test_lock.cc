@@ -253,6 +253,53 @@ TEST_F(TestLock, test_barrier_multithread)
     EXPECT_THROW(barrier.wait(), std::logic_error);
 }
 
+template <typename Mutex>
+void performance_test()
+{
+    Mutex lock;
+    int count = 0;
+
+    int add_num = 50000;
+    int thr_num = 50;
+
+    auto task = [&]()
+    {
+        for (int i = 0; i < add_num; ++i)
+        {
+            std::unique_lock<Mutex> _(lock);
+            ++count;
+        }
+    };
+
+    std::vector<std::thread> thrs;
+    for (int i = 0; i < thr_num; ++i)
+    {
+        thrs.emplace_back(task);
+    }
+    for (int i = 0; i < thr_num; ++i)
+    {
+        thrs[i].join();
+    }
+
+    EXPECT_EQ(count, add_num * thr_num);
+}
+
+
+TEST_F(TestLock, test_spinlock_performance)
+{
+    performance_test<spinlock>();
+}
+
+TEST_F(TestLock, test_pshared_lock_performance)
+{
+    performance_test<pshared_lock>();
+}
+
+TEST_F(TestLock, test_mutex_performance)
+{
+    performance_test<std::mutex>();
+}
+
 }   // namespace cppev
 
 int main(int argc, char **argv)
