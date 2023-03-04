@@ -32,16 +32,8 @@ public:
     thread_pool(const thread_pool &) = delete;
     thread_pool &operator=(const thread_pool &) = delete;
 
-    thread_pool(thread_pool &&other) noexcept
-    {
-        this->thrs_.swap(other.thrs_);
-    }
-
-    thread_pool &operator=(thread_pool &&other) noexcept
-    {
-        this->thrs_.swap(other.thrs_);
-        return *this;
-    }
+    thread_pool(thread_pool &&other) = default;
+    thread_pool &operator=(thread_pool &&other) = default;
 
     virtual ~thread_pool() = default;
 
@@ -197,6 +189,11 @@ public:
     : task_queue(), thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
     {
     }
+
+    thread_pool_task_queue(const thread_pool_task_queue &) = delete;
+    thread_pool_task_queue &operator=(const thread_pool_task_queue &) = delete;
+    thread_pool_task_queue(thread_pool_task_queue &&) = delete;
+    thread_pool_task_queue &operator=(thread_pool_task_queue &&) = delete;
 
     ~thread_pool_task_queue() = default;
 

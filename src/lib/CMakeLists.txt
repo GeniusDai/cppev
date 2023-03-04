@@ -10,7 +10,6 @@ set (LIB
     tcp.cc
     subprocess.cc
     ipc.cc
-    dynamic_loader.cc
 )
 
 add_library(cppev SHARED ${LIB})

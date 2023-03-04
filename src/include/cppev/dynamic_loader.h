@@ -11,25 +11,25 @@ namespace cppev
 class dynamic_loader
 {
 public:
-    explicit dynamic_loader(const std::string &filename);
+    explicit dynamic_loader(const std::string &filename)
+    : handle_(nullptr)
+    {
+        handle_ = dlopen(filename.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+        if (handle_ == nullptr)
+        {
+            throw_runtime_error(std::string("dlopen error : ").append(dlerror()));
+        }
+    }
 
     dynamic_loader(const dynamic_loader&) = delete;
     dynamic_loader &operator=(const dynamic_loader&) = delete;
+    dynamic_loader(dynamic_loader &&other) = delete;
+    dynamic_loader &operator=(dynamic_loader &&other) = delete;
 
-    dynamic_loader(dynamic_loader &&other) noexcept
+    ~dynamic_loader() noexcept
     {
-        this->handle_ = other.handle_;
-        other.handle_ = nullptr;
+        dlclose(handle_);
     }
-
-    dynamic_loader &operator=(dynamic_loader &&other) noexcept
-    {
-        this->handle_ = other.handle_;
-        other.handle_ = nullptr;
-        return *this;
-    }
-
-    ~dynamic_loader() noexcept;
 
     template <typename Function>
     Function *load(const std::string &func) const

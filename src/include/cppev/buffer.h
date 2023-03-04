@@ -49,16 +49,9 @@ public:
         return *this;
     }
 
-    buffer(buffer &&other) noexcept
-    {
-        move(std::forward<buffer>(other));
-    }
+    buffer(buffer &&other) noexcept = default;
 
-    buffer &operator=(buffer &&other) noexcept
-    {
-        move(std::forward<buffer>(other));
-        return *this;
-    }
+    buffer &operator=(buffer &&other) = default;
 
     ~buffer() = default;
 
@@ -213,21 +206,9 @@ private:
             this->cap_ = other.cap_;
             this->start_ = other.start_;
             this->offset_ = other.offset_;
-            this->buffer_ = std::unique_ptr<char[]>(new char[cap_]);
+            this->buffer_ = std::make_unique<char[]>(cap_);
             memcpy(this->buffer_.get(), other.buffer_.get(), cap_);
         }
-    }
-
-    // Swap function for move constructor and move assignment
-    void move(buffer &&other) noexcept
-    {
-        this->cap_ = other.cap_;
-        this->start_ = other.start_;
-        this->offset_ = other.offset_;
-        this->buffer_ = std::move(other.buffer_);
-        other.cap_ = 0;
-        other.start_ = 0;
-        other.offset_ = 0;
     }
 };
 

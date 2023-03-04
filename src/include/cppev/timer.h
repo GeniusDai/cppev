@@ -60,6 +60,7 @@ public:
 
     timed_task_executor(const timed_task_executor &) = delete;
     timed_task_executor &operator=(const timed_task_executor &) = delete;
+
     timed_task_executor(timed_task_executor &&) = default;
     timed_task_executor &operator=(timed_task_executor &&) = default;
 
@@ -221,6 +222,7 @@ public:
 
     timed_multitask_executor(const timed_multitask_executor &) = delete;
     timed_multitask_executor &operator=(const timed_multitask_executor &) = delete;
+
     timed_multitask_executor(timed_multitask_executor &&) = default;
     timed_multitask_executor &operator=(timed_multitask_executor &&) = default;
 

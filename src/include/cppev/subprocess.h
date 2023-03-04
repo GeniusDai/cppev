@@ -28,16 +28,8 @@ public:
     subp_open(const subp_open &) = delete;
     subp_open &operator=(const subp_open &) = delete;
 
-    subp_open(subp_open &&other) noexcept
-    {
-        move(std::forward<subp_open>(other));
-    }
-
-    subp_open &operator=(subp_open &&other) noexcept
-    {
-        move(std::forward<subp_open>(other));
-        return *this;
-    }
+    subp_open(subp_open &&other) = default;
+    subp_open &operator=(subp_open &&other) = default;
 
     ~subp_open() = default;
 
@@ -90,22 +82,6 @@ public:
     }
 
 private:
-    void move(subp_open &&other) noexcept
-    {
-        this->cmd_ = other.cmd_;
-        this->envp_ = other.envp_;
-        this->stdin_ = std::move(other.stdin_);
-        this->stdout_ = std::move(other.stdout_);
-        this->stderr_ = std::move(other.stderr_);
-        this->pid_ = other.pid_;
-        this->returncode_ = other.returncode_;
-
-        other.cmd_ = "";
-        other.envp_ = nullptr;
-        other.pid_ = 0;
-        other.returncode_ = -1;
-    }
-
     std::string cmd_;
 
     char *const *envp_;
