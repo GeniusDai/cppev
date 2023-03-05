@@ -254,9 +254,8 @@ TEST_F(TestLock, test_barrier_multithread)
 }
 
 template <typename Mutex>
-void performance_test()
+void performance_test(Mutex &lock)
 {
-    Mutex lock;
     int count = 0;
 
     int add_num = 50000;
@@ -287,17 +286,30 @@ void performance_test()
 
 TEST_F(TestLock, test_spinlock_performance)
 {
-    performance_test<spinlock>();
-}
-
-TEST_F(TestLock, test_pshared_lock_performance)
-{
-    performance_test<pshared_lock>();
+    spinlock splck;
+    performance_test<spinlock>(splck);
 }
 
 TEST_F(TestLock, test_mutex_performance)
 {
-    performance_test<std::mutex>();
+    std::mutex lock;
+    performance_test<std::mutex>(lock);
+}
+
+TEST_F(TestLock, test_pshared_lock_performance)
+{
+    pshared_lock plock;
+    performance_test<pshared_lock>(plock);
+}
+
+TEST_F(TestLock, test_pshared_lock_shm_performance)
+{
+    std::string shm_name = "/cppev_test_lock_shm";
+    shared_memory shm(shm_name, sizeof(pshared_lock));
+    pshared_lock *lock_ptr = shm.construct<pshared_lock>();
+    performance_test<pshared_lock>(*lock_ptr);
+    lock_ptr->~pshared_lock();
+    shm.unlink();
 }
 
 }   // namespace cppev
