@@ -256,19 +256,17 @@ public:
     bool timedwait(std::unique_lock<pshared_lock> &lock, const std::chrono::duration<Rep, Period> &span,
         const condition &cond = []{ return true; })
     {
-        int ret = 0;
-
-        auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(span).count();
-
         timespec ts;
+        memset(&ts, 0, sizeof(ts));
         // CLOCK_REALTIME is essential here, pthread_cond_timedwait will use absolute time
         clock_gettime(CLOCK_REALTIME, &ts);
+        auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(span).count();
         ts.tv_sec += nanos / 1'000'000'000;
         ts.tv_nsec += nanos % 1'000'000'000;
 
         while (true)
         {
-            ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
+            int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
             if (ret != 0)
             {
                 if (ret == ETIMEDOUT)

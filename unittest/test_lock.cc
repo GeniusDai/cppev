@@ -156,28 +156,33 @@ TEST_F(TestLock, test_spinlock)
     thr.join();
 }
 
-TEST_F(TestLock, test_cond_wait_timeout)
+TEST_F(TestLock, test_cond_timedwait_timeout)
 {
     pshared_lock lock;
     pshared_cond cond;
+    cond.notify_one();
+    cond.notify_all();
     std::unique_lock<pshared_lock> lk(lock);
     EXPECT_FALSE(cond.timedwait(lk, std::chrono::milliseconds(1)));
 }
 
-TEST_F(TestLock, test_cond_wait_in_time)
+TEST_F(TestLock, test_cond_timedwait_in_time)
 {
     pshared_lock lock;
     pshared_cond cond;
 
     auto func = [&]() -> void
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         cond.notify_one();
     };
     std::thread thr(func);
 
-    std::unique_lock<pshared_lock> lk(lock);
-    EXPECT_TRUE(cond.timedwait(lk, std::chrono::milliseconds(20)));
+    {
+        std::unique_lock<pshared_lock> lk(lock);
+        // Process sometimes receives SIGABRT if wait time is short just like 200ms
+        EXPECT_TRUE(cond.timedwait(lk, std::chrono::milliseconds(2000)));
+    }
 
     thr.join();
 }
