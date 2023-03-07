@@ -39,7 +39,7 @@ public:
             auto tp_curr = Clock::now();
             if (align)
             {
-                tp_curr = ceil_time_point(tp_curr);
+                tp_curr = ceil_time_point<Clock>(tp_curr);
                 std::this_thread::sleep_until(tp_curr);
             }
             while(!stop_)
@@ -156,7 +156,7 @@ public:
                 auto tp_curr = Clock::now();
                 if (align)
                 {
-                    tp_curr = ceil_time_point(tp_curr);
+                    tp_curr = ceil_time_point<Clock>(tp_curr);
                     std::this_thread::sleep_until(tp_curr);
                 }
                 while(!stop_)
