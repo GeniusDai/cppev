@@ -108,7 +108,7 @@ public:
     : stop_(false)
     {
         std::priority_queue<std::tuple<priority, size_t>, std::vector<std::tuple<priority, size_t>>,
-            cmp_tuple_less<std::tuple<priority, size_t>, 0>> timer_tasks_heap, discrete_tasks_heap;
+            tuple_less<std::tuple<priority, size_t>, 0>> timer_tasks_heap, discrete_tasks_heap;
         for (size_t i = 0; i < timer_tasks.size(); ++i)
         {
             timer_tasks_heap.push({ std::get<1>(timer_tasks[i]) , i });

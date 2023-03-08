@@ -35,7 +35,7 @@ struct enum_hash
 };
 
 template <typename T, size_t I>
-struct cmp_tuple_less
+struct tuple_less
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
@@ -44,7 +44,7 @@ struct cmp_tuple_less
 };
 
 template <typename T, size_t I>
-struct cmp_tuple_greater
+struct tuple_greater
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
