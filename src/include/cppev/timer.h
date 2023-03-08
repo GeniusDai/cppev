@@ -26,6 +26,8 @@ using timer_handler = std::function<void(const std::chrono::nanoseconds &ts_curr
 using discrete_handler = std::function<void(const std::chrono::nanoseconds &ts_curr,
     const std::chrono::nanoseconds &ts_next)>;
 
+using init_handler = std::function<void(void)>;
+
 template<typename Clock = std::chrono::system_clock>
 class timed_task_executor final
 {
@@ -89,6 +91,7 @@ public:
     //                      tuple : <frequency, priority, callback>
     // @param discrete_tasks : tasks that will be triggered between timed_task_executor tasks.
     //                         tuple : <priority, callback>
+    // @param init_tasks : tasks that will be executed once only
     // @param safety_factor : discrete tasks will not be executed if time before next trigger
     //                        is shorter than interval * safety_factor
     // @param safety_span : discrete task will not be executed if timer before next trigger
@@ -97,6 +100,7 @@ public:
     timed_multitask_executor(
         const std::vector<std::tuple<double, priority, timer_handler>> &timer_tasks,
         const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
+        const std::vector<init_handler> &init_tasks = {},
         const double safety_factor = 0.1,
         const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
         const bool align = true
@@ -151,8 +155,12 @@ public:
         }
 
         thr_ = std::thread(
-            [this, safety_factor, safety_span, align]()
+            [this, init_tasks, safety_factor, safety_span, align]()
             {
+                for (auto task : init_tasks)
+                {
+                    task();
+                }
                 auto tp_curr = Clock::now();
                 if (align)
                 {
@@ -210,13 +218,14 @@ public:
     timed_multitask_executor(
         const double freq,
         const timer_handler &handler,
-        const discrete_handler &discrete_tasks,
+        const discrete_handler &discrete_task,
+        const init_handler &init_task,
         const double safety_factor = 0.1,
         const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
         const bool align = true
     )
-    : timed_multitask_executor({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_tasks }},
-        safety_factor, safety_span, align)
+    : timed_multitask_executor({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_task }},
+        { init_task }, safety_factor, safety_span, align)
     {
     }
 

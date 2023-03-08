@@ -64,11 +64,19 @@ TEST_F(TestTimer, test_timed_task_executor)
 
 TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
 {
+    bool init = false;
+    auto init_task = [&init]()
     {
-        timed_multitask_executor executor(freq, task, discrete_task,
+        init = true;
+    };
+
+    {
+        timed_multitask_executor executor(freq, task, discrete_task, init_task,
             0, std::chrono::nanoseconds(1), false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
+
+    EXPECT_TRUE(init);
 
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 
@@ -136,7 +144,7 @@ TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
             { freq2, priority::p0, task2 },
             { freq3, priority::p4, task3 },
             { freq4, priority::p3, task4 },
-        }, {});
+        });
 
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
