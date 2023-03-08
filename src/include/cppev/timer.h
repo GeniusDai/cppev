@@ -23,7 +23,8 @@ using timer_handler = std::function<void(const std::chrono::nanoseconds &ts_curr
 
 // @param ts_curr : trigger timestamp
 // @param ts_next : next trigger timestamp
-using discrete_handler = std::function<void(const std::chrono::nanoseconds &ts_curr,
+// @return : whether task all done
+using discrete_handler = std::function<bool(const std::chrono::nanoseconds &ts_curr,
     const std::chrono::nanoseconds &ts_next)>;
 
 using init_handler = std::function<void(void)>;
@@ -196,13 +197,26 @@ public:
 
                         auto safety_time_point = tp_next.time_since_epoch() - safety_interval;
 
+                        bool shall_stop_loop = false;
+
                         for (const auto &h : discrete_handlers_)
                         {
-                            if (stop_ || (Clock::now().time_since_epoch() > safety_time_point))
+                            while (true)
+                            {
+                                if (stop_ || (Clock::now().time_since_epoch() > safety_time_point))
+                                {
+                                    shall_stop_loop = true;
+                                    break;
+                                }
+                                if (h(tp_curr.time_since_epoch(), tp_next.time_since_epoch()))
+                                {
+                                    break;
+                                }
+                            }
+                            if (shall_stop_loop)
                             {
                                 break;
                             }
-                            h(tp_curr.time_since_epoch(), tp_next.time_since_epoch());
                         }
 
                         std::this_thread::sleep_until(tp_next);

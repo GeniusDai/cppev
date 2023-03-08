@@ -16,6 +16,7 @@ protected:
     {
         count = 0;
         discrete_count = 0;
+        discrete_count_helper = 0;
         total_time_ms = 200;
         freq = 500;
     }
@@ -23,6 +24,8 @@ protected:
     int count;
 
     int discrete_count;
+
+    int discrete_count_helper;
 
     int total_time_ms;
 
@@ -36,14 +39,21 @@ protected:
     };
 
     discrete_handler discrete_task = [this](const std::chrono::nanoseconds &,
-        const std::chrono::nanoseconds &)
+        const std::chrono::nanoseconds &) -> bool
     {
         ++this->discrete_count;
+        ++this->discrete_count_helper;
+        if (discrete_count_helper % 3 != 0)
+        {
+            return false;
+        }
+        this->discrete_count_helper = 0;
+        return true;
     };
 };
 
 
-#define CHEKC_ALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
+#define CHECK_ALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
     EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
     EXPECT_GE(count, static_cast<int>((1 + (total_time_ms / 1'000.0 - 1) * freq) * (1 - err_percent)))
 
@@ -80,7 +90,7 @@ TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
 
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 
-    CHECK_UNALIGNED_TRIGGER_COUNT(discrete_count, freq, total_time_ms, err_percent);
+    CHECK_UNALIGNED_TRIGGER_COUNT(discrete_count / 3, freq, total_time_ms, err_percent);
 }
 
 bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
@@ -139,23 +149,29 @@ TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
     double freq4 = 40;
 
     {
-        timed_multitask_executor executor({
-            { freq1, priority::p6, task1 },
-            { freq2, priority::p0, task2 },
-            { freq3, priority::p4, task3 },
-            { freq4, priority::p3, task4 },
-        });
+        timed_multitask_executor executor(
+            {
+                { freq1, priority::p6, task1 },
+                { freq2, priority::p0, task2 },
+                { freq3, priority::p4, task3 },
+                { freq4, priority::p3, task4 },
+            },
+            {
+                { priority::p0, discrete_task },
+                { priority::p0, discrete_task },
+            }
+        );
 
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    CHEKC_ALIGNED_TRIGGER_COUNT(count1, freq1, total_time_ms, err_percent);
+    CHECK_ALIGNED_TRIGGER_COUNT(count1, freq1, total_time_ms, err_percent);
 
-    CHEKC_ALIGNED_TRIGGER_COUNT(count2, freq2, total_time_ms, err_percent);
+    CHECK_ALIGNED_TRIGGER_COUNT(count2, freq2, total_time_ms, err_percent);
 
-    CHEKC_ALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
+    CHECK_ALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
 
-    CHEKC_ALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
+    CHECK_ALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
 
     std::vector<int> res{ 2, 4, 3, 1 };
 
