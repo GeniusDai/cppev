@@ -33,7 +33,7 @@ protected:
 
     double err_percent = 0.05;
 
-    timer_handler task = [this](const std::chrono::nanoseconds &)
+    timed_handler task = [this](const std::chrono::nanoseconds &)
     {
         ++this->count;
     };
@@ -72,21 +72,29 @@ TEST_F(TestTimer, test_timed_task_executor)
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 }
 
-TEST_F(TestTimer, test_timed_multitask_executor_single_task_with_discrete_task)
+TEST_F(TestTimer, test_timed_multitask_scheduler_single_task_with_discrete_task)
 {
     bool init = false;
+    bool has_exit = false;
     auto init_task = [&init]()
     {
         init = true;
     };
 
+    auto exit_task = [&init, &has_exit]()
     {
-        timed_multitask_executor executor(freq, task, discrete_task, init_task,
-            0, std::chrono::nanoseconds(1), false);
+        EXPECT_TRUE(init);
+        has_exit = true;
+    };
+
+    {
+        timed_multitask_scheduler executor(freq, task, discrete_task, init_task,
+            exit_task, 0, std::chrono::nanoseconds(1), false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
     EXPECT_TRUE(init);
+    EXPECT_TRUE(has_exit);
 
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 
@@ -113,7 +121,7 @@ bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
     return p == s.size();
 }
 
-TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
+TEST_F(TestTimer, test_timed_multitask_scheduler_several_timed_task)
 {
     std::map<int64_t, std::vector<int>> kvmap;
     int count1 = 0;
@@ -149,7 +157,7 @@ TEST_F(TestTimer, test_timed_multitask_executor_several_timed_task)
     double freq4 = 40;
 
     {
-        timed_multitask_executor executor(
+        timed_multitask_scheduler executor(
             {
                 { freq1, priority::p6, task1 },
                 { freq2, priority::p0, task2 },
