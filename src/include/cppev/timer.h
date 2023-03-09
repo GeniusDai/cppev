@@ -18,6 +18,7 @@
 
 namespace cppev
 {
+
 // Triggered timely
 // @param ts_curr : trigger timestamp
 using timed_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
@@ -35,63 +36,12 @@ using init_handler = std::function<void(void)>;
 // Triggered once when thread exits
 using exit_handler = std::function<void(void)>;
 
-template<typename Clock = std::chrono::system_clock>
-class timed_task_executor final
-{
-public:
-    timed_task_executor(const std::chrono::nanoseconds &span, const timed_handler &handler,
-        const bool align = true)
-    : handler_(handler), stop_ (false)
-    {
-        auto thr_func = [this, span, align]()
-        {
-            auto tp_curr = Clock::now();
-            if (align)
-            {
-                tp_curr = ceil_time_point<Clock>(tp_curr);
-                std::this_thread::sleep_until(tp_curr);
-            }
-            while(!stop_)
-            {
-                tp_curr += std::chrono::duration_cast<typename decltype(tp_curr)::duration>(span);
-                std::this_thread::sleep_until(tp_curr);
-                handler_(tp_curr.time_since_epoch());
-            }
-        };
-        thr_ = std::thread(thr_func);
-    }
-
-    timed_task_executor(const double freq, const timed_handler &handler, const bool align = true)
-    : timed_task_executor(std::chrono::nanoseconds(static_cast<int64_t>(1'000'000'000 / freq)),
-        handler, align)
-    {
-    }
-
-    timed_task_executor(const timed_task_executor &) = delete;
-    timed_task_executor &operator=(const timed_task_executor &) = delete;
-
-    timed_task_executor(timed_task_executor &&) = default;
-    timed_task_executor &operator=(timed_task_executor &&) = default;
-
-    ~timed_task_executor() noexcept
-    {
-        stop_ = true;
-        thr_.join();
-    }
-
-private:
-    timed_handler handler_;
-
-    bool stop_;
-
-    std::thread thr_;
-};
-
-
 
 template<typename Clock = std::chrono::system_clock>
 class timed_multitask_scheduler
 {
+    static constexpr double default_safety_factor = 0.1;
+    static constexpr std::chrono::nanoseconds default_safety_span = std::chrono::microseconds(100);
 public:
     // Create backend thread to execute tasks
     // @param timer_tasks : tasks that will be triggered regularly according to frequency.
@@ -110,8 +60,8 @@ public:
         const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
         const std::vector<init_handler> &init_tasks = {},
         const std::vector<exit_handler> &exit_tasks = {},
-        const double safety_factor = 0.1,
-        const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
+        const double safety_factor = default_safety_factor,
+        const std::chrono::nanoseconds &safety_span = default_safety_span,
         const bool align = true
     )
     : stop_(false)
@@ -247,12 +197,22 @@ public:
         const discrete_handler &discrete_task,
         const init_handler &init_task,
         const exit_handler &exit_task,
-        const double safety_factor = 0.1,
-        const std::chrono::nanoseconds &safety_span = std::chrono::microseconds(100),
+        const double safety_factor = default_safety_factor,
+        const std::chrono::nanoseconds &safety_span = default_safety_span,
         const bool align = true
     )
     : timed_multitask_scheduler({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_task }},
         { init_task }, { exit_task }, safety_factor, safety_span, align)
+    {
+    }
+
+    timed_multitask_scheduler(
+        const double freq,
+        const timed_handler &handler,
+        const bool align = true
+    )
+    : timed_multitask_scheduler({{ freq, priority::p0, handler }}, {}, {}, {},
+        default_safety_factor, default_safety_span, align)
     {
     }
 
@@ -275,16 +235,16 @@ private:
     // time interval in nanoseconds
     int64_t interval_;
 
-    // timed_task_executor task handlers, discending priority order
+    // timed task handlers, discending priority order
     std::vector<timed_handler> timer_handlers_;
 
     // discrete task handlers, discending priority order
     std::vector<discrete_handler> discrete_handlers_;
 
-    // timepoint -> timed_task_executor handler index
+    // timepoint -> timed handler index
     std::map<int64_t, std::vector<size_t>> tasks_;
 
-    // backend thread execute tasks
+    // backend thread executing tasks
     std::thread thr_;
 };
 

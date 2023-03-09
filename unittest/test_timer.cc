@@ -62,10 +62,10 @@ protected:
     EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0* freq) * (1 - err_percent)))
 
 
-TEST_F(TestTimer, test_timed_task_executor)
+TEST_F(TestTimer, test_timed_multitask_scheduler_single_task)
 {
     {
-        timed_task_executor executor(freq, task, false);
+        timed_multitask_scheduler executor(freq, task, false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
