@@ -532,7 +532,7 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
     return query_ip_port_family(addr);
 }
 
-void nsock::bind(int port, const char *ip)
+void nsock::bind(const char *ip, int port)
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -649,7 +649,7 @@ std::tuple<std::string, int, family> nsockudp::recv()
     rbuffer().offset_ += ret;
     if (family_ == family::local)
     {
-        return std::make_tuple(unix_bind_path_, -1, family::local);
+        return std::make_tuple(std::get<0>(peer_), -1, family::local);
     }
     return query_ip_port_family(addr);
 }

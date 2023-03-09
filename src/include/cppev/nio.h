@@ -274,13 +274,19 @@ public:
     {
         return family_;
     }
-    void bind(int port, const char *ip = nullptr);
+
+    void bind(const char *ip, int port);
 
     void bind_unix(const char *path, bool remove = false);
 
-    void bind(int port, const std::string &ip)
+    void bind(int port)
     {
-        bind(port, ip.c_str());
+        bind(nullptr, port);
+    }
+
+    void bind(const std::string &ip, int port)
+    {
+        bind(ip.c_str(), port);
     }
 
     void bind_unix(const std::string &path, bool remove =false)
@@ -328,11 +334,15 @@ protected:
     // socket family
     family family_;
 
-    // Used only by tcp
-    // IPV4/6 : Record ip/port  in connect()
+    // TCP --> IPV4/6 :
+    //          Record ip/port in connect()
     //          Return by connpeer()
-    // Unix   : Record sockpath in bind_unix()/connect_unix()
-    //        : Return by sockname()/peername()/connpeer()
+    // TCP --> Unix:
+    //         Record sockpath in bind_unix()/connect_unix()
+    //         Return by sockname()/peername()/connpeer()
+    // UDP --> Unix:
+    //         Record sockpath in bind_unix()
+    //         Return by recv()
     std::tuple<std::string, int> peer_;
 
     static const std::unordered_map<family, int, enum_hash> fmap_;
@@ -496,16 +506,12 @@ public:
     bool get_so_broadcast() const;
 
 private:
-    std::string unix_bind_path_;
-
     void move(nsockudp &&other, bool move_base) noexcept
     {
         if (move_base)
         {
             nsock::move(std::forward<nsockudp>(other), true);
         }
-        this->unix_bind_path_ = other.unix_bind_path_;
-        other.unix_bind_path_ = "";
     }
 };
 
