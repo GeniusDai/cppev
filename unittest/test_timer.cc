@@ -33,12 +33,12 @@ protected:
 
     double err_percent = 0.05;
 
-    timed_handler task = [this](const std::chrono::nanoseconds &)
+    timed_task_handler task = [this](const std::chrono::nanoseconds &)
     {
         ++this->count;
     };
 
-    discrete_handler discrete_task = [this](const std::chrono::nanoseconds &,
+    discrete_task_handler discrete_task = [this](const std::chrono::nanoseconds &,
         const std::chrono::nanoseconds &) -> bool
     {
         ++this->discrete_count;

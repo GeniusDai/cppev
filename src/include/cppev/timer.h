@@ -21,20 +21,20 @@ namespace cppev
 
 // Triggered timely
 // @param ts_curr : trigger timestamp
-using timed_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
+using timed_task_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
 
 // Triggered when timed tasks have finished
 // @param ts_curr : trigger timestamp
 // @param ts_next : next trigger timestamp
 // @return : whether task all done
-using discrete_handler = std::function<bool(const std::chrono::nanoseconds &ts_curr,
+using discrete_task_handler = std::function<bool(const std::chrono::nanoseconds &ts_curr,
     const std::chrono::nanoseconds &ts_next)>;
 
 // Triggered once when thread starts
-using init_handler = std::function<void(void)>;
+using init_task_handler = std::function<void(void)>;
 
 // Triggered once when thread exits
-using exit_handler = std::function<void(void)>;
+using exit_task_handler = std::function<void(void)>;
 
 
 template<typename Clock = std::chrono::system_clock>
@@ -56,10 +56,10 @@ public:
     //                      is shorter than safety_span
     // @param align : whether start time align to 1s.
     timed_multitask_scheduler(
-        const std::vector<std::tuple<double, priority, timed_handler>> &timer_tasks,
-        const std::vector<std::tuple<priority, discrete_handler>> &discrete_tasks = {},
-        const std::vector<init_handler> &init_tasks = {},
-        const std::vector<exit_handler> &exit_tasks = {},
+        const std::vector<std::tuple<double, priority, timed_task_handler>> &timer_tasks,
+        const std::vector<std::tuple<priority, discrete_task_handler>> &discrete_tasks = {},
+        const std::vector<init_task_handler> &init_tasks = {},
+        const std::vector<exit_task_handler> &exit_tasks = {},
         const double safety_factor = default_safety_factor,
         const std::chrono::nanoseconds &safety_span = default_safety_span,
         const bool align = true
@@ -110,7 +110,7 @@ public:
         {
             size_t idx = std::get<1>(discrete_tasks_heap.top());
             discrete_tasks_heap.pop();
-            discrete_handlers_.push_back(std::get<1>(discrete_tasks[idx]));
+            discrete_task_handlers_.push_back(std::get<1>(discrete_tasks[idx]));
         }
 
         thr_ = std::thread(
@@ -157,7 +157,7 @@ public:
 
                         bool shall_stop_loop = false;
 
-                        for (const auto &task : discrete_handlers_)
+                        for (const auto &task : discrete_task_handlers_)
                         {
                             while (true)
                             {
@@ -193,10 +193,10 @@ public:
 
     timed_multitask_scheduler(
         const double freq,
-        const timed_handler &handler,
-        const discrete_handler &discrete_task,
-        const init_handler &init_task,
-        const exit_handler &exit_task,
+        const timed_task_handler &handler,
+        const discrete_task_handler &discrete_task,
+        const init_task_handler &init_task,
+        const exit_task_handler &exit_task,
         const double safety_factor = default_safety_factor,
         const std::chrono::nanoseconds &safety_span = default_safety_span,
         const bool align = true
@@ -208,7 +208,7 @@ public:
 
     timed_multitask_scheduler(
         const double freq,
-        const timed_handler &handler,
+        const timed_task_handler &handler,
         const bool align = true
     )
     : timed_multitask_scheduler({{ freq, priority::p0, handler }}, {}, {}, {},
@@ -236,10 +236,10 @@ private:
     int64_t interval_;
 
     // timed task handlers, discending priority order
-    std::vector<timed_handler> timer_handlers_;
+    std::vector<timed_task_handler> timer_handlers_;
 
     // discrete task handlers, discending priority order
-    std::vector<discrete_handler> discrete_handlers_;
+    std::vector<discrete_task_handler> discrete_task_handlers_;
 
     // timepoint -> timed handler index
     std::map<int64_t, std::vector<size_t>> tasks_;
