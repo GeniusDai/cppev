@@ -1,6 +1,7 @@
 #ifndef _nio_h_6C0224787A17_
 #define _nio_h_6C0224787A17_
 
+#include <string>
 #include <sys/socket.h>
 #include <vector>
 #include <unordered_map>
@@ -273,6 +274,19 @@ public:
     {
         return family_;
     }
+    void bind(int port, const char *ip = nullptr);
+
+    void bind_unix(const char *path, bool remove = false);
+
+    void bind(int port, const std::string &ip)
+    {
+        bind(port, ip.c_str());
+    }
+
+    void bind_unix(const std::string &path, bool remove =false)
+    {
+        bind_unix(path.c_str(), remove);
+    }
 
     // setsockopt SO_REUSEADDR
     void set_so_reuseaddr(bool enable=true);
@@ -314,6 +328,13 @@ protected:
     // socket family
     family family_;
 
+    // Used only by tcp
+    // IPV4/6 : Record ip/port  in connect()
+    //          Return by connpeer()
+    // Unix   : Record sockpath in bind_unix()/connect_unix()
+    //        : Return by sockname()/peername()/connpeer()
+    std::tuple<std::string, int> peer_;
+
     static const std::unordered_map<family, int, enum_hash> fmap_;
 
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
@@ -325,6 +346,7 @@ protected:
             nio::move(std::forward<nsock>(other));
         }
         this->family_ = other.family_;
+        this->peer_ = other.peer_;
     }
 };
 
@@ -360,28 +382,20 @@ public:
 
     ~nsocktcp() = default;
 
-    void listen(int port, const char *ip = nullptr);
-
-    void listen(int port, const std::string &ip)
-    {
-        listen(port, ip.c_str());
-    }
+    void listen(int backlog=sysconfig::listen_number);
 
     bool connect(const char *ip, int port);
+
+    bool connect_unix(const char *path);
+
+    std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
+
+    void shutdown(shut_mode howto) noexcept;
 
     bool connect(const std::string &ip, int port)
     {
         return connect(ip.c_str(), port);
     }
-
-    void listen_unix(const char *path, bool remove = false);
-
-    void listen_unix(const std::string &path, bool remove = false)
-    {
-        listen_unix(path.c_str(), remove);
-    }
-
-    bool connect_unix(const char *path);
 
     bool connect_unix(const std::string &path)
     {
@@ -393,8 +407,6 @@ public:
         return get_so_error() == 0;
     }
 
-    std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
-
     std::tuple<std::string, int, family> sockname() const;
 
     std::tuple<std::string, int, family> peername() const;
@@ -403,8 +415,6 @@ public:
     {
         return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
     }
-
-    void shutdown(shut_mode howto) noexcept;
 
     // setsockopt SO_KEEPALIVE
     void set_so_keepalive(bool enable=true);
@@ -428,12 +438,6 @@ public:
     int get_so_error() const;
 
 private:
-    // IPV4/6 : Record ip/port  in connect()
-    //          Return by connpeer()
-    // Unix   : Record sockpath in listen_unix()/connect_unix()
-    //        : Return by sockname()/peername()/connpeer()
-    std::tuple<std::string, int> peer_;
-
     void move(nsocktcp &&other, bool move_base) noexcept
     {
         if (move_base)
@@ -442,7 +446,6 @@ private:
             nsock::move(std::forward<nsocktcp>(other), false);
             nstream::move(std::forward<nsocktcp>(other), false);
         }
-        this->peer_ = other.peer_;
     }
 };
 
@@ -470,30 +473,16 @@ public:
 
     ~nsockudp() = default;
 
-    void bind(int port, const char *ip = nullptr);
-
-    void bind(int port, const std::string &ip)
-    {
-        bind(port, ip.c_str());
-    }
+    std::tuple<std::string, int, family> recv();
 
     void send(const char *ip, int port);
+
+    void send_unix(const char *path);
 
     void send(const std::string &ip, int port)
     {
         send(ip.c_str(), port);
     }
-
-    std::tuple<std::string, int, family> recv();
-
-    void bind_unix(const char *path, bool remove = false);
-
-    void bind_unix(const std::string &path, bool remove = false)
-    {
-        bind_unix(path.c_str(), remove);
-    }
-
-    void send_unix(const char *path);
 
     void send_unix(const std::string &path)
     {
@@ -507,7 +496,7 @@ public:
     bool get_so_broadcast() const;
 
 private:
-    std::string unix_listen_path_;
+    std::string unix_bind_path_;
 
     void move(nsockudp &&other, bool move_base) noexcept
     {
@@ -515,8 +504,8 @@ private:
         {
             nsock::move(std::forward<nsockudp>(other), true);
         }
-        this->unix_listen_path_ = other.unix_listen_path_;
-        other.unix_listen_path_ = "";
+        this->unix_bind_path_ = other.unix_bind_path_;
+        other.unix_bind_path_ = "";
     }
 };
 

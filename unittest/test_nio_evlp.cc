@@ -91,7 +91,8 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
     for (size_t i = 0; i < vec.size(); ++i)
     {
         auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
-        listensock->listen(std::get<1>(vec[i]));
+        listensock->bind(std::get<1>(vec[i]));
+        listensock->listen();
         auto listensock1 = std::make_shared<nsocktcp>(std::move(*listensock));
         *listensock = std::move(*listensock1);
         acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock), 

@@ -532,7 +532,7 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
     return query_ip_port_family(addr);
 }
 
-void nsocktcp::listen(int port, const char *ip)
+void nsock::bind(int port, const char *ip)
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -543,13 +543,9 @@ void nsocktcp::listen(int port, const char *ip)
     {
         throw_system_error(std::string("bind error : ").append(std::to_string(port)));
     }
-    if (::listen(fd_, sysconfig::listen_number) < 0)
-    {
-        throw_system_error("listen error");
-    }
 }
 
-void nsocktcp::listen_unix(const char *path, bool remove)
+void nsock::bind_unix(const char *path, bool remove)
 {
     if (remove)
     {
@@ -564,7 +560,11 @@ void nsocktcp::listen_unix(const char *path, bool remove)
     {
         throw_system_error(std::string("bind error : ").append(path));
     }
-    if (::listen(fd_, sysconfig::listen_number) < 0)
+}
+
+void nsocktcp::listen(int backlog)
+{
+    if (::listen(fd_, backlog) < 0)
     {
         throw_system_error("listen error");
     }
@@ -636,36 +636,6 @@ std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
     return sockfds;
 }
 
-void nsockudp::bind(int port, const char *ip)
-{
-    sockaddr_storage addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.ss_family = fmap_.at(family_);
-    set_ip_port(addr, ip, port);
-    set_so_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
-    {
-        throw_system_error("bind error");
-    }
-}
-
-void nsockudp::bind_unix(const char *path, bool remove)
-{
-    if (remove)
-    {
-        ::unlink(path);
-    }
-    unix_listen_path_ = path;
-    sockaddr_storage addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.ss_family = fmap_.at(family_);
-    set_path(addr, path);
-    if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
-    {
-        throw_system_error("bind error");
-    }
-}
-
 std::tuple<std::string, int, family> nsockudp::recv()
 {
     sockaddr_storage addr;
@@ -679,7 +649,7 @@ std::tuple<std::string, int, family> nsockudp::recv()
     rbuffer().offset_ += ret;
     if (family_ == family::local)
     {
-        return std::make_tuple(unix_listen_path_, -1, family::local);
+        return std::make_tuple(unix_bind_path_, -1, family::local);
     }
     return query_ip_port_family(addr);
 }

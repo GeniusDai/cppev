@@ -149,14 +149,16 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
 void acceptor::listen(int port, family f, const char *ip)
 {
     sock_ = nio_factory::get_nsocktcp(f);
-    sock_->listen(port, ip);
+    sock_->bind(port, ip);
+    sock_->listen();
     log::info << "fd " << sock_->fd() << " listening in port " << port << log::endl;
 }
 
 void acceptor::listen_unix(const std::string &path, bool remove)
 {
     sock_ = nio_factory::get_nsocktcp(family::local);
-    sock_->listen_unix(path, remove);
+    sock_->bind_unix(path, remove);
+    sock_->listen();
     log::info << "fd " << sock_->fd() << " listening in path " << path << log::endl;
 }
 

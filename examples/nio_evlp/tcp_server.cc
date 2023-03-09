@@ -30,9 +30,13 @@ void start_server_loop()
     auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
     auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
 
-    tcp_ipv4->listen(       TCP_IPV4_PORT   );
-    tcp_ipv6->listen(       TCP_IPV6_PORT   );
-    tcp_unix->listen_unix(  TCP_UNIX_PATH   , true);
+    tcp_ipv4->bind(       TCP_IPV4_PORT   );
+    tcp_ipv6->bind(       TCP_IPV6_PORT   );
+    tcp_unix->bind_unix(  TCP_UNIX_PATH   , true);
+
+    tcp_ipv4->listen();
+    tcp_ipv6->listen();
+    tcp_unix->listen();
 
     evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
