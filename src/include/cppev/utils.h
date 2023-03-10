@@ -127,13 +127,6 @@ void thread_wait_for_signal(int sig);
 
 bool thread_check_signal_pending(int sig);
 
-/*
- * Thread controlling
- */
-void thread_yield() noexcept;
-
-void thread_cancel_point();
-
 #ifdef __linux__
 typedef pid_t tid_t;
 #elif defined(__APPLE__)

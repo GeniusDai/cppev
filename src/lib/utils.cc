@@ -3,6 +3,7 @@
 #include <cstring>
 #include <exception>
 #include <system_error>
+#include <sched.h>
 
 #ifdef __linux__
 #include <sys/syscall.h>
@@ -248,20 +249,6 @@ bool thread_check_signal_pending(int sig)
         throw_system_error("sigpending error");
     }
     return sigismember(&set, sig) == 1;
-}
-
-void thread_yield() noexcept
-{
-#ifdef __linux__
-    pthread_yield();
-#else
-    pthread_yield_np();
-#endif
-}
-
-void thread_cancel_point()
-{
-    pthread_testcancel();
 }
 
 namespace utils

@@ -15,29 +15,8 @@ class runnable_tester
 public:
     void run_impl() override
     {
-        thread_yield();
         std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
-};
-
-class runnable_tester_cancel_point
-: public runnable
-{
-public:
-    void run_impl() override
-    {
-        sum_ = 0;
-        while (true)
-        {
-            thread_cancel_point();
-            for (int i = 0; i < 10000000; ++i)
-            {
-                sum_ += i;
-            }
-        }
-    }
-private:
-    int sum_;
 };
 
 const int sig = SIGTERM;
@@ -83,14 +62,6 @@ TEST(TestRunnable, test_wait_for_ok)
     tester.run();
     bool ok = tester.wait_for(std::chrono::milliseconds(delay * 2));
     EXPECT_TRUE(ok);
-    tester.join();
-}
-
-TEST(TestRunnable, test_cancel)
-{
-    runnable_tester_cancel_point tester;
-    tester.run();
-    EXPECT_TRUE(tester.cancel());
     tester.join();
 }
 
