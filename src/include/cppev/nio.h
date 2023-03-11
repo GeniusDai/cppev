@@ -212,12 +212,12 @@ public:
     // Read until block or unreadable
     // @param step  Bytes to read in each loop
     // @return      Exact bytes that have been read into rbuffer
-    int read_all(int step = 128);
+    int read_all(int step = sysconfig::buffer_io_step);
 
     // Write until block or unwritable
     // @param len   Bytes to write in each loop
     // @return      Exact bytes that have been writen from wbuffer
-    int write_all(int step = 128);
+    int write_all(int step = sysconfig::buffer_io_step);
 
 protected:
     // Used by tcp-socket
@@ -388,7 +388,7 @@ public:
 
     ~nsocktcp() = default;
 
-    void listen(int backlog=sysconfig::listen_number);
+    void listen(int backlog = SOMAXCONN);
 
     bool connect(const char *ip, int port);
 

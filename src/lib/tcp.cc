@@ -34,7 +34,7 @@ event_loop *tp_shared_data::minloads_get_evlp()
 void async_write(const std::shared_ptr<nsocktcp> &iopt)
 {
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
-    iopt->write_all(sysconfig::buffer_io_step);
+    iopt->write_all();
     if (0 == iopt->wbuffer().size())
     {
         dp->on_write_complete(iopt);
@@ -70,7 +70,7 @@ void iohandler::on_readable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
-    iopt->read_all(sysconfig::buffer_io_step);
+    iopt->read_all();
     dp->on_read_complete(iopt);
     iopt->rbuffer().clear();
     if (iopt->eof() || iopt->is_reset())
@@ -88,7 +88,7 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
-    iopt->write_all(sysconfig::buffer_io_step);
+    iopt->write_all();
     if (0 == iopt->wbuffer().size())
     {
         iopt->evlp().fd_remove(iop, false);

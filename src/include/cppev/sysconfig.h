@@ -9,14 +9,8 @@ namespace cppev
 namespace sysconfig
 {
 
-// buffer size for reading inotify fd
-extern int inotify_step;
-
 // buffer size for udp socket
 extern int udp_buffer_size;
-
-// param backlog for ::listen()
-extern int listen_number;
 
 // param size for epoll / kevent
 extern int event_number;
