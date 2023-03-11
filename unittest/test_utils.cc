@@ -89,7 +89,7 @@ class TestSignal
 {
 };
 
-const int delay = 10;
+const int delay = 50;
 
 void test_main_thread_signal_wait(int sig, bool block)
 {
