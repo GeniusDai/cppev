@@ -19,6 +19,15 @@
 namespace cppev
 {
 
+void nio::close() noexcept
+{
+    if (fd_ != -1)
+    {
+        ::close(fd_);
+    }
+    closed_ = true;
+}
+
 void nio::set_io_nonblock()
 {
     int flags = fcntl(fd_, F_GETFL);

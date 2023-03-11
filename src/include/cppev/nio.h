@@ -123,11 +123,7 @@ public:
         return closed_;
     }
 
-    void close() noexcept
-    {
-        ::close(fd_);
-        closed_ = true;
-    }
+    void close() noexcept;
 
     // Set fd to nonblock
     void set_io_nonblock();
@@ -335,12 +331,12 @@ protected:
     family family_;
 
     // TCP --> IPV4/6 :
-    //          Record ip/port in connect()
-    //          Return by connpeer()
-    // TCP --> Unix:
+    //         Record ip/port in connect()
+    //         Return by connpeer()
+    // TCP --> Unix :
     //         Record sockpath in bind_unix()/connect_unix()
     //         Return by sockname()/peername()/connpeer()
-    // UDP --> Unix:
+    // UDP --> Unix :
     //         Record sockpath in bind_unix()
     //         Return by recv()
     std::tuple<std::string, int> peer_;
