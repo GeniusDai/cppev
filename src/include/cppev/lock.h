@@ -24,6 +24,8 @@ class wrlockguard;
 #define CPPEV_SPINLOCK_USE_PTHREAD
 #endif
 
+// Usage of spinlock is usually not recommended. Only used when task that shall be protected by lock is
+// really important and performance sensitive and very simple.
 class spinlock final
 {
 public:
