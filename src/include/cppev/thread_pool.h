@@ -89,9 +89,7 @@ protected:
 namespace task_queue
 {
 
-using task_handler = std::function<void()>;
-
-class thread_pool_task_queue_runnable;
+using thread_pool_task_handler = std::function<void(void)>;
 
 class task_queue
 {
@@ -104,21 +102,21 @@ public:
 
     virtual ~task_queue() = default;
 
-    void add_task(const task_handler &h) noexcept
+    void add_task(const thread_pool_task_handler &h) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
         queue_.push(h);
         cond_.notify_one();
     }
 
-    void add_task(task_handler &&h) noexcept
+    void add_task(thread_pool_task_handler &&h) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
-        queue_.push(std::forward<task_handler>(h));
+        queue_.push(std::forward<thread_pool_task_handler>(h));
         cond_.notify_one();
     }
 
-    void add_task(const std::vector<task_handler> &vh) noexcept
+    void add_task(const std::vector<thread_pool_task_handler> &vh) noexcept
     {
         std::unique_lock<std::mutex> lock(lock_);
         for (const auto &h : vh)
@@ -129,7 +127,7 @@ public:
     }
 
 protected:
-    std::queue<task_handler> queue_;
+    std::queue<thread_pool_task_handler> queue_;
 
     std::mutex lock_;
 
@@ -149,7 +147,7 @@ public:
 
     void run_impl() override
     {
-        task_handler handler;
+        thread_pool_task_handler handler;
         while(true)
         {
             {
@@ -212,7 +210,7 @@ public:
 
 using thread_pool_task_queue = task_queue::thread_pool_task_queue;
 
-using task_handler = task_queue::task_handler;
+using thread_pool_task_handler = task_queue::thread_pool_task_handler;
 
 }   // namespace cppev
 
