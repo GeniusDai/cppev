@@ -38,7 +38,7 @@ using exit_task_handler = std::function<void(void)>;
 
 
 template<typename Clock = std::chrono::system_clock>
-class timed_multitask_scheduler
+class timed_scheduler
 {
     static constexpr double default_safety_factor = 0.1;
     static constexpr std::chrono::nanoseconds default_safety_span = std::chrono::microseconds(100);
@@ -55,7 +55,7 @@ public:
     // @param safety_span : discrete task will not be executed if timer before next trigger
     //                      is shorter than safety_span
     // @param align : whether start time align to 1s.
-    timed_multitask_scheduler(
+    timed_scheduler(
         const std::vector<std::tuple<double, priority, timed_task_handler>> &timer_tasks,
         const std::vector<std::tuple<priority, discrete_task_handler>> &discrete_tasks = {},
         const std::vector<init_task_handler> &init_tasks = {},
@@ -191,7 +191,7 @@ public:
         );
     }
 
-    timed_multitask_scheduler(
+    timed_scheduler(
         const double freq,
         const timed_task_handler &handler,
         const discrete_task_handler &discrete_task,
@@ -201,28 +201,27 @@ public:
         const std::chrono::nanoseconds &safety_span = default_safety_span,
         const bool align = true
     )
-    : timed_multitask_scheduler({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_task }},
+    : timed_scheduler({{ freq, priority::p0, handler }}, {{ priority::p0, discrete_task }},
         { init_task }, { exit_task }, safety_factor, safety_span, align)
     {
     }
 
-    timed_multitask_scheduler(
+    timed_scheduler(
         const double freq,
         const timed_task_handler &handler,
         const bool align = true
     )
-    : timed_multitask_scheduler({{ freq, priority::p0, handler }}, {}, {}, {},
+    : timed_scheduler({{ freq, priority::p0, handler }}, {}, {}, {},
         default_safety_factor, default_safety_span, align)
     {
     }
 
-    timed_multitask_scheduler(const timed_multitask_scheduler &) = delete;
-    timed_multitask_scheduler &operator=(const timed_multitask_scheduler &) = delete;
+    timed_scheduler(const timed_scheduler &) = delete;
+    timed_scheduler &operator=(const timed_scheduler &) = delete;
+    timed_scheduler(timed_scheduler &&) = delete;
+    timed_scheduler &operator=(timed_scheduler &&) = delete;
 
-    timed_multitask_scheduler(timed_multitask_scheduler &&) = default;
-    timed_multitask_scheduler &operator=(timed_multitask_scheduler &&) = default;
-
-    ~timed_multitask_scheduler()
+    ~timed_scheduler()
     {
         stop_ = true;
         thr_.join();

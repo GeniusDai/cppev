@@ -3,12 +3,12 @@
 #include <unordered_map>
 #include <chrono>
 #include <gtest/gtest.h>
-#include "cppev/timer.h"
+#include "cppev/timed_scheduler.h"
 
 namespace cppev
 {
 
-class TestTimer
+class TestTimedScheduler
 : public testing::Test
 {
 protected:
@@ -62,17 +62,17 @@ protected:
     EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0* freq) * (1 - err_percent)))
 
 
-TEST_F(TestTimer, test_timed_multitask_scheduler_single_task)
+TEST_F(TestTimedScheduler, test_timed_scheduler_single_task)
 {
     {
-        timed_multitask_scheduler executor(freq, task, false);
+        timed_scheduler executor(freq, task, false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
     CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
 }
 
-TEST_F(TestTimer, test_timed_multitask_scheduler_single_task_with_discrete_task)
+TEST_F(TestTimedScheduler, test_timed_scheduler_single_task_with_discrete_task)
 {
     bool init = false;
     bool has_exit = false;
@@ -88,7 +88,7 @@ TEST_F(TestTimer, test_timed_multitask_scheduler_single_task_with_discrete_task)
     };
 
     {
-        timed_multitask_scheduler executor(freq, task, discrete_task, init_task,
+        timed_scheduler executor(freq, task, discrete_task, init_task,
             exit_task, 0, std::chrono::nanoseconds(1), false);
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
@@ -121,7 +121,7 @@ bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
     return p == s.size();
 }
 
-TEST_F(TestTimer, test_timed_multitask_scheduler_several_timed_task)
+TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
 {
     std::map<int64_t, std::vector<int>> kvmap;
     int count1 = 0;
@@ -157,7 +157,7 @@ TEST_F(TestTimer, test_timed_multitask_scheduler_several_timed_task)
     double freq4 = 40;
 
     {
-        timed_multitask_scheduler executor(
+        timed_scheduler executor(
             {
                 { freq1, priority::p6, task1 },
                 { freq2, priority::p0, task2 },

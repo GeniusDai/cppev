@@ -43,9 +43,9 @@ cc_test(
 )
 
 cc_test(
-    name = "test_timer",
+    name = "test_timed_scheduler",
     srcs = [
-        "test_timer.cc",
+        "test_timed_scheduler.cc",
     ],
     deps = [
         "//src:cppev",
