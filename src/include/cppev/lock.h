@@ -237,52 +237,21 @@ public:
         pthread_cond_destroy(&cond_);
     }
 
-    void wait(std::unique_lock<pshared_lock> &lock, const condition &cond = []{ return true; })
+    void wait(std::unique_lock<pshared_lock> &lock)
     {
-        int ret = 0;
-        while (true)
+        int ret = pthread_cond_wait(&cond_, &lock.mutex()->lock_);
+        if (ret != 0)
         {
-            ret = pthread_cond_wait(&cond_, &lock.mutex()->lock_);
-            if (ret != 0)
-            {
-                throw_system_error("pthread_cond_wait error", ret);
-            }
-            if (cond())
-            {
-                break;
-            }
+            throw_system_error("pthread_cond_wait error", ret);
         }
     }
 
-    template <typename Rep, typename Period>
-    bool timedwait(std::unique_lock<pshared_lock> &lock, const std::chrono::duration<Rep, Period> &span,
-        const condition &cond = []{ return true; })
+    void wait(std::unique_lock<pshared_lock> &lock, const condition &cond)
     {
-        timespec ts;
-        memset(&ts, 0, sizeof(ts));
-        // CLOCK_REALTIME is essential here, pthread_cond_timedwait will use absolute time
-        clock_gettime(CLOCK_REALTIME, &ts);
-        auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(span).count();
-        ts.tv_sec += nanos / 1'000'000'000;
-        ts.tv_nsec += nanos % 1'000'000'000;
-
-        while (true)
+        while (!cond())
         {
-            int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
-            if (ret != 0)
-            {
-                if (ret == ETIMEDOUT)
-                {
-                    return false;
-                }
-                throw_system_error("pthread_cond_timedwait error", ret);
-            }
-            if (cond())
-            {
-                break;
-            }
+            wait(lock);
         }
-        return true;
     }
 
     void notify_one()
