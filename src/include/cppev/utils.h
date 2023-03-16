@@ -135,9 +135,6 @@ typedef uint64_t tid_t;
 static_assert(false, "platform not supported");
 #endif
 
-namespace utils
-{
-
 tid_t gettid() noexcept;
 
 /*
@@ -149,8 +146,6 @@ std::vector<std::string> split(const char *str, const char *sep) noexcept;
 std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept;
 
 std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
-
-}   // namespace utils
 
 }   // namespace cppev
 

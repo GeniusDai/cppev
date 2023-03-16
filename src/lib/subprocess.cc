@@ -68,9 +68,9 @@ subp_open::subp_open(const std::string &cmd, char *const *envp)
         dup2(one, STDOUT_FILENO);
         dup2(two, STDERR_FILENO);
 
-        std::vector<std::string> cmd_with_args = utils::split(cmd_, " ");
+        std::vector<std::string> cmd_with_args = split(cmd_, " ");
         std::string cmd_with_path = cmd_with_args[0];
-        cmd_with_args[0] = utils::split(cmd_with_args[0], "/").back();
+        cmd_with_args[0] = split(cmd_with_args[0], "/").back();
 
         char *argv[cmd_with_args.size()+1];
         memset(argv, 0, sizeof(argv));

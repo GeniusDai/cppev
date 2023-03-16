@@ -251,9 +251,6 @@ bool thread_check_signal_pending(int sig)
     return sigismember(&set, sig) == 1;
 }
 
-namespace utils
-{
-
 tid_t gettid() noexcept
 {
     thread_local tid_t thr_id = 0;
@@ -348,7 +345,5 @@ std::string join(const std::vector<std::string> &str_arr, const std::string &sep
     }
     return ret;
 }
-
-}   // namespace utils
 
 }   // namespace cppev

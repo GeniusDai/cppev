@@ -56,7 +56,7 @@ TEST(TestCommonUtils, test_split)
 
     for (const auto &tc : cases)
     {
-        EXPECT_EQ(std::get<2>(tc), utils::split(std::get<0>(tc), std::get<1>(tc)));
+        EXPECT_EQ(std::get<2>(tc), split(std::get<0>(tc), std::get<1>(tc)));
     }
 }
 
@@ -73,7 +73,7 @@ TEST(TestCommonUtils, test_join)
 
     for (const auto &tc : cases)
     {
-        EXPECT_EQ(std::get<2>(tc), utils::join(std::get<0>(tc), std::get<1>(tc)));
+        EXPECT_EQ(std::get<2>(tc), join(std::get<0>(tc), std::get<1>(tc)));
     }
 }
 
@@ -231,7 +231,7 @@ void test_sub_thread_signal_suspend(int sig, bool block)
     handle_signal(sig,
         [](int sig)
         {
-            std::cout << "handling signal " << sig << std::endl;
+            std::cout << gettid() << " handling signal " << sig << std::endl;
         }
     );
 
@@ -262,6 +262,7 @@ void test_sub_thread_signal_suspend(int sig, bool block)
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
+                std::cout  << gettid() << " suspending for signal" << std::endl;
                 thread_suspend_for_signal(sig);
             }
         );

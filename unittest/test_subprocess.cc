@@ -59,7 +59,7 @@ TEST_P(TestSubprocess, test_subp_popen)
 
     EXPECT_EQ(subp.stdout(), std::get<0>(param));
     EXPECT_EQ(subp.stderr(), std::string(""));
-    EXPECT_NE(subp.pid(), utils::gettid());
+    EXPECT_NE(subp.pid(), gettid());
 }
 
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestSubprocess,

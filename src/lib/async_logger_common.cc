@@ -45,7 +45,7 @@ async_logger &async_logger::operator<<(float x)
 void async_logger::write_header(buffer &buf)
 {
     std::stringstream ss;
-    tid_t thr_id = utils::gettid();
+    tid_t thr_id = gettid();
     ss << "- [";
     if (level_ == 1)
     {

@@ -33,7 +33,7 @@ cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::n
     iopt->write_all();
 
     std::string file_copy_name = std::string(FILENAME) + "." + std::to_string(iopt->fd()) + "."
-         + std::to_string(cppev::utils::gettid()) + ".copy";
+         + std::to_string(cppev::gettid()) + ".copy";
     int fd = open(file_copy_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
     if (fd < 0)
     {
