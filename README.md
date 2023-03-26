@@ -18,7 +18,7 @@ Support subprocess / semaphore / shared-memory / pshared-locks.
 
 ### Others
 
-Support reactor / dynamic-loader / timed-scheduler / signal-handing / async-logger.
+Support reactor / dynamic-loader / task-scheduler / signal-handing / async-logger.
 
 # Usage
 

@@ -1,5 +1,5 @@
-#ifndef _timer_h_6C0224787A17_
-#define _timer_h_6C0224787A17_
+#ifndef _scheduler_h_6C0224787A17_
+#define _scheduler_h_6C0224787A17_
 
 #include <cstddef>
 #include <functional>
@@ -12,29 +12,42 @@
 #include <map>
 #include <thread>
 #include <algorithm>
-#include <ctime>
-#include <csignal>
 #include "cppev/utils.h"
 
 namespace cppev
 {
 
-// Triggered timely
-// @param ts_curr : trigger timestamp
-using timed_task_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
-
-// Triggered when timed tasks have finished
-// @param ts_curr : trigger timestamp
-// @param ts_next : next trigger timestamp
-// @return : whether task all done
-using discrete_task_handler = std::function<bool(const std::chrono::nanoseconds &ts_curr,
-    const std::chrono::nanoseconds &ts_next)>;
+enum task_status
+{
+    done,
+    yield,
+};
 
 // Triggered once when thread starts
 using init_task_handler = std::function<void(void)>;
 
 // Triggered once when thread exits
 using exit_task_handler = std::function<void(void)>;
+
+// Triggered periodically by timed_scheduler
+// @param ts_curr : trigger timestamp
+using timed_task_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
+
+// Triggered periodically by timed_scheduler
+// @param ts_curr : trigger timestamp
+// @param ts_next : next trigger timestamp
+// @return : task status
+using discrete_task_handler = std::function<task_status(const std::chrono::nanoseconds &ts_curr,
+    const std::chrono::nanoseconds &ts_next)>;
+
+// Triggered periodically by timesharing_scheduler
+// @param timeslice : time slice the task has been assigned
+// @return : task status
+using timesharing_task_handler = std::function<task_status(const std::chrono::nanoseconds &timeslice)>;
+
+// Triggered periodically by timesharing_scheduler
+using yield_scheduler_handler = std::function<void(void)>;
+
 
 
 template<typename Clock = std::chrono::system_clock>
@@ -166,7 +179,8 @@ public:
                                     shall_stop_loop = true;
                                     break;
                                 }
-                                if (task(tp_curr.time_since_epoch(), tp_next.time_since_epoch()))
+                                if (task(tp_curr.time_since_epoch(), tp_next.time_since_epoch()) ==
+                                    task_status::done)
                                 {
                                     break;
                                 }
@@ -248,6 +262,117 @@ private:
 };
 
 
+
+class timesharing_scheduler
+{
+    using clock = std::chrono::steady_clock;
+
+    using task_queue_type = std::priority_queue<
+        std::tuple<priority, std::chrono::nanoseconds, std::shared_ptr<timesharing_task_handler>>,
+        std::vector<std::tuple<priority, std::chrono::nanoseconds, std::shared_ptr<timesharing_task_handler>>>,
+        tuple_less<std::tuple<priority, std::chrono::nanoseconds, std::shared_ptr<timesharing_task_handler>>, 0>
+    >;
+public:
+    // Create backend thread to execute tasks
+    // @param timesharing_tasks : tasks that will be executed with awareness of timeslice
+    // @param yield_scheduler : task that will be triggered when a round of scheduling finishes
+    // @param timeslice_unit : unit of time slice for tasks
+    // @param init_tasks : tasks that will be executed once only when thread starts
+    // @param exit_tasks : tasks that will be executed once only when thread exits
+    timesharing_scheduler(
+        const std::vector<std::tuple<priority, size_t, timesharing_task_handler>> &timesharing_tasks,
+        const yield_scheduler_handler &yield_scheduler,
+        const std::chrono::nanoseconds &timeslice_unit,
+        const std::vector<init_task_handler> &init_tasks = {},
+        const std::vector<exit_task_handler> &exit_tasks = {}
+    )
+    : stop_(false)
+    {
+        for (const auto &task : timesharing_tasks)
+        {
+            all_tasks_.push(std::make_tuple(std::get<0>(task), timeslice_unit * std::get<1>(task),
+                std::make_shared<timesharing_task_handler>(std::get<2>(task))));
+        }
+
+        thr_ = std::thread(
+            [=]()
+            {
+                for (const auto &task : init_tasks)
+                {
+                    task();
+                }
+
+                task_queue_type curr_tasks = all_tasks_;
+                task_queue_type next_tasks;
+
+                while (!stop_)
+                {
+                    while(!curr_tasks.empty() && !stop_)
+                    {
+                        auto task = curr_tasks.top();
+                        curr_tasks.pop();
+
+                        auto tp_begin = clock::now();
+                        auto status = (*std::get<2>(task))(std::get<1>(task));
+                        if (status == task_status::done)
+                        {
+                            continue;
+                        }
+                        auto tp_end = clock::now();
+
+                        auto remain = std::get<1>(task) - std::chrono::duration_cast<std::chrono::nanoseconds>
+                            (tp_end.time_since_epoch() - tp_begin.time_since_epoch());
+
+                        if (remain.count() > 0)
+                        {
+                            next_tasks.push(std::make_tuple(std::get<0>(task), remain, std::get<2>(task)));
+                        }
+                    }
+                    if (stop_)
+                    {
+                        break;
+                    }
+                    else if (next_tasks.empty())
+                    {
+                        curr_tasks = all_tasks_;
+                        yield_scheduler();
+                    }
+                    else
+                    {
+                        curr_tasks.swap(next_tasks);
+                    }
+                }
+
+                for (const auto &task : exit_tasks)
+                {
+                    task();
+                }
+            }
+        );
+    }
+
+    timesharing_scheduler(const timesharing_scheduler &) = delete;
+    timesharing_scheduler &operator=(const timesharing_scheduler &) = delete;
+    timesharing_scheduler(timesharing_scheduler &&) = delete;
+    timesharing_scheduler &operator=(timesharing_scheduler &&) = delete;
+
+    ~timesharing_scheduler()
+    {
+        stop_ = true;
+        thr_.join();
+    }
+
+private:
+    // whether thread shall stop
+    bool stop_;
+
+    // All the tasks
+    task_queue_type all_tasks_;
+
+    // backend thread executing tasks
+    std::thread thr_;
+};
+
 }   // namespace cppev
 
-#endif  // timed_task_executor.h
+#endif  // scheduler.h

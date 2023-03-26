@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <gtest/gtest.h>
-#include "cppev/timed_scheduler.h"
+#include "cppev/scheduler.h"
 
 namespace cppev
 {
@@ -39,16 +39,16 @@ protected:
     };
 
     discrete_task_handler discrete_task = [this](const std::chrono::nanoseconds &,
-        const std::chrono::nanoseconds &) -> bool
+        const std::chrono::nanoseconds &) -> task_status
     {
         ++this->discrete_count;
         ++this->discrete_count_helper;
         if (discrete_count_helper % 3 != 0)
         {
-            return false;
+            return task_status::yield;
         }
         this->discrete_count_helper = 0;
-        return true;
+        return task_status::done;
     };
 };
 
@@ -186,6 +186,19 @@ TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
     for (auto iter = kvmap.cbegin(); iter != kvmap.cend(); ++iter)
     {
         EXPECT_TRUE(is_sub_sequence(iter->second, res));
+    }
+}
+
+TEST(TestTimesharingScheduler, test_timesharing_scheduler)
+{
+    yield_scheduler_handler yield_scheduler = []()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    };
+
+    // TODO : implement unittest
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
