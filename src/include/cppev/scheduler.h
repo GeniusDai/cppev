@@ -30,15 +30,15 @@ using init_task_handler = std::function<void(void)>;
 using exit_task_handler = std::function<void(void)>;
 
 // Triggered periodically by timed_scheduler
-// @param ts_curr : trigger timestamp
-using timed_task_handler = std::function<void(const std::chrono::nanoseconds &ts_curr)>;
+// @param curr_timestamp : current trigger timestamp
+using timed_task_handler = std::function<void(const std::chrono::nanoseconds &curr_timestamp)>;
 
 // Triggered periodically by timed_scheduler
-// @param ts_curr : trigger timestamp
-// @param ts_next : next trigger timestamp
+// @param curr_timestamp : current trigger timestamp
+// @param next_timestamp : next trigger timestamp
 // @return : task status
-using discrete_task_handler = std::function<task_status(const std::chrono::nanoseconds &ts_curr,
-    const std::chrono::nanoseconds &ts_next)>;
+using discrete_task_handler = std::function<task_status(const std::chrono::nanoseconds &curr_timestamp,
+    const std::chrono::nanoseconds &next_timestamp)>;
 
 // Triggered periodically by timesharing_scheduler
 // @param timeslice : time slice the task has been assigned
@@ -58,9 +58,9 @@ class timed_scheduler
 public:
     // Create backend thread to execute tasks
     // @param timer_tasks : tasks that will be triggered regularly according to frequency.
-    //                      tuple : <frequency, priority, callback>
+    //                      tuple : <frequency, priority, task>
     // @param discrete_tasks : tasks that will be triggered between timed_task_executor tasks.
-    //                         tuple : <priority, callback>
+    //                         tuple : <priority, task>
     // @param init_tasks : tasks that will be executed once only when thread starts
     // @param exit_tasks : tasks that will be executed once only when thread exits
     // @param safety_factor : discrete tasks will not be executed if time before next trigger
@@ -274,7 +274,8 @@ class timesharing_scheduler
     >;
 public:
     // Create backend thread to execute tasks
-    // @param timesharing_tasks : tasks that will be executed with awareness of timeslice
+    // @param timesharing_tasks : tasks that will be executed with awareness of their assigned timeslice
+    //                            tuple : <priority, number of timeslice unit, task>
     // @param yield_scheduler : task that will be triggered when a round of scheduling finishes
     // @param timeslice_unit : unit of time slice for tasks
     // @param init_tasks : tasks that will be executed once only when thread starts
