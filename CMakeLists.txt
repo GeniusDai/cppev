@@ -7,6 +7,7 @@ if (CMAKE_HOST_UNIX)
 endif()
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -O0 -Wall -g -pthread")
+set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 include_directories(src/include)
 

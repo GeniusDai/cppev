@@ -126,6 +126,9 @@ cc_binary(
         "test_dyld_impl.h",
         "test_dyld_impl.cc",
     ],
+    copts = [
+        "-fPIC",
+    ],
     target_compatible_with = [
         "@platforms//os:linux",
     ],
@@ -138,6 +141,9 @@ cc_binary(
         "test_dyld_base.h",
         "test_dyld_impl.h",
         "test_dyld_impl.cc",
+    ],
+    copts = [
+        "-fPIC",
     ],
     target_compatible_with = [
         "@platforms//os:osx",
