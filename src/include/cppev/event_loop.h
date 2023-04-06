@@ -100,7 +100,7 @@ public:
     void loop_once(int timeout = -1);
 
     // Loop infinitely
-    void loop(int timeout = -1)
+    void loop_forever(int timeout = -1)
     {
         while(true)
         {

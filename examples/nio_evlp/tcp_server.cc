@@ -42,7 +42,7 @@ void start_server_loop()
     evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
     evlp.fd_register(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
 
-    evlp.loop();
+    evlp.loop_forever();
 }
 
 int main()
