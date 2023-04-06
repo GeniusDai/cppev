@@ -60,6 +60,8 @@ cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::ns
 
 int main(int argc, char **argv)
 {
+    cppev::thread_block_signal(SIGINT);
+
     fdcache cache;
     cppev::reactor::tcp_client client(6, 1, &cache);
 
@@ -69,5 +71,10 @@ int main(int argc, char **argv)
 
     client.add("127.0.0.1", PORT, cppev::family::ipv4, CONCURRENCY);
     client.run();
+
+    cppev::thread_wait_for_signal(SIGINT);
+
+    client.shutdown();
+
     return 0;
 }

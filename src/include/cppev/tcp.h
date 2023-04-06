@@ -129,7 +129,7 @@ class iohandler final
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
     {
     }
 
@@ -154,14 +154,18 @@ public:
     // will be executed by one thread of the pool to check the connection and do init jobs
     static void on_cont_writable(const std::shared_ptr<nio> &iop);
 
-    void run_impl() override
-    {
-        evlp_.loop();
-    }
+    // Run io handling
+    void run_impl() override;
+
+    // Shutdown io eventloop
+    void shutdown();
 
 private:
     // Event loop
     event_loop evlp_;
+
+    // Whether backend thread shall stop
+    bool stop_;
 
     // Hosts failed in the SO_ERROR check
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
@@ -173,7 +177,7 @@ class acceptor final
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
     {
     }
 
@@ -197,9 +201,15 @@ public:
     // Register readable to event loop and start loop
     void run_impl() override;
 
+    // Shutdown io eventloop
+    void shutdown();
+
 private:
     // Event loop
     event_loop evlp_;
+
+    // Whether backend thread shall stop
+    bool stop_;
 
     // Listening socket
     std::shared_ptr<nsocktcp> sock_;
@@ -211,7 +221,7 @@ class connector final
 {
 public:
     explicit connector(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
     {
         auto pipes = nio_factory::get_pipes();
         rdp_ = pipes[0];
@@ -238,9 +248,18 @@ public:
     // Register readable to event loop and start loop
     void run_impl() override;
 
+    // Shutdown io eventloop
+    void shutdown();
+
 private:
     // Event loop
     event_loop evlp_;
+
+    // Whether backend thread shall stop
+    bool stop_;
+
+    // Protects hosts_;
+    std::mutex lock_;
 
     // Pipe write end
     std::shared_ptr<nstream> wrp_;
@@ -268,10 +287,6 @@ public:
 
     ~tcp_server() = default;
 
-    void listen(int port, family f, const char *ip = nullptr);
-
-    void listen_unix(const std::string &path, bool remove = false);
-
     void set_on_accept(const tcp_event_handler &handler)
     {
         data_.on_accept = handler;
@@ -292,7 +307,13 @@ public:
         data_.on_closed = handler;
     }
 
+    void listen(int port, family f, const char *ip = nullptr);
+
+    void listen_unix(const std::string &path, bool remove = false);
+
     void run();
+
+    void shutdown();
 
 private:
     // Thread pool shared data
@@ -319,10 +340,6 @@ public:
 
     ~tcp_client() = default;
 
-    void add(const std::string &ip, int port, family f, int t = 1);
-
-    void add_unix(const std::string &path, int t = 1);
-
     void set_on_connect(const tcp_event_handler &handler)
     {
         data_.on_connect = handler;
@@ -343,7 +360,13 @@ public:
         data_.on_closed = handler;
     }
 
+    void add(const std::string &ip, int port, family f, int t = 1);
+
+    void add_unix(const std::string &path, int t = 1);
+
     void run();
+
+    void shutdown();
 
 private:
     // Thread pool shared data

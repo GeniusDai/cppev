@@ -50,6 +50,8 @@ cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::ns
  */
 int main()
 {
+    cppev::thread_block_signal(SIGINT);
+
     cppev::reactor::tcp_client client(CLIENT_WORKER_NUM, CONTOR_NUM);
     client.set_on_connect(on_connect);
     client.set_on_read_complete(on_read_complete);
@@ -63,5 +65,10 @@ int main()
     client.add_unix(             UNIX_PATH,                      UNIX_CONCURRENCY);
 
     client.run();
+
+    cppev::thread_wait_for_signal(SIGINT);
+
+    client.shutdown();
+
     return 0;
 }

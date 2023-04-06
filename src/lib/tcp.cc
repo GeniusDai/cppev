@@ -62,6 +62,21 @@ void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 
 const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
+
+
+static void cancel_evlp(event_loop &evlp, bool &stop)
+{
+    stop = true;
+    auto iopps = nio_factory::get_pipes();
+    iopps[0]->set_evlp(evlp);
+    fd_event_handler handler = [](const std::shared_ptr<nio> &iop)
+    {
+    };
+    evlp.fd_register(std::dynamic_pointer_cast<nio>(iopps[0]), fd_event::fd_readable, handler, true, priority::p6);
+}
+
+
+
 void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
@@ -146,6 +161,21 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
     iopt->evlp().fd_register(iop, fd_event::fd_readable, iohandler::on_readable, true);
 }
 
+void iohandler::run_impl()
+{
+    while (!stop_)
+    {
+        evlp_.loop_once();
+    }
+}
+
+void iohandler::shutdown()
+{
+    cancel_evlp(evlp_, stop_);
+}
+
+
+
 void acceptor::listen(int port, family f, const char *ip)
 {
     sock_ = nio_factory::get_nsocktcp(f);
@@ -184,8 +214,18 @@ void acceptor::run_impl()
 {
     evlp_.fd_register(std::static_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable, true);
-    evlp_.loop();
+    while(!stop_)
+    {
+        evlp_.loop_once();
+    }
 }
+
+void acceptor::shutdown()
+{
+    cancel_evlp(evlp_, stop_);
+}
+
+
 
 void connector::add(const std::string &ip, int port, family f, int t)
 {
@@ -194,14 +234,19 @@ void connector::add(const std::string &ip, int port, family f, int t)
         return;
     }
     auto h = std::make_tuple(ip, port, f);
-    if (hosts_.count(h))
+
     {
-        hosts_[h] += t;
+        std::unique_lock<std::mutex> _(lock_);
+        if (hosts_.count(h))
+        {
+            hosts_[h] += t;
+        }
+        else
+        {
+            hosts_[h] = t;
+        }
     }
-    else
-    {
-        hosts_[h] = t;
-    }
+
     wrp_->wbuffer().put_string("0");
     wrp_->write_all(1);
 }
@@ -220,8 +265,15 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iops->evlp().data());
     iops->read_all(1);
+
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
     connector *pseudo_this = reinterpret_cast<connector *>(iops->evlp().back());
-    for (auto iter = pseudo_this->hosts_.begin(); iter != pseudo_this->hosts_.end(); )
+    {
+        std::unique_lock<std::mutex> _(pseudo_this->lock_);
+        pseudo_this->hosts_.swap(hosts);
+    }
+
+    for (auto iter = hosts.begin(); iter != hosts.end(); )
     {
         for (int i = 0; i < iter->second; ++i)
         {
@@ -255,7 +307,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
                 pseudo_this->failures_[iter->first] += 1;
             }
         }
-        iter = pseudo_this->hosts_.erase(iter);
+        iter = hosts.erase(iter);
     }
 }
 
@@ -263,8 +315,18 @@ void connector::run_impl()
 {
     evlp_.fd_register(std::static_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable, true);
-    evlp_.loop();
+    while (!stop_)
+    {
+        evlp_.loop_once();
+    }
 }
+
+void connector::shutdown()
+{
+    cancel_evlp(evlp_, stop_);
+}
+
+
 
 tcp_server::tcp_server(int thr_num, void *external_data)
 : data_(external_data), tp_(thr_num, &data_)
@@ -295,12 +357,30 @@ void tcp_server::run()
     {
         acpt->run();
     }
-    tp_.join();
+}
+
+void tcp_server::shutdown()
+{
+    for (auto &acpt : acpts_)
+    {
+        acpt->shutdown();
+    }
     for (auto &acpt : acpts_)
     {
         acpt->join();
     }
+
+    for (int i = 0; i < tp_.size(); ++i)
+    {
+        tp_[i].shutdown();
+    }
+    for (int i = 0; i < tp_.size(); ++i)
+    {
+        tp_[i].join();
+    }
 }
+
+
 
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
 : data_(external_data), tp_(thr_num, &data_)
@@ -359,10 +439,26 @@ void tcp_client::run()
     {
         cont->run();
     }
-    tp_.join();
+}
+
+void tcp_client::shutdown()
+{
+    for (auto &cont : conts_)
+    {
+        cont->shutdown();
+    }
     for (auto &cont : conts_)
     {
         cont->join();
+    }
+
+    for (int i = 0; i < tp_.size(); ++i)
+    {
+        tp_[i].shutdown();
+    }
+    for (int i = 0; i < tp_.size(); ++i)
+    {
+        tp_[i].join();
     }
 }
 

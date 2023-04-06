@@ -58,11 +58,18 @@ cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<c
 
 int main()
 {
+    cppev::thread_block_signal(SIGINT);
+
     filecache cache;
     cppev::reactor::tcp_server server(3, &cache);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
     server.listen(PORT, cppev::family::ipv4);
     server.run();
+
+    cppev::thread_wait_for_signal(SIGINT);
+
+    server.shutdown();
+
     return 0;
 }
