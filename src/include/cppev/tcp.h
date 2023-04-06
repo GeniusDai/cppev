@@ -188,18 +188,18 @@ public:
 
     ~acceptor() = default;
 
-    // Specify listening socket's port and family
-    void listen(int port, family f, const char *ip = nullptr);
-
-    // Specify unix domain listening socket's path
-    void listen_unix(const std::string &path, bool remove = false);
-
     // Listening socket is readable, indicating new client arrives, this callback will be executed
     // by accept thread to accept connection and assign connection to thread pool
     static void on_acpt_readable(const std::shared_ptr<nio> &iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
+
+    // Specify listening socket's port and family
+    void listen(int port, family f, const char *ip = nullptr);
+
+    // Specify unix domain listening socket's path
+    void listen_unix(const std::string &path, bool remove = false);
 
     // Shutdown io eventloop
     void shutdown();
@@ -235,18 +235,18 @@ public:
 
     ~connector() = default;
 
-    // Add connection task (ip, port, family)
-    void add(const std::string &ip, int port, family f, int t = 1);
-
-    // Add connection task (path, 0, family::local)
-    void add_unix(const std::string &path, int t = 1);
-
     // Pipe fd is readable, indicating new task added, this callback will be executed by
     // connect thread to execute the connection task and assign connection to thread pool
     static void on_pipe_readable(const std::shared_ptr<nio> &iop);
 
     // Register readable to event loop and start loop
     void run_impl() override;
+
+    // Add connection task (ip, port, family)
+    void add(const std::string &ip, int port, family f, int t = 1);
+
+    // Add connection task (path, 0, family::local)
+    void add_unix(const std::string &path, int t = 1);
 
     // Shutdown io eventloop
     void shutdown();
