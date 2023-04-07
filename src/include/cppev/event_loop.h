@@ -34,11 +34,7 @@ constexpr fd_event operator|(fd_event a, fd_event b)
     return static_cast<fd_event>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-class event_loop;
-
 using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
-
-using evlp_handler = std::function<void(event_loop &)>;
 
 class event_loop
 {
@@ -75,11 +71,6 @@ public:
         return fds_.size();
     }
 
-    void set_on_loop(const evlp_handler &handler) noexcept
-    {
-        evlp_handler_ = handler;
-    }
-
     // Register fd event to event pollor
     // @param iop       nio smart pointer
     // @param ev_type   event type
@@ -104,31 +95,21 @@ public:
     {
         while(true)
         {
-            if (evlp_handler_)
-            {
-                evlp_handler_(*this);
-            }
-#ifdef CPPEV_DEBUG
-            log::info << "start event loop" << log::endl;
-#endif  // CPPEV_DEBUG
             loop_once(timeout);
         }
     }
 
 private:
-    // When event loop starts;
-    evlp_handler evlp_handler_;
-
     // Used for registering callback for event loop
     std::mutex lock_;
 
     // Event watcher fd
     int ev_fd_;
 
-    // Thread pool shared data
+    // External data for eventloop
     void *data_;
 
-    // Class that contains this eventloop
+    // External class contains eventloop
     void *back_;
 
     // Tuple : priority, nio, callback, event

@@ -45,7 +45,7 @@ static fd_event fd_map_to_event(uint32_t ev)
 }
 
 event_loop::event_loop(void *data, void *back)
-: evlp_handler_(evlp_handler()), data_(data), back_(back)
+: data_(data), back_(back)
 {
     ev_fd_ = kqueue();
     if (ev_fd_ < 0)
