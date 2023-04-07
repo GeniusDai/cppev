@@ -129,7 +129,7 @@ class iohandler final
     friend class tcp_client;
 public:
     explicit iohandler(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
     {
     }
 
@@ -164,9 +164,6 @@ private:
     // Event loop
     event_loop evlp_;
 
-    // Whether backend thread shall stop
-    bool stop_;
-
     // Hosts failed in the SO_ERROR check
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> failures_;
 };
@@ -177,7 +174,7 @@ class acceptor final
 {
 public:
     explicit acceptor(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
     {
     }
 
@@ -208,9 +205,6 @@ private:
     // Event loop
     event_loop evlp_;
 
-    // Whether backend thread shall stop
-    bool stop_;
-
     // Listening socket
     std::shared_ptr<nsocktcp> sock_;
 };
@@ -221,7 +215,7 @@ class connector final
 {
 public:
     explicit connector(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this)), stop_(false)
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
     {
         auto pipes = nio_factory::get_pipes();
         rdp_ = pipes[0];
@@ -254,9 +248,6 @@ public:
 private:
     // Event loop
     event_loop evlp_;
-
-    // Whether backend thread shall stop
-    bool stop_;
 
     // Protects hosts_;
     std::mutex lock_;

@@ -44,7 +44,7 @@ static fd_event fd_map_to_event(uint32_t ev)
 }
 
 event_loop::event_loop(void *data, void *back)
-: data_(data), back_(back)
+: data_(data), back_(back), stop_(false)
 {
     ev_fd_ = epoll_create(sysconfig::event_number);
     if (ev_fd_ < 0)

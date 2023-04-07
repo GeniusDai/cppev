@@ -93,10 +93,24 @@ public:
     // Loop infinitely
     void loop_forever(int timeout = -1)
     {
-        while(true)
+        while(!stop_)
         {
             loop_once(timeout);
         }
+    }
+
+    // Stop loop infinitely
+    void stop_loop_forever()
+    {
+        stop_ = true;
+        auto iopps = nio_factory::get_pipes();
+        iopps[0]->set_evlp(*this);
+        fd_event_handler handler = [](const std::shared_ptr<nio> &iop)
+        {
+            iop->evlp().fd_remove(iop);
+        };
+        this->fd_register(std::dynamic_pointer_cast<nio>(iopps[0]), fd_event::fd_readable,
+            handler, true, priority::p6);
     }
 
 private:
@@ -120,6 +134,9 @@ private:
 
     // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;
+
+    // Whether loop forever shall be stopped
+    bool stop_;
 };
 
 }   // namespace cppev

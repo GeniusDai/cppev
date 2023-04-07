@@ -63,20 +63,6 @@ void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
 
-
-static void cancel_evlp(event_loop &evlp, bool &stop)
-{
-    stop = true;
-    auto iopps = nio_factory::get_pipes();
-    iopps[0]->set_evlp(evlp);
-    fd_event_handler handler = [](const std::shared_ptr<nio> &iop)
-    {
-    };
-    evlp.fd_register(std::dynamic_pointer_cast<nio>(iopps[0]), fd_event::fd_readable, handler, true, priority::p6);
-}
-
-
-
 void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
@@ -163,17 +149,13 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
 
 void iohandler::run_impl()
 {
-    while (!stop_)
-    {
-        evlp_.loop_once();
-    }
+    evlp_.loop_forever();
 }
 
 void iohandler::shutdown()
 {
-    cancel_evlp(evlp_, stop_);
+    evlp_.stop_loop_forever();
 }
-
 
 
 void acceptor::listen(int port, family f, const char *ip)
@@ -214,17 +196,13 @@ void acceptor::run_impl()
 {
     evlp_.fd_register(std::static_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable, true);
-    while(!stop_)
-    {
-        evlp_.loop_once();
-    }
+    evlp_.loop_forever();
 }
 
 void acceptor::shutdown()
 {
-    cancel_evlp(evlp_, stop_);
+    evlp_.stop_loop_forever();
 }
-
 
 
 void connector::add(const std::string &ip, int port, family f, int t)
@@ -315,17 +293,13 @@ void connector::run_impl()
 {
     evlp_.fd_register(std::static_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable, true);
-    while (!stop_)
-    {
-        evlp_.loop_once();
-    }
+    evlp_.loop_forever();
 }
 
 void connector::shutdown()
 {
-    cancel_evlp(evlp_, stop_);
+    evlp_.stop_loop_forever();
 }
-
 
 
 tcp_server::tcp_server(int thr_num, void *external_data)
@@ -379,7 +353,6 @@ void tcp_server::shutdown()
         tp_[i].join();
     }
 }
-
 
 
 tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
