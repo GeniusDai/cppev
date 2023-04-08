@@ -76,5 +76,7 @@ int main(int argc, char **argv)
 
     client.shutdown();
 
+    cppev::log::info << "main thread exited" << cppev::log::endl;
+
     return 0;
 }

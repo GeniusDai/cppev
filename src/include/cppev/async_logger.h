@@ -19,6 +19,8 @@
 #endif
 #endif
 
+#undef __CPPEV_USE_HASHED_LOGGER__
+
 namespace cppev
 {
 

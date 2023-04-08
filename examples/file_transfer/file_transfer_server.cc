@@ -71,5 +71,7 @@ int main()
 
     server.shutdown();
 
+    cppev::log::info << "main thread exited" << cppev::log::endl;
+
     return 0;
 }
