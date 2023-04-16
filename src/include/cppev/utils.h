@@ -28,9 +28,9 @@ enum priority
 struct enum_hash
 {
     template <typename T>
-    std::size_t operator()(const T &t) const
+    std::size_t operator()(const T &t) const noexcept
     {
-        return std::hash<int>()((int)t);
+        return std::hash<int>()(static_cast<int>(t));
     }
 };
 
