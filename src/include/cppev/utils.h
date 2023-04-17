@@ -137,15 +137,15 @@ static_assert(false, "platform not supported");
 
 tid_t gettid() noexcept;
 
-/*
- * split : doesn't support string contains '\0'
- * join  : support string contains '\0'
- */
-std::vector<std::string> split(const char *str, const char *sep) noexcept;
+std::string strip(const std::string &str, const std::string &chars) noexcept;
 
-std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept;
+std::string lstrip(const std::string &str, const std::string &chars) noexcept;
+
+std::string rstrip(const std::string &str, const std::string &chars) noexcept;
 
 std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
+
+std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 }   // namespace cppev
 

@@ -265,29 +265,26 @@ tid_t gettid() noexcept
     return thr_id;
 }
 
-std::vector<std::string> split(const std::string &str, const std::string &sep) noexcept
+std::vector<std::string> split(const std::string &str, const std::string &sep)
 {
-    return split(str.c_str(), sep.c_str());
-}
+    if (sep.empty())
+    {
+        throw_runtime_error("cannot split string with empty seperator");
+    }
 
-std::vector<std::string> split(const char *str, const char *sep) noexcept
-{
-    size_t str_len = strlen(str);
-    size_t sep_len = strlen(sep);
-
-    if (sep_len > str_len)
+    if (sep.size() > str.size())
     {
         return { str };
     }
 
     std::vector<int> sep_index;
 
-    sep_index.push_back(0 - sep_len);
+    sep_index.push_back(0 - sep.size());
 
-    for (size_t i = 0; i <= str_len - sep_len; )
+    for (size_t i = 0; i <= str.size() - sep.size(); )
     {
         bool is_sep = true;
-        for (size_t j = i; j < i + sep_len; ++j)
+        for (size_t j = i; j < i + sep.size(); ++j)
         {
             if (str[j] != sep[j-i])
             {
@@ -298,7 +295,7 @@ std::vector<std::string> split(const char *str, const char *sep) noexcept
         if (is_sep)
         {
             sep_index.push_back(static_cast<int>(i));
-            i += sep_len;
+            i += sep.size();
         }
         else
         {
@@ -306,7 +303,7 @@ std::vector<std::string> split(const char *str, const char *sep) noexcept
         }
     }
 
-    sep_index.push_back(str_len);
+    sep_index.push_back(str.size());
 
     if (sep_index.size() == 2)
     {
@@ -317,7 +314,7 @@ std::vector<std::string> split(const char *str, const char *sep) noexcept
 
     for (size_t i = 1; i < sep_index.size(); ++i)
     {
-        int begin = sep_index[i-1] + sep_len;
+        int begin = sep_index[i-1] + sep.size();
         int end = sep_index[i];
 
         substrs.push_back(std::string(str, begin, end - begin));

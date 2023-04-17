@@ -52,6 +52,7 @@ TEST(TestCommonUtils, test_split)
         { "hellohello", "invalid", { "hellohello" } },
         { "***", "*", { "", "", "", "" } },
         { "**cppev**", "*", { "", "", "cppev", "", "" } },
+        { std::string("*\0cppev\0*\0\0", 10), std::string("\0", 1), { "*", "cppev", "*", "" } },
     };
 
     for (const auto &tc : cases)

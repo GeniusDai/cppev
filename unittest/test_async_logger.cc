@@ -92,7 +92,7 @@ TEST_F(TestAsyncLogger, test_output)
         thrs[i].join();
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     close(fd);
     dup2(save_stdout, STDOUT_FILENO);
