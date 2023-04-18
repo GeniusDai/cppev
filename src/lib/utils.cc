@@ -343,4 +343,86 @@ std::string join(const std::vector<std::string> &str_arr, const std::string &sep
     return ret;
 }
 
+static constexpr int STRIP_LEFT = 0x01;
+static constexpr int STRIP_RIGHT = 0x10;
+
+static std::string do_strip(const std::string &str, const std::string &chars, const int type)
+{
+    if (chars.empty())
+    {
+        throw_runtime_error("cannot strip string with empty strip chars");
+    }
+
+    size_t p = 0;
+    size_t r = str.size();
+
+    if (type & STRIP_LEFT)
+    {
+        while (r - p >= chars.size())
+        {
+            bool eq = true;
+            size_t j = 0;
+            for (size_t i = p; i < p + chars.size(); ++i)
+            {
+                if (str[i] != chars[j++])
+                {
+                    eq = false;
+                    break;
+                }
+            }
+            if (eq)
+            {
+                p += chars.size();
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if (type & STRIP_RIGHT)
+    {
+        while (r - p >= chars.size())
+        {
+            bool eq = true;
+            size_t j = chars.size() - 1;
+            for (size_t i = r - 1; i > r - chars.size() - 1; --i)
+            {
+                if (str[i] != chars[j--])
+                {
+                    eq = false;
+                    break;
+                }
+            }
+            if (eq)
+            {
+                r -= chars.size();
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    return str.substr(p ,r - p);
+}
+
+std::string strip(const std::string &str, const std::string &chars)
+{
+    return do_strip(str, chars, STRIP_LEFT | STRIP_RIGHT);
+}
+
+std::string lstrip(const std::string &str, const std::string &chars)
+{
+    return do_strip(str, chars, STRIP_LEFT);
+}
+
+std::string rstrip(const std::string &str, const std::string &chars)
+{
+    return do_strip(str, chars, STRIP_RIGHT);
+}
+
+
 }   // namespace cppev

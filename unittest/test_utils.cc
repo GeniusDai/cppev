@@ -78,6 +78,29 @@ TEST(TestCommonUtils, test_join)
     }
 }
 
+TEST(TestCommonUtils, test_strip)
+{
+    /*
+     * str / chars / strip / lstrip / rstrip
+     */
+    std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> cases =
+    {
+        { "cppev", "c", "ppev", "ppev", "cppev" },
+        { "", "1", "", "", "" },
+        { std::string("\0\0cppev\0", 8), std::string("\0\0", 2),
+            std::string("cppev\0", 6), std::string("cppev\0", 6), std::string("\0\0cppev\0", 8) },
+        { std::string("\0\0cppev\0", 8), std::string("\0", 1),
+            "cppev", std::string("cppev\0", 6), std::string("\0\0cppev", 7) },
+    };
+
+    for (const auto &tc : cases)
+    {
+        EXPECT_EQ(std::get<2>(tc), strip(std::get<0>(tc), std::get<1>(tc)));
+        EXPECT_EQ(std::get<3>(tc), lstrip(std::get<0>(tc), std::get<1>(tc)));
+        EXPECT_EQ(std::get<4>(tc), rstrip(std::get<0>(tc), std::get<1>(tc)));
+    }
+}
+
 typedef void (*testing_func_type)(int, bool);
 
 class TestSignal

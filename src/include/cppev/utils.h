@@ -137,13 +137,13 @@ static_assert(false, "platform not supported");
 
 tid_t gettid() noexcept;
 
-std::string strip(const std::string &str, const std::string &chars) noexcept;
-
-std::string lstrip(const std::string &str, const std::string &chars) noexcept;
-
-std::string rstrip(const std::string &str, const std::string &chars) noexcept;
-
 std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
+
+std::string strip(const std::string &str, const std::string &chars);
+
+std::string lstrip(const std::string &str, const std::string &chars);
+
+std::string rstrip(const std::string &str, const std::string &chars);
 
 std::vector<std::string> split(const std::string &str, const std::string &sep);
 
