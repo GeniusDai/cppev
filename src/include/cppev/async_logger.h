@@ -11,16 +11,6 @@
 #include "cppev/utils.h"
 #include "cppev/runnable.h"
 
-// Only use hashed async logger in linux with higher version
-// glibc, lower version glibc or macOS got bug in read-write-lock
-#if defined(__linux__) && defined(__GNUC_PREREQ)
-#if __GNUC_PREREQ(2, 25)
-#define __CPPEV_USE_HASHED_LOGGER__
-#endif
-#endif
-
-#undef __CPPEV_USE_HASHED_LOGGER__
-
 namespace cppev
 {
 
@@ -48,15 +38,6 @@ public:
 
     async_logger &operator<<(float x);
 
-    static constexpr const char *impl()
-    {
-#if defined(__CPPEV_USE_HASHED_LOGGER__)
-        return "hashed";
-#else
-        return "buffered";
-#endif
-    }
-
 private:
     void write_header(buffer &buf);
 
@@ -64,25 +45,13 @@ private:
 
     bool stop_;
 
-#if defined(__CPPEV_USE_HASHED_LOGGER__)
-
-    // thread_id --> < buffer, recursive_mutex, recursive_level, timestamp >
-    std::unordered_map<tid_t, std::tuple<buffer,
-        std::unique_ptr<std::recursive_mutex>, int, time_t>> logs_;
-
-    std::shared_mutex lock_;
-
-#else
-
     std::recursive_mutex lock_;
+
+    std::condition_variable_any cond_;
 
     buffer buffer_;
 
     int recur_level_;
-
-#endif  // __CPPEV_USE_HASHED_LOGGER__
-
-    std::condition_variable_any cond_;
 };
 
 namespace log

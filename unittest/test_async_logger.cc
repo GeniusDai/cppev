@@ -35,7 +35,6 @@ protected:
 
 TEST_F(TestAsyncLogger, test_output)
 {
-    std::cout << async_logger::impl() << std::endl;
     int fd = open(file, O_TRUNC | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
