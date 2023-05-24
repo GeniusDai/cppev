@@ -167,11 +167,16 @@ bool check_process_group(pid_t pgid)
     return check_process(-1 * pgid);
 }
 
-/*
- * Q: Why not support waiting for a set of signals?
- * A: One thread waiting for one signal. If you need to wait for several signals, just
- *    create several threads.
- */
+
+
+void thread_raise_signal(int sig)
+{
+    if (raise(sig) != 0)
+    {
+        throw_system_error("raise error");
+    }
+}
+
 void thread_wait_for_signal(int sig)
 {
     sigset_t set;
@@ -186,6 +191,24 @@ void thread_wait_for_signal(int sig)
     }
 }
 
+int thread_wait_for_signal(const std::vector<int> &sigs)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    for (auto sig : sigs)
+    {
+        sigaddset(&set, sig);
+    }
+
+    // linux requires non-null
+    int ret_sig;
+    if (sigwait(&set, &ret_sig) != 0)
+    {
+        throw_system_error("sigwait error");
+    }
+    return ret_sig;
+}
+
 void thread_suspend_for_signal(int sig)
 {
     sigset_t set;
@@ -195,11 +218,38 @@ void thread_suspend_for_signal(int sig)
     sigsuspend(&set);
 }
 
+void thread_suspend_for_signal(const std::vector<int> &sigs)
+{
+    sigset_t set;
+    sigfillset(&set);
+    for (auto sig : sigs)
+    {
+        sigdelset(&set, sig);
+    }
+    // sigsuspend always returns -1
+    sigsuspend(&set);
+}
+
 void thread_block_signal(int sig)
 {
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, sig);
+    int ret = pthread_sigmask(SIG_BLOCK, &set, nullptr);
+    if (ret != 0)
+    {
+        throw_system_error("pthread_sigmask error", ret);
+    }
+}
+
+void thread_block_signal(const std::vector<int> &sigs)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    for (auto sig : sigs)
+    {
+        sigaddset(&set, sig);
+    }
     int ret = pthread_sigmask(SIG_BLOCK, &set, nullptr);
     if (ret != 0)
     {
@@ -219,11 +269,18 @@ void thread_unblock_signal(int sig)
     }
 }
 
-void thread_raise_signal(int sig)
+void thread_unblock_signal(const std::vector<int> &sigs)
 {
-    if (raise(sig) != 0)
+    sigset_t set;
+    sigemptyset(&set);
+    for (auto sig : sigs)
     {
-        throw_system_error("raise error");
+        sigaddset(&set, sig);
+    }
+    int ret = pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
+    if (ret != 0)
+    {
+        throw_system_error("pthread_sigmask error", ret);
     }
 }
 
@@ -250,6 +307,8 @@ bool thread_check_signal_pending(int sig)
     }
     return sigismember(&set, sig) == 1;
 }
+
+
 
 tid_t gettid() noexcept
 {

@@ -141,7 +141,7 @@ void test_main_thread_signal_wait(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
-        thread_wait_for_signal(sig);
+        EXPECT_EQ(sig, thread_wait_for_signal({ sig, SIGUSR2}));
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }
@@ -170,7 +170,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
             {
                 if (block)
                 {
-                    thread_block_signal(sig);
+                    thread_block_signal({ sig, SIGUSR2 });
                     EXPECT_TRUE(thread_check_signal_mask(sig));
                     thread_raise_signal(sig);
                     thread_raise_signal(sig);
@@ -180,7 +180,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
                 }
                 else
                 {
-                    thread_unblock_signal(sig);
+                    thread_unblock_signal({ sig, SIGUSR2 });
                     handle_signal(sig,
                         [](int sig)
                         {
@@ -236,7 +236,7 @@ void test_main_thread_signal_suspend(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
-        thread_suspend_for_signal(sig);
+        thread_suspend_for_signal({ sig, SIGUSR2 });
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }

@@ -113,17 +113,25 @@ bool check_process_group(pid_t pgid);
 /*
  * Thread level signal handling
  */
+void thread_raise_signal(int sig);
+
 void thread_block_signal(int sig);
+
+void thread_block_signal(const std::vector<int> &sigs);
 
 void thread_unblock_signal(int sig);
 
-bool thread_check_signal_mask(int sig);
-
-void thread_raise_signal(int sig);
+void thread_unblock_signal(const std::vector<int> &sigs);
 
 void thread_suspend_for_signal(int sig);
 
+void thread_suspend_for_signal(const std::vector<int> &sigs);
+
 void thread_wait_for_signal(int sig);
+
+int thread_wait_for_signal(const std::vector<int> &sigs);
+
+bool thread_check_signal_mask(int sig);
 
 bool thread_check_signal_pending(int sig);
 
