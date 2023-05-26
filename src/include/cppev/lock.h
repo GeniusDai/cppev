@@ -411,7 +411,7 @@ public:
         int ret = pthread_rwlock_unlock(&lock_);
         if (ret != 0)
         {
-            throw_system_error("pthread_rwlock_destroy error", ret);
+            throw_system_error("pthread_rwlock_unlock error", ret);
         }
     }
 
