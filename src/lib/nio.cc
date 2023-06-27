@@ -726,9 +726,11 @@ std::vector<std::shared_ptr<nstream>> get_pipes()
     {
         throw_system_error("pipe error");
     }
-    std::vector<std::shared_ptr<nstream>> pipes;
-    pipes.push_back(std::make_shared<nstream>(pfds[0]));
-    pipes.push_back(std::make_shared<nstream>(pfds[1]));
+    std::vector<std::shared_ptr<nstream>> pipes =
+    {
+        std::make_shared<nstream>(pfds[0]),
+        std::make_shared<nstream>(pfds[1]),
+    };
     return pipes;
 }
 
@@ -749,9 +751,11 @@ std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &path)
     {
         throw_system_error("open error");
     }
-    std::vector<std::shared_ptr<nstream>> fifos;
-    fifos.push_back(std::make_shared<nstream>(fdr));
-    fifos.push_back(std::make_shared<nstream>(fdw));
+    std::vector<std::shared_ptr<nstream>> fifos =
+    {
+        std::make_shared<nstream>(fdr),
+        std::make_shared<nstream>(fdw),
+    };
     return fifos;
 }
 
