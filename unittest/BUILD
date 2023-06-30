@@ -120,11 +120,12 @@ cc_test(
 )
 
 cc_binary(
-    name = "libtest_dyld_impl.so",
+    name = "libLoaderTestFunctions.so",
     srcs = [
-        "test_dyld_base.h",
-        "test_dyld_impl.h",
-        "test_dyld_impl.cc",
+        "LoaderTestBase.h",
+        "LoaderTestImpl.h",
+        "LoaderTestImpl.cc",
+        "LoaderTestFunctions.cc",
     ],
     copts = [
         "-fPIC",
@@ -136,11 +137,12 @@ cc_binary(
 )
 
 cc_binary(
-    name = "libtest_dyld_impl.dylib",
+    name = "libLoaderTestFunctions.dylib",
     srcs = [
-        "test_dyld_base.h",
-        "test_dyld_impl.h",
-        "test_dyld_impl.cc",
+        "LoaderTestBase.h",
+        "LoaderTestImpl.h",
+        "LoaderTestImpl.cc",
+        "LoaderTestFunctions.cc",
     ],
     copts = [
         "-fPIC",
@@ -154,7 +156,7 @@ cc_binary(
 cc_test(
     name = "test_dynamic_loader",
     srcs = [
-        "test_dyld_base.h",
+        "LoaderTestBase.h",
         "test_dynamic_loader.cc",
     ],
     deps = [
@@ -163,10 +165,10 @@ cc_test(
     ] +
     select({
         "@platforms//os:linux" : [
-            ":libtest_dyld_impl.so",
+            ":libLoaderTestFunctions.so",
         ],
         "@platforms//os:osx" : [
-            ":libtest_dyld_impl.dylib",
+            ":libLoaderTestFunctions.dylib",
         ],
     }),
 )

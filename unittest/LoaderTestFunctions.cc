@@ -1,5 +1,5 @@
 #include <memory>
-#include "test_dyld_impl.h"
+#include "LoaderTestImpl.h"
 
 extern "C"
 {

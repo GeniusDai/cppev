@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "cppev/utils.h"
 #include "cppev/dynamic_loader.h"
-#include "test_dyld_base.h"
+#include "LoaderTestBase.h"
 
 namespace cppev
 {
@@ -31,7 +31,7 @@ static const std::string get_ld_path(const std::string &exec_path)
     std::string ld_suffix = ".dylib";
 #endif  // __linux__
 
-    return path + "lib" + "test_dyld_impl" + ld_suffix;
+    return path + "lib" + "LoaderTestFunctions" + ld_suffix;
 }
 
 static void test_class(LoaderTestBase *base_cls)
