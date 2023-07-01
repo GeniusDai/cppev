@@ -7,7 +7,6 @@ function(compile_and_enable_test testname_)
     target_link_libraries(${testname_} cppev gtest)
 endfunction(compile_and_enable_test)
 
-# A little bit different with bazel
 add_library(LoaderTestImpl SHARED LoaderTestImpl.cc)
 add_library(LoaderTestFunctions SHARED LoaderTestFunctions.cc)
 target_link_libraries(LoaderTestFunctions LoaderTestImpl cppev)
