@@ -10,15 +10,23 @@ Support socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domai
 
 Support readable / writable event handling by io-multiplexing.
 
-### Concurrency
+### Multithreading
 
-Support thread / thread-pool.
+Support subthread / threadpool.
 
-Support subprocess / semaphore / shared-memory / pshared-locks.
+### Interprocess Communication
+
+Support semaphore / shared-memory.
+
+Support mutex / condition-variable / read-write-lock shared among processes.
+
+### Binary File Loading
+
+Support executable-file loading by subprocess, dynamic-library loading in runtime.
 
 ### Others
 
-Support reactor / dynamic-loader / task-scheduler / signal-handing / async-logger.
+Support reactor / signal-handing / task-scheduler / async-logger.
 
 # Usage
 
@@ -63,4 +71,4 @@ Please see the examples along with a tutorial.
 
 # Issues and Maintenance
 
-Repo will be long-term maintained, author will keep working on the todo-list. If you found any shortage or any new feature nice to have, feel free to raise an issue.
+Repo will be long-term maintained, if you found any shortage or any new feature nice to have, feel free to raise an issue.
