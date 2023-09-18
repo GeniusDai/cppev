@@ -54,17 +54,6 @@ cc_test(
 )
 
 cc_test(
-    name = "test_lru_cache",
-    srcs = [
-        "test_lru_cache.cc",
-    ],
-    deps = [
-        "//src:cppev",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "test_nio_evlp",
     srcs = [
         "test_nio_evlp.cc",

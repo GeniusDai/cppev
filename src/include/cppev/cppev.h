@@ -6,7 +6,6 @@
 #include "cppev/utils.h"
 #include "cppev/sysconfig.h"
 #include "cppev/event_loop.h"
-#include "cppev/lru_cache.h"
 #include "cppev/ipc.h"
 #include "cppev/lock.h"
 #include "cppev/nio.h"
