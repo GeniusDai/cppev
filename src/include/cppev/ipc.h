@@ -18,11 +18,19 @@ public:
 
     shared_memory(shared_memory &&other) noexcept
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<shared_memory>(other));
     }
 
     shared_memory &operator=(shared_memory &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<shared_memory>(other));
         return *this;
     }
@@ -90,11 +98,19 @@ public:
 
     semaphore(semaphore &&other) noexcept
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<semaphore>(other));
     }
 
     semaphore &operator=(semaphore &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<semaphore>(other));
         return *this;
     }

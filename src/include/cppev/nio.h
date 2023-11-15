@@ -59,11 +59,19 @@ public:
 
     nio(nio &&other) noexcept
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<nio>(other));
     }
 
     nio &operator=(nio &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<nio>(other));
         return *this;
     }
@@ -173,11 +181,19 @@ public:
     nstream(nstream &&other) noexcept
     : nio(std::forward<nstream>(other))
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<nstream>(other), false);
     }
 
     nstream &operator=(nstream &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<nstream>(other), true);
         return *this;
     }
@@ -255,11 +271,19 @@ public:
     nsock(nsock &&other) noexcept
     : nio(std::forward<nsock>(other))
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<nsock>(other), false);
     }
 
     nsock &operator=(nsock &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<nsock>(other), true);
         return *this;
     }
@@ -377,11 +401,19 @@ public:
       nsock(std::forward<nsocktcp>(other)),
       nstream(std::forward<nsocktcp>(other))
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<nsocktcp>(other), false);
     }
 
     nsocktcp &operator=(nsocktcp &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<nsocktcp>(other), true);
         return *this;
     }
@@ -468,11 +500,19 @@ public:
     nsockudp(nsockudp &&other) noexcept
     : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
     {
+        if (&other == this)
+        {
+            return;
+        }
         move(std::forward<nsockudp>(other), false);
     }
 
     nsockudp &operator=(nsockudp &&other) noexcept
     {
+        if (&other == this)
+        {
+            return *this;
+        }
         move(std::forward<nsockudp>(other), true);
         return *this;
     }
