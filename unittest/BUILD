@@ -151,8 +151,8 @@ cc_test(
     deps = [
         "//src:cppev",
         "@googletest//:gtest_main",
-    ] +
-    select({
+    ],
+    data = select({
         "@platforms//os:linux" : [
             ":libLoaderTestFunctions.so",
         ],
