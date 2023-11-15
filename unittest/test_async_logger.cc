@@ -50,9 +50,9 @@ TEST_F(TestAsyncLogger, test_output)
     {
         for (int j = 0; j < this->loop_num; ++j)
         {
-            log::info << str << " round [" << i << "]" << log::endl;
+            log::info << str << " thread [" << i << "] round [" << j << "]" << log::endl;
             std::this_thread::sleep_for(std::chrono::microseconds(1));
-            log::error << str << " round [" << i << "]" << log::endl;
+            log::error << str << " thread [" << i << "] round [" << j << "]" << log::endl;
         }
         std::random_device rd;
         std::default_random_engine rde(rd());
