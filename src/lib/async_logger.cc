@@ -15,6 +15,19 @@
 namespace cppev
 {
 
+async_logger::async_logger(int level)
+: level_(level), stop_(false), curr_(0), recur_level_(0)
+{
+    if (level_ < 0)
+    {
+        return;
+    }
+    for (int i = 0; i < 2; ++i) {
+        buffers_.emplace_back();
+    }
+    run();
+}
+
 async_logger::~async_logger()
 {
     if (level_ < 0)
@@ -73,26 +86,14 @@ void async_logger::write_header(buffer &buf)
     buf.put_string(ss.str());
 }
 
-
-
-async_logger::async_logger(int level)
-: level_(level), stop_(false), recur_level_(0)
-{
-    if (level_ < 0)
-    {
-        return;
-    }
-    run();
-}
-
 async_logger &async_logger::operator<<(const char *str)
 {
     lock_.lock();
     if (0 == recur_level_++)
     {
-        write_header(buffer_);
+        write_header(buffers_[curr_]);
     }
-    buffer_.put_string(str);
+    buffers_[curr_].put_string(str);
     return *this;
 }
 
@@ -113,20 +114,28 @@ void async_logger::run_impl()
 {
     while (!stop_)
     {
-        std::unique_lock<std::recursive_mutex> lock(lock_);
-        if (0 == buffer_.size())
+        int prev = -1;
         {
-            cond_.wait(lock,
-                [this]() -> bool
-                {
-                    return this->buffer_.size()||this->stop_;
-                }
-            );
+            std::unique_lock<std::recursive_mutex> lock(lock_);
+            if (0 == buffers_[curr_].size())
+            {
+                cond_.wait(lock,
+                    [this]() -> bool
+                    {
+                        return (this->buffers_[curr_].size() || this->stop_);
+                    }
+                );
+            }
+            prev = curr_;
+            curr_ = 1 - curr_;
         }
-        if (buffer_.size())
+
+        buffer &buf = buffers_[prev];
+
+        if (buf.size())
         {
-            write(level_, buffer_.rawbuf(), buffer_.size());
-            buffer_.clear();
+            write(level_, buf.rawbuf(), buf.size());
+            buf.clear();
         }
     }
 }

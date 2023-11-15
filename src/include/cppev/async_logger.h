@@ -49,9 +49,11 @@ private:
 
     std::condition_variable_any cond_;
 
-    buffer buffer_;
+    int curr_;
 
     int recur_level_;
+
+    std::vector<buffer> buffers_;
 };
 
 namespace log
