@@ -52,22 +52,13 @@ public:
         communicate();
     }
 
-    void wait()
-    {
-        wait(std::chrono::milliseconds(50));
-    }
+    void wait();
 
     void communicate(const char *input, int len);
 
-    void communicate()
-    {
-        communicate(nullptr, 0);
-    }
+    void communicate();
 
-    void communicate(const std::string &input)
-    {
-        communicate(input.c_str(), input.size());
-    }
+    void communicate(const std::string &input);
 
     void terminate() const;
 
@@ -75,25 +66,13 @@ public:
 
     void send_signal(int sig) const;
 
-    int returncode() const noexcept
-    {
-        return returncode_;
-    }
+    int returncode() const noexcept;
 
-    const char *stdout() const noexcept
-    {
-        return stdout_->rbuffer().rawbuf();
-    }
+    const char *stdout() const noexcept;
 
-    const char *stderr() const noexcept
-    {
-        return stderr_->rbuffer().rawbuf();
-    }
+    const char *stderr() const noexcept;
 
-    pid_t pid() const noexcept
-    {
-        return pid_;
-    }
+    pid_t pid() const noexcept;
 
 private:
     std::string cmd_;

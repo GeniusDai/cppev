@@ -96,6 +96,11 @@ bool subp_open::poll()
     return ret != 0;
 }
 
+void subp_open::wait()
+{
+    wait(std::chrono::milliseconds(50));
+}
+
 void subp_open::communicate(const char *input, int len)
 {
     stdout_->read_all();
@@ -106,6 +111,16 @@ void subp_open::communicate(const char *input, int len)
         stdin_->wbuffer().produce(input, len);
         stdin_->write_all();
     }
+}
+
+void subp_open::communicate()
+{
+    communicate(nullptr, 0);
+}
+
+void subp_open::communicate(const std::string &input)
+{
+    communicate(input.c_str(), input.size());
 }
 
 void subp_open::send_signal(int sig) const
@@ -124,6 +139,26 @@ void subp_open::terminate() const
 void subp_open::kill() const
 {
     send_signal(SIGKILL);
+}
+
+int subp_open::returncode() const noexcept
+{
+    return returncode_;
+}
+
+const char *subp_open::stdout() const noexcept
+{
+    return stdout_->rbuffer().rawbuf();
+}
+
+const char *subp_open::stderr() const noexcept
+{
+    return stderr_->rbuffer().rawbuf();
+}
+
+pid_t subp_open::pid() const noexcept
+{
+    return pid_;
 }
 
 }   // namespace cppev

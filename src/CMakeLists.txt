@@ -7,6 +7,7 @@ set (LIB
     lib/tcp.cc
     lib/subprocess.cc
     lib/ipc.cc
+    lib/lock.cc
     lib/async_logger.cc
 )
 
