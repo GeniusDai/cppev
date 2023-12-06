@@ -12,8 +12,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE on)
 include_directories(src/include)
 
 add_subdirectory(src)
-add_subdirectory(unittest)
 add_subdirectory(examples)
+
+find_package(GTest)
+if (GTest_FOUND)
+    message("Googletest found, will enable unittest")
+    add_subdirectory(unittest)
+else()
+    message("Googletest not found, will skip unittest")
+endif()
 
 install(
     TARGETS cppev

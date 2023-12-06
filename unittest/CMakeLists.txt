@@ -1,4 +1,3 @@
-find_package(GTest)
 enable_testing()
 
 function(compile_and_enable_test testname_)
