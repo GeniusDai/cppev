@@ -79,7 +79,7 @@ subp_open::subp_open(const std::string &cmd, char *const *envp)
             argv[i] = const_cast<char *>(cmd_with_args[i].c_str());
         }
 
-        execve(cmd_with_path.c_str(), argv, envp_);
+        execvpe(cmd_with_path.c_str(), argv, envp_);
         _exit(127);
     }
 

@@ -7,11 +7,18 @@
 namespace cppev
 {
 
-std::string ld_path = "";
+#ifdef __linux__
+std::string ld_suffix = ".so";
+#else
+std::string ld_suffix = ".dylib";
+#endif  // __linux__
 
-static const std::string get_ld_path(const std::string &exec_path)
+std::string ld_full_name = "libLoaderTestFunctions" + ld_suffix;
+
+static const std::string get_bin_directory_path(const std::string &exec_path)
 {
-    std::string path = "";
+    std::string path;
+
     for (int i = exec_path.size() - 1; i >= 0; --i)
     {
         if (exec_path[i] == '/')
@@ -25,14 +32,10 @@ static const std::string get_ld_path(const std::string &exec_path)
         cppev::throw_runtime_error("find path error");
     }
 
-#ifdef __linux__
-    std::string ld_suffix = ".so";
-#else
-    std::string ld_suffix = ".dylib";
-#endif  // __linux__
-
-    return path + "lib" + "LoaderTestFunctions" + ld_suffix;
+    return path;
 }
+
+std::string ld_path = "";
 
 static void test_class(LoaderTestBase *base_cls)
 {
@@ -46,9 +49,17 @@ static void test_class(LoaderTestBase *base_cls)
     EXPECT_EQ(base_cls->get_var(), 66);
 }
 
-TEST(TestDynamicLoader, test_base_impl_new_delete_loader)
+class TestDynamicLoader
+: public testing::TestWithParam<std::tuple<std::string>>
 {
-    dynamic_loader dyld(ld_path);
+};
+
+TEST_P(TestDynamicLoader, test_base_impl_new_delete_loader)
+{
+    auto p = GetParam();
+
+    dynamic_loader dyld(std::get<0>(p));
+
     auto *constructor = dyld.load<LoaderTestBaseConstructorType>("LoaderTestBaseConstructorImpl");
     auto *destructor = dyld.load<LoaderTestBaseDestructorType>("LoaderTestBaseDestructorImpl");
 
@@ -59,9 +70,11 @@ TEST(TestDynamicLoader, test_base_impl_new_delete_loader)
     destructor(base_cls);
 }
 
-TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
+TEST_P(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 {
-    dynamic_loader dyld(ld_path);
+    auto p = GetParam();
+    dynamic_loader dyld(std::get<0>(p));
+
     auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
 
     std::shared_ptr<LoaderTestBase> shared_base_cls = shared_ptr_constructor();
@@ -69,12 +82,28 @@ TEST(TestDynamicLoader, test_base_impl_shared_ptr_loader)
     test_class(shared_base_cls.get());
 }
 
+#define CPPEV_TEST_DLOPEN_ENV_SEARCH 0
+
+INSTANTIATE_TEST_SUITE_P(CppevTest, TestDynamicLoader,
+#if CPPEV_TEST_DLOPEN_ENV_SEARCH
+    testing::Combine(testing::Values(ld_path, ld_full_name))
+#else
+    testing::Combine(testing::Values(ld_path))
+#endif
+);
+
 }   // namespace cppev
 
 int main(int argc, char **argv)
 {
-    cppev::ld_path = cppev::get_ld_path(argv[0]);
+    std::string dir_path = cppev::get_bin_directory_path(argv[0]);
+
+    cppev::ld_path = dir_path + cppev::ld_full_name;
+
+    std::cout << "executable file directory : " << dir_path << std::endl;
     std::cout << "dynamic library path : " << cppev::ld_path << std::endl;
+
     testing::InitGoogleTest();
+
     return RUN_ALL_TESTS();
 }

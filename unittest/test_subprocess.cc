@@ -14,7 +14,8 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
         (char *)"test=TEST",
         nullptr
     };
-    rets = subprocess::exec_cmd("/usr/bin/printenv test", envp);
+
+    rets = subprocess::exec_cmd("printenv test", envp);
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "TEST\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
@@ -23,6 +24,11 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
     EXPECT_NE(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "");
     EXPECT_STRNE(std::get<2>(rets).c_str(), "");
+
+    rets = subprocess::exec_cmd("not_exist_cmd /cppev/test/not/exist");
+    EXPECT_NE(std::get<0>(rets), 0);
+    EXPECT_STREQ(std::get<1>(rets).c_str(), "");
+    EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 }
 
 class TestSubprocess
@@ -42,7 +48,7 @@ TEST_P(TestSubprocess, test_subp_popen)
 {
     auto param = GetParam();
 
-    subp_open subp("/bin/cat");
+    subp_open subp("cat");
     subp.communicate(std::get<0>(param));
 
     subp_open subp1(std::move(subp));
