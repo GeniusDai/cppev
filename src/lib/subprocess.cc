@@ -14,22 +14,17 @@ namespace cppev
 namespace subprocess
 {
 
-std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp)
+std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, const std::vector<std::string> &env)
 {
-    subp_open subp(cmd, envp);
+    subp_open subp(cmd, env);
     subp.wait();
     return std::make_tuple(subp.returncode(), subp.stdout(), subp.stderr());
 }
 
-std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char *const *envp)
-{
-    return exec_cmd(cmd.c_str(), envp);
-}
-
 }   // namespace subprocess
 
-subp_open::subp_open(const std::string &cmd, char *const *envp)
-: cmd_(cmd), envp_(envp)
+subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env)
+: cmd_(cmd), env_(env)
 {
     int fds[2];
     int zero, one, two;
@@ -74,12 +69,20 @@ subp_open::subp_open(const std::string &cmd, char *const *envp)
 
         char *argv[cmd_with_args.size()+1];
         memset(argv, 0, sizeof(argv));
-        for (int i = 0; i <= static_cast<int>(cmd_with_args.size() - 1); ++i)
+        for (size_t i = 0; i < cmd_with_args.size(); ++i)
         {
             argv[i] = const_cast<char *>(cmd_with_args[i].c_str());
         }
 
-        execvpe(cmd_with_path.c_str(), argv, envp_);
+        char *envp[env_.size()+1];
+        memset(envp, 0, sizeof(envp));
+        for (size_t i = 0; i < env_.size(); ++i)
+        {
+            envp[i] = const_cast<char *>(env_[i].c_str());
+        }
+        environ = envp;
+
+        execvp(cmd_with_path.c_str(), argv);
         _exit(127);
     }
 

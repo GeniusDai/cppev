@@ -14,16 +14,14 @@ namespace cppev
 namespace subprocess
 {
 
-std::tuple<int, std::string, std::string> exec_cmd(const char *cmd, char *const *envp = nullptr);
-
-std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, char *const *envp = nullptr);
+std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, const std::vector<std::string> &env = {});
 
 }   // namespace subprocess
 
 class subp_open final
 {
 public:
-    explicit subp_open(const std::string &cmd, char *const *envp=nullptr);
+    explicit subp_open(const std::string &cmd, const std::vector<std::string> &env);
 
     subp_open(const subp_open &) = delete;
     subp_open &operator=(const subp_open &) = delete;
@@ -77,7 +75,7 @@ public:
 private:
     std::string cmd_;
 
-    char *const *envp_;
+    std::vector<std::string> env_;
 
     std::unique_ptr<nstream> stdin_;
 

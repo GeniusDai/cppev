@@ -9,13 +9,7 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
 {
     std::tuple<int, std::string, std::string> rets;
 
-    char *envp[] =
-    {
-        (char *)"test=TEST",
-        nullptr
-    };
-
-    rets = subprocess::exec_cmd("printenv test", envp);
+    rets = subprocess::exec_cmd("printenv test", { "test=TEST" });
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "TEST\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
@@ -30,6 +24,24 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
     EXPECT_STREQ(std::get<1>(rets).c_str(), "");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 }
+
+#define CPPEV_ENABLE_SUBPROCESS_PYTHON_TEST 0
+#if CPPEV_ENABLE_SUBPROCESS_PYTHON_TEST
+TEST(TestSubprocessExecCmd, test_exec_cmd_python)
+{
+    std::tuple<int, std::string, std::string> rets;
+
+    rets = subprocess::exec_cmd("./hello.py");
+    EXPECT_EQ(std::get<0>(rets), 0);
+    EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
+    EXPECT_STREQ(std::get<2>(rets).c_str(), "");
+
+    rets = subprocess::exec_cmd("python hello.py");
+    EXPECT_EQ(std::get<0>(rets), 0);
+    EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
+    EXPECT_STREQ(std::get<2>(rets).c_str(), "");
+}
+#endif
 
 class TestSubprocess
 : public testing::TestWithParam<std::tuple<std::string, int>>
@@ -48,7 +60,7 @@ TEST_P(TestSubprocess, test_subp_popen)
 {
     auto param = GetParam();
 
-    subp_open subp("cat");
+    subp_open subp("cat", {});
     subp.communicate(std::get<0>(param));
 
     subp_open subp1(std::move(subp));

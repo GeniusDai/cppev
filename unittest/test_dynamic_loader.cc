@@ -96,11 +96,8 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestDynamicLoader,
 
 int main(int argc, char **argv)
 {
-    std::string dir_path = cppev::get_bin_directory_path(argv[0]);
+    cppev::ld_path = cppev::get_bin_directory_path(argv[0]) + cppev::ld_full_name;
 
-    cppev::ld_path = dir_path + cppev::ld_full_name;
-
-    std::cout << "executable file directory : " << dir_path << std::endl;
     std::cout << "dynamic library path : " << cppev::ld_path << std::endl;
 
     testing::InitGoogleTest();
