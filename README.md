@@ -51,7 +51,7 @@ Run Unittest
         $ cd unittest && ctest
 
 
-### Build with bazel
+### Build with bazelisk
 
 Build
 

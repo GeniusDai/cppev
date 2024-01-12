@@ -1,4 +1,4 @@
 build --cxxopt="-std=c++17"
-build --cxxopt="-O0"
+build --cxxopt="-O2"
 build --cxxopt="-Wall"
 build --compilation_mode="dbg"

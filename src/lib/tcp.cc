@@ -17,7 +17,7 @@ event_loop *tp_shared_data::random_get_evlp()
 event_loop *tp_shared_data::minloads_get_evlp()
 {
     int minloads = INT32_MAX;
-    event_loop *minloads_evlp;
+    event_loop *minloads_evlp = nullptr;
     for (auto evlp : evls)
     {
         // This is not thread safe but it's okay

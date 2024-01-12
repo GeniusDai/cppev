@@ -2,3 +2,5 @@ build*/
 bazel-*
 .vscode/
 whatever/
+MODULE.bazel
+MODULE.bazel.lock
