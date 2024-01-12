@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "d9a4d295f692c8db3049fd48970895707ac0cfab495005464ec4f8e3469bd763",
+  "moduleFileHash": "992368eccac56abbe33f826b126fd68ea2766f0dcf43034150c558c8e2c14e01",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -25,21 +25,21 @@
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "googletest": "googletest@1.14.0",
+        "googletest": "googletest@1.11.0",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       }
     },
-    "googletest@1.14.0": {
+    "googletest@1.11.0": {
       "name": "googletest",
-      "version": "1.14.0",
-      "key": "googletest@1.14.0",
+      "version": "1.11.0",
+      "key": "googletest@1.11.0",
       "repoName": "googletest",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "com_google_absl": "abseil-cpp@20230125.1",
+        "com_google_absl": "abseil-cpp@20210324.2",
         "platforms": "platforms@0.0.7",
         "rules_cc": "rules_cc@0.0.9",
         "bazel_tools": "bazel_tools@_",
@@ -49,14 +49,14 @@
         "bzlFile": "@bazel_tools//tools/build_defs/repo:http.bzl",
         "ruleClassName": "http_archive",
         "attributes": {
-          "name": "googletest~1.14.0",
+          "name": "googletest~1.11.0",
           "urls": [
-            "https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz"
+            "https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz"
           ],
-          "integrity": "sha256-itWYxzrXluDYKAsILOvYKmMNc+c808cAV5OKZQG7pdc=",
-          "strip_prefix": "googletest-1.14.0",
+          "integrity": "sha256-tIcL8SH/d5W6INILzdhie44Ijy0dqymaAxwQNO3ck9U=",
+          "strip_prefix": "googletest-release-1.11.0",
           "remote_patches": {
-            "https://bcr.bazel.build/modules/googletest/1.14.0/patches/module_dot_bazel.patch": "sha256-CSomzvti38LCuURDG5EEoa3O1tQF3cKKt/mknnP1qcc="
+            "https://bcr.bazel.build/modules/googletest/1.11.0/patches/module_dot_bazel.patch": "sha256-HuahEdI/n8KCI071sN3CEziX+7qP/Ec77IWayYunLP0="
           },
           "remote_patch_strip": 0
         }
@@ -209,18 +209,16 @@
         "bazel_tools": "bazel_tools@_"
       }
     },
-    "abseil-cpp@20230125.1": {
+    "abseil-cpp@20210324.2": {
       "name": "abseil-cpp",
-      "version": "20230125.1",
-      "key": "abseil-cpp@20230125.1",
+      "version": "20210324.2",
+      "key": "abseil-cpp@20210324.2",
       "repoName": "abseil-cpp",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
         "rules_cc": "rules_cc@0.0.9",
-        "platforms": "platforms@0.0.7",
-        "bazel_skylib": "bazel_skylib@1.4.1",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       },
@@ -228,14 +226,14 @@
         "bzlFile": "@bazel_tools//tools/build_defs/repo:http.bzl",
         "ruleClassName": "http_archive",
         "attributes": {
-          "name": "abseil-cpp~20230125.1",
+          "name": "abseil-cpp~20210324.2",
           "urls": [
-            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230125.1.tar.gz"
+            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.zip"
           ],
-          "integrity": "sha256-gTEcF1mbNxIGne0gzKCaYqsL8qid+haZN4bIeCt+0UU=",
-          "strip_prefix": "abseil-cpp-20230125.1",
+          "integrity": "sha256-Gn7dof9Wln4zvJOKTwpou578a6c9YrtKX1ZiRjaYBWw=",
+          "strip_prefix": "abseil-cpp-20210324.2",
           "remote_patches": {
-            "https://bcr.bazel.build/modules/abseil-cpp/20230125.1/patches/module_dot_bazel.patch": "sha256-L1wChhBmDOnRbPbD4MENVXHjOBT2KFrDxT6D+aoThxk="
+            "https://bcr.bazel.build/modules/abseil-cpp/20210324.2/patches/module_dot_bazel.patch": "sha256-kRlzYSw5anLoohQbjm2VyB/+WNpXJc4u95rfcc4hAEo="
           },
           "remote_patch_strip": 0
         }
@@ -399,7 +397,7 @@
       "deps": {
         "platforms": "platforms@0.0.7",
         "rules_cc": "rules_cc@0.0.9",
-        "bazel_skylib": "bazel_skylib@1.4.1",
+        "bazel_skylib": "bazel_skylib@1.3.0",
         "rules_proto": "rules_proto@4.0.0",
         "rules_license": "rules_license@0.0.7",
         "bazel_tools": "bazel_tools@_",
@@ -456,7 +454,7 @@
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "bazel_skylib": "bazel_skylib@1.4.1",
+        "bazel_skylib": "bazel_skylib@1.3.0",
         "rules_cc": "rules_cc@0.0.9",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -542,7 +540,7 @@
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "bazel_skylib": "bazel_skylib@1.4.1",
+        "bazel_skylib": "bazel_skylib@1.3.0",
         "zlib": "zlib@1.3",
         "rules_python": "rules_python@0.4.0",
         "rules_cc": "rules_cc@0.0.9",
@@ -633,7 +631,7 @@
         }
       ],
       "deps": {
-        "bazel_skylib": "bazel_skylib@1.4.1",
+        "bazel_skylib": "bazel_skylib@1.3.0",
         "platforms": "platforms@0.0.7",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -653,10 +651,10 @@
         }
       }
     },
-    "bazel_skylib@1.4.1": {
+    "bazel_skylib@1.3.0": {
       "name": "bazel_skylib",
-      "version": "1.4.1",
-      "key": "bazel_skylib@1.4.1",
+      "version": "1.3.0",
+      "key": "bazel_skylib@1.3.0",
       "repoName": "bazel_skylib",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [
@@ -673,11 +671,11 @@
         "bzlFile": "@bazel_tools//tools/build_defs/repo:http.bzl",
         "ruleClassName": "http_archive",
         "attributes": {
-          "name": "bazel_skylib~1.4.1",
+          "name": "bazel_skylib~1.3.0",
           "urls": [
-            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz"
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz"
           ],
-          "integrity": "sha256-uKFSeQF3QYCvx5iusoxGNL3M8ZxNmOe90c550f6aqtc=",
+          "integrity": "sha256-dNVE2W9KW7Yw1GXKi7z+Ix41lOWq5X4e2/F6brPKJQY=",
           "strip_prefix": "",
           "remote_patches": {},
           "remote_patch_strip": 0
