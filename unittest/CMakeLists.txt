@@ -1,9 +1,20 @@
 enable_testing()
 
+option(CPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH "enable dlopen env search test" OFF)
+option(CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON "enable execvp python script test" OFF)
+
 function(compile_and_enable_test testname_)
     add_executable(${testname_} ${testname_}.cc)
     add_test(NAME ${testname_} COMMAND ${testname_})
     target_link_libraries(${testname_} cppev gtest)
+    if (CPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH AND (${testname_} STREQUAL "test_dynamic_loader"))
+        message(STATUS "enable dlopen env search test")
+        target_compile_definitions(${testname_} PRIVATE -DCPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH=1)
+    endif()
+    if (CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON AND (${testname_} STREQUAL "test_subprocess"))
+        message(STATUS "enable execvp python script test")
+        target_compile_definitions(${testname_} PRIVATE -DCPPEV_TEST_ENABLE_SUBPROCESS_PYTHON=1)
+    endif()
 endfunction(compile_and_enable_test)
 
 add_library(LoaderTestImpl SHARED LoaderTestImpl.cc)

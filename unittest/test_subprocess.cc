@@ -25,8 +25,7 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 }
 
-#define CPPEV_ENABLE_SUBPROCESS_PYTHON_TEST 0
-#if CPPEV_ENABLE_SUBPROCESS_PYTHON_TEST
+#ifdef CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON
 TEST(TestSubprocessExecCmd, test_exec_cmd_python)
 {
     std::tuple<int, std::string, std::string> rets;
@@ -36,7 +35,7 @@ TEST(TestSubprocessExecCmd, test_exec_cmd_python)
     EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 
-    rets = subprocess::exec_cmd("python hello.py");
+    rets = subprocess::exec_cmd("python3 hello.py");
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");

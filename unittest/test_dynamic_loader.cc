@@ -82,10 +82,8 @@ TEST_P(TestDynamicLoader, test_base_impl_shared_ptr_loader)
     test_class(shared_base_cls.get());
 }
 
-#define CPPEV_TEST_DLOPEN_ENV_SEARCH 0
-
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestDynamicLoader,
-#if CPPEV_TEST_DLOPEN_ENV_SEARCH
+#ifdef CPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH
     testing::Combine(testing::Values(ld_path, ld_full_name))
 #else
     testing::Combine(testing::Values(ld_path))
