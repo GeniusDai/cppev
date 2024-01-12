@@ -8,6 +8,10 @@
 #include <signal.h>
 #include <thread>
 
+#ifdef __APPLE__
+extern char **environ;
+#endif
+
 namespace cppev
 {
 
