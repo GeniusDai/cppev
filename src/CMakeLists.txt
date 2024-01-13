@@ -13,6 +13,7 @@ set (LIB
 
 add_library(cppev SHARED ${LIB})
 target_link_libraries(cppev dl)
+target_link_libraries(cppev pthread)
 
 if (CMAKE_HOST_APPLE)
     message(STATUS "Platform : Apple")
