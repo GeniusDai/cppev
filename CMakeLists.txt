@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(libcppev)
+project(cppev)
 
 if (CMAKE_HOST_UNIX)
     message(STATUS "Platform : Unix")

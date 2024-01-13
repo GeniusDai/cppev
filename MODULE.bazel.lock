@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "992368eccac56abbe33f826b126fd68ea2766f0dcf43034150c558c8e2c14e01",
+  "moduleFileHash": "e5a53e5d1df62442474c7ac668b788bf186ecfbc276a801b3146c2d9a805c5d1",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -17,10 +17,10 @@
   },
   "moduleDepGraph": {
     "<root>": {
-      "name": "",
+      "name": "cppev",
       "version": "",
       "key": "<root>",
-      "repoName": "",
+      "repoName": "cppev",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
       "extensionUsages": [],

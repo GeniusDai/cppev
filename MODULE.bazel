@@ -5,4 +5,6 @@
 # For more details, please check https://github.com/bazelbuild/bazel/issues/18958
 ###############################################################################
 
+module(name = "cppev")
+
 bazel_dep(name="googletest", version="1.11.0")
