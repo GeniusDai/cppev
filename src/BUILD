@@ -1,8 +1,11 @@
 cc_library(
-    name = "cppev_interface",
-    hdrs = glob(
-        include = ["include/cppev/*.h"],
-    ),
+    name = "cppev",
+    hdrs = glob([
+        "include/cppev/*.h",
+    ]),
+    srcs = glob([
+        "lib/*.cc",
+    ]),
     includes = [
         "include/",
     ],
@@ -15,32 +18,15 @@ cc_library(
         ],
         "@platforms//os:osx" : [],
     }),
-)
-
-cc_library(
-    name = "cppev_lib",
-    srcs = glob(
-        include = ["lib/*.cc"],
-    ),
-    deps = [
-        "cppev_interface",
+    visibility = [
+        "//visibility:public",
     ],
 )
 
 cc_shared_library(
-    name = "cppev_dylib",
+    name = "cppev_dynamic",
     deps = [
-        "cppev_lib",
-    ],
-)
-
-cc_library(
-    name = "cppev",
-    srcs = [
-        "cppev_dylib",
-    ],
-    deps = [
-        "cppev_interface",
+        "cppev",
     ],
     visibility = [
         "//visibility:public",

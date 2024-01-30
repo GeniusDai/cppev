@@ -13,7 +13,10 @@ cc_binary(
     deps = [
         ":lib",
         "//src:cppev",
-    ]
+    ],
+    dynamic_deps = [
+        "//src:cppev_dynamic",
+    ],
 )
 
 cc_binary(
@@ -24,7 +27,10 @@ cc_binary(
     deps = [
         ":lib",
         "//src:cppev",
-    ]
+    ],
+    dynamic_deps = [
+        "//src:cppev_dynamic",
+    ],
 )
 
 cc_binary(
