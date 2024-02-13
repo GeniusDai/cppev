@@ -26,7 +26,7 @@ Support executable-file loading by subprocess, dynamic-library loading in runtim
 
 ### Others
 
-Support reactor / signal-handing / task-scheduler / async-logger.
+Support reactor / signal-handing / async-logger.
 
 # Usage
 
@@ -63,7 +63,7 @@ Run Unittest
 
 ### Validated platforms
 
-Ubuntu-20.04 / CentOS-8 / macOS-Monterey.
+Ubuntu-20.04 / CentOS-8 / macOS-Sonoma.
 
 # Getting Started
 

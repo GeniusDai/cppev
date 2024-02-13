@@ -45,7 +45,11 @@ shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
 
     if (creator_)
     {
-        ftruncate(fd, size_);
+        int ret = ftruncate(fd, size_);
+        if (ret == -1)
+        {
+            throw_system_error("ftruncate error");
+        }
     }
     ptr_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (ptr_ == MAP_FAILED)
