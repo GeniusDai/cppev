@@ -103,6 +103,14 @@ TEST(TestCommonUtils, test_strip)
 
 typedef void (*testing_func_type)(int, bool);
 
+auto signal_handler = [](int sig)
+{
+    std::cout << "thread " << gettid() << " handling signal " << sig << std::endl;
+};
+
+// Basic Signal API Usage:
+// 1. "block signal" + "sigwait"
+// 2. "set signal handler" + "sigsuspend"
 class TestSignal
 : public testing::TestWithParam<
     std::tuple<
@@ -125,12 +133,9 @@ void test_main_thread_signal_wait(int sig, bool block)
     else
     {
         thread_unblock_signal(sig);
-        handle_signal(sig,
-            [](int sig)
-            {
-                std::cout << "handling signal " << sig << std::endl;
-            }
-        );
+        // Signal handler won't be executed, but if not set, different signal will
+        // cause different action which makes things complicated.
+        handle_signal(sig, signal_handler);
     }
 
     pid_t pid = fork();
@@ -141,12 +146,13 @@ void test_main_thread_signal_wait(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
+        std::cout << "mainthread " << gettid() << " waiting for signal" << std::endl;
         EXPECT_EQ(sig, thread_wait_for_signal({ sig, SIGUSR2}));
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }
 
-    // waiting for subprocess waiting for signal
+    // Until subprocess is waiting for signal
     std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     send_signal(pid, sig);
 
@@ -181,15 +187,11 @@ void test_sub_thread_signal_wait(int sig, bool block)
                 else
                 {
                     thread_unblock_signal({ sig, SIGUSR2 });
-                    handle_signal(sig,
-                        [](int sig)
-                        {
-                            std::cout << "handling signal " << sig << std::endl;
-                        }
-                    );
+                    handle_signal(sig, signal_handler);
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
+                std::cout << "subthread " << gettid() << " waiting for signal" << std::endl;
                 thread_wait_for_signal(sig);
             }
         );
@@ -201,7 +203,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
         _exit(0);
     }
 
-    // waiting for subprocess block signal
+    // Until subprocess is waiting for signal
     std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     send_signal(pid, sig);
 
@@ -212,12 +214,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
 
 void test_main_thread_signal_suspend(int sig, bool block)
 {
-    handle_signal(sig,
-        [](int sig)
-        {
-            std::cout << "handling signal " << sig << std::endl;
-        }
-    );
+    handle_signal(sig, signal_handler);
 
     if (block)
     {
@@ -236,12 +233,13 @@ void test_main_thread_signal_suspend(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
+        std::cout << "mainthread " << gettid() << " suspending for signal" << std::endl;
         thread_suspend_for_signal({ sig, SIGUSR2 });
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
     }
 
-    // waiting for subprocess waiting for signal
+    // Until subprocess is suspending for signal
     std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     send_signal(pid, sig);
 
@@ -252,12 +250,7 @@ void test_main_thread_signal_suspend(int sig, bool block)
 
 void test_sub_thread_signal_suspend(int sig, bool block)
 {
-    handle_signal(sig,
-        [](int sig)
-        {
-            std::cout << gettid() << " handling signal " << sig << std::endl;
-        }
-    );
+    handle_signal(sig, signal_handler);
 
     pid_t pid = fork();
     if (pid == -1)
@@ -276,17 +269,17 @@ void test_sub_thread_signal_suspend(int sig, bool block)
                     thread_raise_signal(sig);
                     thread_raise_signal(sig);
                     EXPECT_TRUE(thread_check_signal_pending(sig));
+                    std::cout << "subthread " << gettid() << " suspending for signal" << std::endl;
                     thread_suspend_for_signal(sig);
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
                 else
                 {
-
                     thread_unblock_signal(sig);
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
-                std::cout  << gettid() << " suspending for signal" << std::endl;
+                std::cout << "subthread " << gettid() << " suspending for signal" << std::endl;
                 thread_suspend_for_signal(sig);
             }
         );
@@ -298,7 +291,7 @@ void test_sub_thread_signal_suspend(int sig, bool block)
         _exit(0);
     }
 
-    // waiting for subprocess block signal
+    // Until subprocess is suspending for signal
     std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     send_signal(pid, sig);
 
@@ -310,7 +303,13 @@ void test_sub_thread_signal_suspend(int sig, bool block)
 TEST_P(TestSignal, test_signal_all)
 {
     auto param = GetParam();
-    std::get<1>(std::get<0>(param))(std::get<1>(param), std::get<2>(param));
+    std::string describe = std::get<0>(std::get<0>(param));
+    testing_func_type func = std::get<1>(std::get<0>(param));
+    int sig = std::get<1>(param);
+    bool block = std::get<2>(param);
+
+    printf("Test Case %s with signal %d block %d\n", describe.c_str(), sig, block);
+    func(sig, block);
 }
 
 INSTANTIATE_TEST_SUITE_P(CppevTest, TestSignal,
