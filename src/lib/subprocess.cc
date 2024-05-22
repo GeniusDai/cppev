@@ -130,7 +130,7 @@ void subp_open::communicate(const std::string &input)
     communicate(input.c_str(), input.size());
 }
 
-void subp_open::send_signal(int sig) const
+void subp_open::send_signal(int sig)
 {
     if (::kill(pid(), sig) < 0)
     {
@@ -138,12 +138,12 @@ void subp_open::send_signal(int sig) const
     }
 }
 
-void subp_open::terminate() const
+void subp_open::terminate()
 {
     send_signal(SIGTERM);
 }
 
-void subp_open::kill() const
+void subp_open::kill()
 {
     send_signal(SIGKILL);
 }

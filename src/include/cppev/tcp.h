@@ -315,7 +315,6 @@ private:
 
     // Listening threads
     std::vector<std::unique_ptr<acceptor>> acpts_;
-
 };
 
 

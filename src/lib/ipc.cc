@@ -10,8 +10,7 @@ namespace cppev
 shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
 : name_(name), size_(size), ptr_(nullptr), creator_(false)
 {
-    int fd = -1;
-    fd = shm_open(name_.c_str(), O_RDWR, mode);
+    int fd = shm_open(name_.c_str(), O_RDWR, mode);
     if (fd < 0)
     {
         if (errno == ENOENT)

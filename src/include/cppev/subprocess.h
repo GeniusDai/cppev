@@ -58,11 +58,11 @@ public:
 
     void communicate(const std::string &input);
 
-    void terminate() const;
+    void terminate();
 
-    void kill() const;
+    void kill();
 
-    void send_signal(int sig) const;
+    void send_signal(int sig);
 
     int returncode() const noexcept;
 
