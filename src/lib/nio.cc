@@ -19,6 +19,87 @@
 namespace cppev
 {
 
+nio::nio(int fd)
+: fd_(fd), closed_(false)
+{
+    set_io_nonblock();
+}
+
+nio::nio(nio &&other) noexcept
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<nio>(other));
+}
+
+nio &nio::operator=(nio &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<nio>(other));
+    return *this;
+}
+
+nio::~nio() noexcept
+{
+    if (!closed_)
+    {
+            close();
+    }
+}
+
+
+int nio::fd() const noexcept
+{
+    return fd_;
+}
+
+// Read buffer
+const buffer &nio::rbuffer() const noexcept
+{
+    return rbuffer_;
+}
+
+buffer &nio::rbuffer() noexcept
+{
+    return rbuffer_;
+}
+
+// Write buffer
+const buffer &nio::wbuffer() const noexcept
+{
+    return wbuffer_;
+}
+
+buffer &nio::wbuffer() noexcept
+{
+    return wbuffer_;
+}
+
+const event_loop &nio::evlp() const noexcept
+{
+    return *evlp_;
+}
+
+event_loop &nio::evlp() noexcept
+{
+    return *evlp_;
+}
+
+void nio::set_evlp(event_loop &evlp) noexcept
+{
+    evlp_ = &evlp;
+}
+
+bool nio::is_closed() const noexcept
+{
+    return closed_;
+}
+
 void nio::close() noexcept
 {
     if (fd_ != -1)
@@ -52,6 +133,60 @@ void nio::set_io_block()
     {
         throw_system_error("fcntl error");
     }
+}
+
+void nio::move(nio &&other) noexcept
+{
+    this->fd_ = other.fd_;
+    this->closed_ = other.closed_;
+    this->rbuffer_ = std::move(other.rbuffer_);
+    this->wbuffer_ = std::move(other.rbuffer_);
+    this->evlp_ = other.evlp_;
+
+    other.fd_ = -1;
+    other.closed_ = true;
+    other.evlp_ = nullptr;
+}
+
+
+nstream::nstream(int fd)
+: nio(fd), reset_(false), eof_(false), eop_(false)
+{
+}
+
+nstream::nstream(nstream &&other) noexcept
+: nio(std::forward<nstream>(other))
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<nstream>(other), false);
+}
+
+nstream &nstream::operator=(nstream &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<nstream>(other), true);
+    return *this;
+}
+
+bool nstream::is_reset() const noexcept
+{
+    return reset_;
+}
+
+bool nstream::eof() const noexcept
+{
+    return eof_;
+}
+
+bool nstream::eop() const noexcept
+{
+    return eop_;
 }
 
 int nstream::read_chunk(int len)
@@ -166,6 +301,18 @@ int nstream::write_all(int step)
     return total;
 }
 
+void nstream::move(nstream &&other, bool move_base) noexcept
+{
+    if (move_base)
+    {
+        nio::move(std::forward<nstream>(other));
+    }
+    this->reset_ = other.reset_;
+    this->eof_ = other.eof_;
+    this->eop_ = other.eop_;
+}
+
+
 const std::unordered_map<family, int, enum_hash> nsock::fmap_ =
 {
     {family::ipv4, AF_INET},
@@ -277,6 +424,81 @@ static std::tuple<std::string, int, family> query_ip_port_family(sockaddr_storag
     }
     }
     return std::make_tuple(ip, port, f);
+}
+
+nsock::nsock(int fd, family f)
+: nio(fd), family_(f)
+{
+}
+
+nsock::nsock(nsock &&other) noexcept
+: nio(std::forward<nsock>(other))
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<nsock>(other), false);
+}
+
+nsock &nsock::operator=(nsock &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<nsock>(other), true);
+    return *this;
+}
+
+family nsock::sockfamily() const noexcept
+{
+    return family_;
+}
+
+void nsock::bind(const char *ip, int port)
+{
+    sockaddr_storage addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.ss_family = fmap_.at(family_);
+    set_ip_port(addr, ip, port);
+    set_so_reuseaddr();
+    if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
+    {
+        throw_system_error(std::string("bind error : ").append(std::to_string(port)));
+    }
+}
+
+void nsock::bind(int port)
+{
+    bind(nullptr, port);
+}
+
+void nsock::bind(const std::string &ip, int port)
+{
+    bind(ip.c_str(), port);
+}
+
+void nsock::bind_unix(const char *path, bool remove)
+{
+    if (remove)
+    {
+        ::unlink(path);
+    }
+    peer_ = std::make_tuple(path, -1);
+    sockaddr_storage addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.ss_family = fmap_.at(family_);
+    set_path(addr, path);
+    if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
+    {
+        throw_system_error(std::string("bind error : ").append(path));
+    }
+}
+
+void nsock::bind_unix(const std::string &path, bool remove)
+{
+    bind_unix(path.c_str(), remove);
 }
 
 void nsock::set_so_reuseaddr(bool enable)
@@ -393,6 +615,59 @@ int nsock::get_so_sndlowat() const
         throw_system_error("getsockopt error for SO_SNDLOWAT");
     }
     return size;
+}
+
+void nsock::move(nsock &&other, bool move_base) noexcept
+{
+    if (move_base)
+    {
+        nio::move(std::forward<nsock>(other));
+    }
+    this->family_ = other.family_;
+    this->peer_ = other.peer_;
+}
+
+
+nsocktcp::nsocktcp(int sockfd, family f)
+: nio(sockfd), nsock(-1, f), nstream(-1)
+{
+}
+
+nsocktcp::nsocktcp(nsocktcp &&other) noexcept
+: nio(std::forward<nsocktcp>(other)),
+    nsock(std::forward<nsocktcp>(other)),
+    nstream(std::forward<nsocktcp>(other))
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<nsocktcp>(other), false);
+}
+
+nsocktcp &nsocktcp::operator=(nsocktcp &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<nsocktcp>(other), true);
+    return *this;
+}
+
+bool nsocktcp::connect(const std::string &ip, int port)
+{
+    return connect(ip.c_str(), port);
+}
+
+bool nsocktcp::connect_unix(const std::string &path)
+{
+    return connect_unix(path.c_str());
+}
+
+bool nsocktcp::check_connect() const
+{
+    return get_so_error() == 0;
 }
 
 void nsocktcp::set_so_keepalive(bool enable)
@@ -541,34 +816,9 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
     return query_ip_port_family(addr);
 }
 
-void nsock::bind(const char *ip, int port)
+std::tuple<std::string, int, family> nsocktcp::connpeer() const noexcept
 {
-    sockaddr_storage addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.ss_family = fmap_.at(family_);
-    set_ip_port(addr, ip, port);
-    set_so_reuseaddr();
-    if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
-    {
-        throw_system_error(std::string("bind error : ").append(std::to_string(port)));
-    }
-}
-
-void nsock::bind_unix(const char *path, bool remove)
-{
-    if (remove)
-    {
-        ::unlink(path);
-    }
-    peer_ = std::make_tuple(path, -1);
-    sockaddr_storage addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.ss_family = fmap_.at(family_);
-    set_path(addr, path);
-    if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
-    {
-        throw_system_error(std::string("bind error : ").append(path));
-    }
+    return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
 }
 
 void nsocktcp::listen(int backlog)
@@ -645,6 +895,52 @@ std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
     return sockfds;
 }
 
+void nsocktcp::move(nsocktcp &&other, bool move_base) noexcept
+{
+    if (move_base)
+    {
+        nio::move(std::forward<nsocktcp>(other));
+        nsock::move(std::forward<nsocktcp>(other), false);
+        nstream::move(std::forward<nsocktcp>(other), false);
+    }
+}
+
+
+nsockudp::nsockudp(int sockfd, family f)
+: nio(sockfd), nsock(-1, f)
+{
+}
+
+nsockudp::nsockudp(nsockudp &&other) noexcept
+: nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<nsockudp>(other), false);
+}
+
+nsockudp &nsockudp::operator=(nsockudp &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<nsockudp>(other), true);
+    return *this;
+}
+
+void nsockudp::send(const std::string &ip, int port)
+{
+    send(ip.c_str(), port);
+}
+
+void nsockudp::send_unix(const std::string &path)
+{
+    send_unix(path.c_str());
+}
+
 std::tuple<std::string, int, family> nsockudp::recv()
 {
     sockaddr_storage addr;
@@ -690,6 +986,15 @@ void nsockudp::send_unix(const char *path)
     }
     wbuffer().consume(ret);
 }
+
+void nsockudp::move(nsockudp &&other, bool move_base) noexcept
+{
+    if (move_base)
+    {
+        nsock::move(std::forward<nsockudp>(other), true);
+    }
+}
+
 
 namespace nio_factory
 {

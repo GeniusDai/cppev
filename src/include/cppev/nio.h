@@ -22,7 +22,6 @@ class nstream;
 class nsock;
 class nsockudp;
 class nsocktcp;
-class nwatcher;
 class event_loop;
 
 enum class family
@@ -48,89 +47,44 @@ std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &str);
 class nio
 {
 public:
-    explicit nio(int fd)
-    : fd_(fd), closed_(false)
-    {
-        set_io_nonblock();
-    }
+    explicit nio(int fd);
 
     nio(const nio &) = delete;
     nio &operator=(const nio &) = delete;
 
-    nio(nio &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<nio>(other));
-    }
+    nio(nio &&other) noexcept;
+    nio &operator=(nio &&other) noexcept;
 
-    nio &operator=(nio &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<nio>(other));
-        return *this;
-    }
+    virtual ~nio() noexcept;
 
-    virtual ~nio() noexcept
-    {
-        if (!closed_)
-        {
-             close();
-        }
-    }
-
-    int fd() const noexcept
-    {
-        return fd_;
-    }
+    // File descriptor
+    int fd() const noexcept;
 
     // Read buffer
-    const buffer &rbuffer() const noexcept
-    {
-        return rbuffer_;
-    }
+    const buffer &rbuffer() const noexcept;
 
-    buffer &rbuffer() noexcept
-    {
-        return rbuffer_;
-    }
+    // Read buffer
+    buffer &rbuffer() noexcept;
 
     // Write buffer
-    const buffer &wbuffer() const noexcept
-    {
-        return wbuffer_;
-    }
+    const buffer &wbuffer() const noexcept;
 
-    buffer &wbuffer() noexcept
-    {
-        return wbuffer_;
-    }
+    // Write buffer
+    buffer &wbuffer() noexcept;
 
-    const event_loop &evlp() const noexcept
-    {
-        return *evlp_;
-    }
+    // Query event loop this nio belongs to
+    const event_loop &evlp() const noexcept;
 
-    event_loop &evlp() noexcept
-    {
-        return *evlp_;
-    }
+    // Query event loop this nio belongs to
+    event_loop &evlp() noexcept;
 
-    void set_evlp(event_loop &evlp) noexcept
-    {
-        evlp_ = &evlp;
-    }
+    // Set event loop this nio belongs to
+    void set_evlp(event_loop &evlp) noexcept;
 
-    bool is_closed() const noexcept
-    {
-        return closed_;
-    }
+    // Is nio closed
+    bool is_closed() const noexcept;
 
+    // Close nio
     void close() noexcept;
 
     // Set fd to nonblock
@@ -155,65 +109,30 @@ protected:
     // One nio belongs to one event loop
     event_loop *evlp_;
 
-    void move(nio &&other) noexcept
-    {
-        this->fd_ = other.fd_;
-        this->closed_ = other.closed_;
-        this->rbuffer_ = std::move(other.rbuffer_);
-        this->wbuffer_ = std::move(other.rbuffer_);
-        this->evlp_ = other.evlp_;
-
-        other.fd_ = -1;
-        other.closed_ = true;
-        other.evlp_ = nullptr;
-    }
+    // Move constructor implementation
+    void move(nio &&other) noexcept;
 };
 
 class nstream
 : public virtual nio
 {
 public:
-    explicit nstream(int fd)
-    : nio(fd), reset_(false), eof_(false), eop_(false)
-    {
-    }
+    explicit nstream(int fd);
 
-    nstream(nstream &&other) noexcept
-    : nio(std::forward<nstream>(other))
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<nstream>(other), false);
-    }
+    nstream(nstream &&other) noexcept;
 
-    nstream &operator=(nstream &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<nstream>(other), true);
-        return *this;
-    }
+    nstream &operator=(nstream &&other) noexcept;
 
     virtual ~nstream() = default;
 
-    bool is_reset() const noexcept
-    {
-        return reset_;
-    }
+    // Is connection reset, ECONNRESET
+    bool is_reset() const noexcept;
 
-    bool eof() const noexcept
-    {
-        return eof_;
-    }
+    // End of file
+    bool eof() const noexcept;
 
-    bool eop() const noexcept
-    {
-        return eop_;
-    }
+    // Error of pipe, EPIPE
+    bool eop() const noexcept;
 
     // Read until block or unreadable
     // @param len   Bytes to read, at most len
@@ -236,7 +155,7 @@ public:
     int write_all(int step = sysconfig::buffer_io_step);
 
 protected:
-    // Used by tcp-socket
+    // Connect Reset: Used by tcp-socket
     bool reset_;
 
     // End Of File: Used by tcp-socket, pipe, fifo, disk-file
@@ -245,16 +164,8 @@ protected:
     // Error Of Pipe: Used by tcp-socket, pipe, fifo
     bool eop_;
 
-    void move(nstream &&other, bool move_base) noexcept
-    {
-        if (move_base)
-        {
-            nio::move(std::forward<nstream>(other));
-        }
-        this->reset_ = other.reset_;
-        this->eof_ = other.eof_;
-        this->eop_ = other.eop_;
-    }
+    // Move constructor implementation
+    void move(nstream &&other, bool move_base) noexcept;
 };
 
 class nsock
@@ -263,56 +174,31 @@ class nsock
     friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
     friend std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f);
 public:
-    nsock(int fd, family f)
-    : nio(fd), family_(f)
-    {
-    }
+    nsock(int fd, family f);
 
-    nsock(nsock &&other) noexcept
-    : nio(std::forward<nsock>(other))
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<nsock>(other), false);
-    }
+    nsock(nsock &&other) noexcept;
 
-    nsock &operator=(nsock &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<nsock>(other), true);
-        return *this;
-    }
+    nsock &operator=(nsock &&other) noexcept;
 
     virtual ~nsock() = default;
 
-    family sockfamily() const noexcept
-    {
-        return family_;
-    }
+    // socket family
+    family sockfamily() const noexcept;
 
+    // bind to address: IPv4 / IPv6
     void bind(const char *ip, int port);
 
+    // bind to address: IPv4 / IPv6
+    void bind(int port);
+
+    // bind to address: IPv4 / IPv6
+    void bind(const std::string &ip, int port);
+
+    // bind to address: Unix-domain
     void bind_unix(const char *path, bool remove = false);
 
-    void bind(int port)
-    {
-        bind(nullptr, port);
-    }
-
-    void bind(const std::string &ip, int port)
-    {
-        bind(ip.c_str(), port);
-    }
-
-    void bind_unix(const std::string &path, bool remove =false)
-    {
-        bind_unix(path.c_str(), remove);
-    }
+    // bind to address: Unix-domain
+    void bind_unix(const std::string &path, bool remove =false);
 
     // setsockopt SO_REUSEADDR
     void set_so_reuseaddr(bool enable=true);
@@ -354,7 +240,7 @@ protected:
     // socket family
     family family_;
 
-    // TCP --> IPV4/6 :
+    // TCP --> IPv4 / IPv6 :
     //         Record ip/port in connect()
     //         Return by connpeer()
     // TCP --> Unix :
@@ -365,19 +251,12 @@ protected:
     //         Return by recv()
     std::tuple<std::string, int> peer_;
 
+    // Move constructor implementation
+    void move(nsock &&other, bool move_base) noexcept;
+
     static const std::unordered_map<family, int, enum_hash> fmap_;
 
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
-
-    void move(nsock &&other, bool move_base) noexcept
-    {
-        if (move_base)
-        {
-            nio::move(std::forward<nsock>(other));
-        }
-        this->family_ = other.family_;
-        this->peer_ = other.peer_;
-    }
 };
 
 enum class shut_mode
@@ -391,68 +270,49 @@ class nsocktcp final
 : public nsock, public nstream
 {
 public:
-    nsocktcp(int sockfd, family f)
-    : nio(sockfd), nsock(-1, f), nstream(-1)
-    {
-    }
+    nsocktcp(int sockfd, family f);
 
-    nsocktcp(nsocktcp &&other) noexcept
-    : nio(std::forward<nsocktcp>(other)),
-      nsock(std::forward<nsocktcp>(other)),
-      nstream(std::forward<nsocktcp>(other))
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<nsocktcp>(other), false);
-    }
+    nsocktcp(nsocktcp &&other) noexcept;
 
-    nsocktcp &operator=(nsocktcp &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<nsocktcp>(other), true);
-        return *this;
-    }
+    nsocktcp &operator=(nsocktcp &&other) noexcept;
 
     ~nsocktcp() = default;
 
+    // listen: IPv4 / IPv6 / Unix-domain
     void listen(int backlog = SOMAXCONN);
 
+    // connect: IPv4 / IPv6
     bool connect(const char *ip, int port);
 
+    // connect: IPv4 / IPv6
+    bool connect(const std::string &ip, int port);
+
+    // connect: Unix-domain
     bool connect_unix(const char *path);
 
+    // connect: Unix-domain
+    bool connect_unix(const std::string &path);
+
+    // accept: IPv4 / IPv6 / Unix-domain
     std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
 
+    // shutdown: IPv4 / IPv6 / Unix-domain
     void shutdown(shut_mode howto) noexcept;
 
-    bool connect(const std::string &ip, int port)
-    {
-        return connect(ip.c_str(), port);
-    }
+    // whether connect is established, used by tcp client
+    bool check_connect() const;
 
-    bool connect_unix(const std::string &path)
-    {
-        return connect_unix(path.c_str());
-    }
-
-    bool check_connect() const
-    {
-        return get_so_error() == 0;
-    }
-
+    // Current socket: ip / port / family
+    // For Unix-domain: ip=path, port=-1
     std::tuple<std::string, int, family> sockname() const;
 
+    // Connect target established: ip / port / family
+    // For Unix-domain: ip=path, port=-1
     std::tuple<std::string, int, family> peername() const;
 
-    std::tuple<std::string, int, family> connpeer() const noexcept
-    {
-        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
-    }
+    // Connect target even not established: ip / port / family
+    // For Unix-domain: ip=path, port=-1
+    std::tuple<std::string, int, family> connpeer() const noexcept;
 
     // setsockopt SO_KEEPALIVE
     void set_so_keepalive(bool enable=true);
@@ -476,15 +336,8 @@ public:
     int get_so_error() const;
 
 private:
-    void move(nsocktcp &&other, bool move_base) noexcept
-    {
-        if (move_base)
-        {
-            nio::move(std::forward<nsocktcp>(other));
-            nsock::move(std::forward<nsocktcp>(other), false);
-            nstream::move(std::forward<nsocktcp>(other), false);
-        }
-    }
+    // Move constructor implementation
+    void move(nsocktcp &&other, bool move_base) noexcept;
 };
 
 
@@ -492,48 +345,28 @@ class nsockudp final
 : public nsock
 {
 public:
-    nsockudp(int sockfd, family f)
-    : nio(sockfd), nsock(-1, f)
-    {
-    }
+    nsockudp(int sockfd, family f);
 
-    nsockudp(nsockudp &&other) noexcept
-    : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<nsockudp>(other), false);
-    }
+    nsockudp(nsockudp &&other) noexcept;
 
-    nsockudp &operator=(nsockudp &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<nsockudp>(other), true);
-        return *this;
-    }
+    nsockudp &operator=(nsockudp &&other) noexcept;
 
     ~nsockudp() = default;
 
+    // recvfrom: IPv4 / IPv6 / Unix-domain
     std::tuple<std::string, int, family> recv();
 
+    // sendto: IPv4 / IPv6
     void send(const char *ip, int port);
 
+    // sendto: IPv4 / IPv6
+    void send(const std::string &ip, int port);
+
+    // sendto: Unix-domain
     void send_unix(const char *path);
 
-    void send(const std::string &ip, int port)
-    {
-        send(ip.c_str(), port);
-    }
-
-    void send_unix(const std::string &path)
-    {
-        send_unix(path.c_str());
-    }
+    // sendto: Unix-domain
+    void send_unix(const std::string &path);
 
     // setsockopt SO_BROADCAST
     void set_so_broadcast(bool enable=true);
@@ -542,13 +375,8 @@ public:
     bool get_so_broadcast() const;
 
 private:
-    void move(nsockudp &&other, bool move_base) noexcept
-    {
-        if (move_base)
-        {
-            nsock::move(std::forward<nsockudp>(other), true);
-        }
-    }
+    // Move constructor implementation
+    void move(nsockudp &&other, bool move_base) noexcept;
 };
 
 }   // namespace cppev
