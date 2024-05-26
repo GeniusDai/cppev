@@ -152,10 +152,22 @@ TEST_P(TestNioSocket, test_tcp_socket)
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
     sock->set_so_rcvlowat(std::get<2>(p));
-    std::unordered_set<int> buf_size{std::get<2>(p), std::get<2>(p)*2};
-    EXPECT_TRUE(buf_size.count(sock->get_so_rcvbuf()));
-    EXPECT_TRUE(buf_size.count(sock->get_so_sndbuf()));
+
+#ifndef __linux__
+    sock->set_so_sndlowat(std::get<2>(p));
+#endif
+
+#ifdef __linux__
+    int buf_size = std::get<2>(p) * 2;
+    int sndlowat_size = 1;
+#else
+    int buf_size = std::get<2>(p);
+    int sndlowat_size = std::get<2>(p);
+#endif
+    EXPECT_EQ(buf_size, sock->get_so_rcvbuf());
+    EXPECT_EQ(buf_size, sock->get_so_sndbuf());
     EXPECT_EQ(sock->get_so_rcvlowat(), std::get<2>(p));
+    EXPECT_EQ(sock->get_so_sndlowat(), sndlowat_size);
 
     EXPECT_EQ(sock->get_so_error(), 0);
 }

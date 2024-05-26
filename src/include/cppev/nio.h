@@ -215,10 +215,10 @@ public:
     // setsockopt SO_RCVBUF, actual value = size*2 in linux
     void set_so_rcvbuf(int size);
 
-    // getsockopt SO_RCVBUF, actual value = size*2 in linux
+    // getsockopt SO_RCVBUF
     int get_so_rcvbuf() const;
 
-    // setsockopt SO_SNDBUF
+    // setsockopt SO_SNDBUF, actual value = size*2 in linux
     void set_so_sndbuf(int size);
 
     // getsockopt SO_SNDBUF
@@ -230,10 +230,10 @@ public:
     // getsockopt SO_RCVLOWAT
     int get_so_rcvlowat() const;
 
-    // setsockopt SO_SNDLOWAT, Protocol not available in linux
+    // setsockopt SO_SNDLOWAT, DONOT use it in linux since protocol not available
     void set_so_sndlowat(int size);
 
-    // getsockopt SO_SNDLOWAT, Protocol not available in linux
+    // getsockopt SO_SNDLOWAT
     int get_so_sndlowat() const;
 
 protected:
