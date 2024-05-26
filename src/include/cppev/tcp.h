@@ -128,10 +128,7 @@ class iohandler final
     friend class tcp_server;
     friend class tcp_client;
 public:
-    explicit iohandler(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
-    {
-    }
+    explicit iohandler(tp_shared_data *data);
 
     iohandler(const iohandler &) = delete;
     iohandler &operator=(const iohandler &) = delete;
@@ -173,10 +170,7 @@ class acceptor final
 : public runnable
 {
 public:
-    explicit acceptor(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
-    {
-    }
+    explicit acceptor(tp_shared_data *data);
 
     acceptor(const acceptor &) = delete;
     acceptor &operator=(const acceptor &) = delete;
@@ -214,13 +208,7 @@ class connector final
 : public runnable
 {
 public:
-    explicit connector(tp_shared_data *data)
-    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
-    {
-        auto pipes = nio_factory::get_pipes();
-        rdp_ = pipes[0];
-        wrp_ = pipes[1];
-    }
+    explicit connector(tp_shared_data *data);
 
     connector(const connector &) = delete;
     connector &operator=(const connector &) = delete;
@@ -278,25 +266,13 @@ public:
 
     ~tcp_server() = default;
 
-    void set_on_accept(const tcp_event_handler &handler)
-    {
-        data_.on_accept = handler;
-    }
+    void set_on_accept(const tcp_event_handler &handler);
 
-    void set_on_read_complete(const tcp_event_handler &handler)
-    {
-        data_.on_read_complete = handler;
-    }
+    void set_on_read_complete(const tcp_event_handler &handler);
 
-    void set_on_write_complete(const tcp_event_handler &handler)
-    {
-        data_.on_write_complete = handler;
-    }
+    void set_on_write_complete(const tcp_event_handler &handler);
 
-    void set_on_closed(const tcp_event_handler &handler)
-    {
-        data_.on_closed = handler;
-    }
+    void set_on_closed(const tcp_event_handler &handler);
 
     void listen(int port, family f, const char *ip = nullptr);
 
@@ -330,25 +306,13 @@ public:
 
     ~tcp_client() = default;
 
-    void set_on_connect(const tcp_event_handler &handler)
-    {
-        data_.on_connect = handler;
-    }
+    void set_on_connect(const tcp_event_handler &handler);
 
-    void set_on_read_complete(const tcp_event_handler &handler)
-    {
-        data_.on_read_complete = handler;
-    }
+    void set_on_read_complete(const tcp_event_handler &handler);
 
-    void set_on_write_complete(const tcp_event_handler &handler)
-    {
-        data_.on_write_complete = handler;
-    }
+    void set_on_write_complete(const tcp_event_handler &handler);
 
-    void set_on_closed(const tcp_event_handler &handler)
-    {
-        data_.on_closed = handler;
-    }
+    void set_on_closed(const tcp_event_handler &handler);
 
     void add(const std::string &ip, int port, family f, int t = 1);
 

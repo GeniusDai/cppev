@@ -63,6 +63,11 @@ void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
 
+iohandler::iohandler(tp_shared_data *data)
+: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+{
+}
+
 void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {
     std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
@@ -158,6 +163,11 @@ void iohandler::shutdown()
 }
 
 
+acceptor::acceptor(tp_shared_data *data)
+: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+{
+}
+
 void acceptor::listen(int port, family f, const char *ip)
 {
     sock_ = nio_factory::get_nsocktcp(f);
@@ -204,6 +214,14 @@ void acceptor::shutdown()
     evlp_.stop_loop_forever();
 }
 
+
+connector::connector(tp_shared_data *data)
+: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+{
+    auto pipes = nio_factory::get_pipes();
+    rdp_ = pipes[0];
+    wrp_ = pipes[1];
+}
 
 void connector::add(const std::string &ip, int port, family f, int t)
 {
@@ -311,6 +329,26 @@ tcp_server::tcp_server(int thr_num, void *external_data)
     }
 }
 
+void tcp_server::set_on_accept(const tcp_event_handler &handler)
+{
+    data_.on_accept = handler;
+}
+
+void tcp_server::set_on_read_complete(const tcp_event_handler &handler)
+{
+    data_.on_read_complete = handler;
+}
+
+void tcp_server::set_on_write_complete(const tcp_event_handler &handler)
+{
+    data_.on_write_complete = handler;
+}
+
+void tcp_server::set_on_closed(const tcp_event_handler &handler)
+{
+    data_.on_closed = handler;
+}
+
 void tcp_server::listen(int port, family f, const char *ip)
 {
     acpts_.push_back(std::make_unique<acceptor>(&data_));
@@ -366,6 +404,26 @@ tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
     {
         conts_.push_back(std::make_unique<connector>(&data_));
     }
+}
+
+void tcp_client::set_on_connect(const tcp_event_handler &handler)
+{
+    data_.on_connect = handler;
+}
+
+void tcp_client::set_on_read_complete(const tcp_event_handler &handler)
+{
+    data_.on_read_complete = handler;
+}
+
+void tcp_client::set_on_write_complete(const tcp_event_handler &handler)
+{
+    data_.on_write_complete = handler;
+}
+
+void tcp_client::set_on_closed(const tcp_event_handler &handler)
+{
+    data_.on_closed = handler;
 }
 
 void tcp_client::add(const std::string &ip, int port, family f, int t)
