@@ -12,6 +12,9 @@ set (LIB
 )
 
 add_library(cppev SHARED ${LIB})
+
+target_include_directories(cppev PUBLIC include)
+target_compile_options(cppev PUBLIC -O2 -Wall -Wextra)
 target_link_libraries(cppev dl)
 target_link_libraries(cppev pthread)
 

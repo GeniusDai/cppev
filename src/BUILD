@@ -14,10 +14,15 @@ cc_library(
         "-ldl",
     ] + select({
         "@platforms//os:linux" : [
-            "-lrt"
+            "-lrt",
         ],
         "@platforms//os:osx" : [],
     }),
+    copts = [
+        "-Wall",
+        "-Wextra",
+        "-fPIC",
+    ],
     visibility = [
         "//visibility:public",
     ],
