@@ -773,14 +773,17 @@ void nsocktcp::shutdown(shut_mode howto) noexcept
     case shut_mode::shut_rd :
     {
         ::shutdown(fd_, SHUT_RD);
+        break;
     }
     case shut_mode::shut_wr :
     {
         ::shutdown(fd_, SHUT_WR);
+        break;
     }
     case shut_mode::shut_rdwr :
     {
         ::shutdown(fd_, SHUT_RDWR);
+        break;
     }
     default: ;
     }
