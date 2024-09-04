@@ -26,6 +26,7 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
+    linkstatic = True,
 )
 
 cc_shared_library(

@@ -7,6 +7,15 @@ cc_binary(
     deps = [
         "//src:cppev",
     ],
+    dynamic_deps = [
+        "//src:cppev_dynamic",
+    ],
+    linkopts = [
+        "-Wl,-rpath=$ORIGIN/../../src",
+    ],
+    visibility = [
+        "//:__pkg__",
+    ],
 )
 
 cc_binary(
@@ -17,5 +26,14 @@ cc_binary(
     ],
     deps = [
         "//src:cppev",
+    ],
+    dynamic_deps = [
+        "//src:cppev_dynamic",
+    ],
+    linkopts = [
+        "-Wl,-rpath=$ORIGIN/../../src",
+    ],
+    visibility = [
+        "//:__pkg__",
     ],
 )

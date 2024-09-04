@@ -6,7 +6,10 @@ cc_binary(
     ],
     deps = [
         "//src:cppev",
-    ]
+    ],
+    visibility = [
+        "//:__pkg__",
+    ],
 )
 
 cc_binary(
@@ -17,5 +20,8 @@ cc_binary(
     ],
     deps = [
         "//src:cppev",
-    ]
+    ],
+    visibility = [
+        "//:__pkg__",
+    ],
 )
