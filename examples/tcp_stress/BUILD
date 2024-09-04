@@ -8,7 +8,7 @@ cc_binary(
         "//src:cppev",
     ],
     visibility = [
-        "//:__pkg__",
+        "//examples:__pkg__",
     ],
 )
 
@@ -22,6 +22,6 @@ cc_binary(
         "//src:cppev",
     ],
     visibility = [
-        "//:__pkg__",
+        "//examples:__pkg__",
     ],
 )

@@ -17,7 +17,7 @@ cc_binary(
         "@platforms//os:osx": [],
     }),
     visibility = [
-        "//:__pkg__",
+        "//examples:__pkg__",
     ],
 )
 
@@ -40,6 +40,6 @@ cc_binary(
         "@platforms//os:osx": [],
     }),
     visibility = [
-        "//:__pkg__",
+        "//examples:__pkg__",
     ],
 )
