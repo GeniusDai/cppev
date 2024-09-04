@@ -10,9 +10,12 @@ cc_binary(
     dynamic_deps = [
         "//src:cppev_dynamic",
     ],
-    linkopts = [
-        "-Wl,-rpath=$ORIGIN/../../src",
-    ],
+    linkopts = select({
+        "@platforms//os:linux":  [
+            "-Wl,-rpath,$ORIGIN/../../src",
+        ],
+        "@platforms//os:osx": [],
+    }),
     visibility = [
         "//:__pkg__",
     ],
@@ -30,9 +33,12 @@ cc_binary(
     dynamic_deps = [
         "//src:cppev_dynamic",
     ],
-    linkopts = [
-        "-Wl,-rpath=$ORIGIN/../../src",
-    ],
+    linkopts = select({
+        "@platforms//os:linux":  [
+            "-Wl,-rpath,$ORIGIN/../../src",
+        ],
+        "@platforms//os:osx": [],
+    }),
     visibility = [
         "//:__pkg__",
     ],
