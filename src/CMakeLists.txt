@@ -9,6 +9,7 @@ set (LIB
     lib/ipc.cc
     lib/lock.cc
     lib/async_logger.cc
+    lib/runnable.cc
 )
 
 add_library(cppev SHARED ${LIB})

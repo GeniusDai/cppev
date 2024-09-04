@@ -25,10 +25,7 @@ namespace cppev
 class runnable
 {
 public:
-    runnable()
-    : fut_(prom_.get_future())
-    {
-    }
+    runnable();
 
     runnable(const runnable &) = delete;
     runnable &operator=(const runnable &) = delete;
@@ -40,56 +37,20 @@ public:
     // Derived class should override
     virtual void run_impl() = 0;
 
+    // Cancel thread
+    virtual bool cancel() noexcept;
+
     // Create and run thread
-    void run()
-    {
-        auto thr_func = [](void *arg) -> void *
-        {
-            runnable *pseudo_this = static_cast<runnable *>(arg);
-            if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr) != 0)
-            {
-                throw_logic_error("pthread_setcancelstate error");
-            }
-            if (pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr) != 0)
-            {
-                throw_logic_error("pthread_setcanceltype error");
-            }
-            pseudo_this->run_impl();
-            pseudo_this->prom_.set_value(true);
-            return nullptr;
-        };
-        int ret = pthread_create(&thr_, nullptr, thr_func, this);
-        if (ret != 0)
-        {
-            throw_system_error("pthread_create error", ret);
-        }
-    }
+    void run();
 
     // Wait until thread finish
-    void join()
-    {
-        int ret = pthread_join(thr_, nullptr);
-        if (ret != 0)
-        {
-            throw_system_error("pthread_join error", ret);
-        }
-    }
+    void join();
 
     // Detach thread
-    void detach()
-    {
-        int ret = pthread_detach(thr_);
-        if (ret != 0)
-        {
-            throw_system_error("pthread_detach error", ret);
-        }
-    }
+    void detach();
 
-    // Cancel thread
-    virtual bool cancel() noexcept
-    {
-        return 0 == pthread_cancel(thr_);
-    }
+    // Send signal to thread
+    void send_signal(int sig) noexcept;
 
     // Wait for thread
     // @return  whether thread finishes
@@ -111,12 +72,6 @@ public:
             break;
         }
         return ret;
-    }
-
-    // Send signal to thread
-    void send_signal(int sig) noexcept
-    {
-        pthread_kill(thr_, sig);
     }
 
 private:
