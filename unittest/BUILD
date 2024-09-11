@@ -154,6 +154,8 @@ cc_binary(
     linkshared = True,
 )
 
+# Attention! The function dlerror and dlsym is undefined in the test_dynamic_loader.pic.o
+# and cc_shared_library won't transfer linkopts. So cannot use //src:cppev_dynamic.
 cc_test(
     name = "test_dynamic_loader",
     srcs = [

@@ -11,18 +11,13 @@ cc_library(
     ],
     linkopts = [
         "-lpthread",
-        "-ldl",
     ] + select({
         "@platforms//os:linux" : [
             "-lrt",
+            "-ldl",
         ],
         "@platforms//os:osx" : [],
     }),
-    copts = [
-        "-Wall",
-        "-Wextra",
-        "-fPIC",
-    ],
     visibility = [
         "//visibility:public",
     ],
