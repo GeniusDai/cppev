@@ -1,4 +1,5 @@
 #include <memory>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include "cppev/utils.h"
 #include "cppev/dynamic_loader.h"
@@ -7,35 +8,14 @@
 namespace cppev
 {
 
+std::string ld_full_name = std::string("libLoaderTestFunctions") +
 #ifdef __linux__
-std::string ld_suffix = ".so";
+".so";
 #else
-std::string ld_suffix = ".dylib";
+".dylib";
 #endif  // __linux__
 
-std::string ld_full_name = "libLoaderTestFunctions" + ld_suffix;
-
-static const std::string get_bin_directory_path(const std::string &exec_path)
-{
-    std::string path;
-
-    for (int i = exec_path.size() - 1; i >= 0; --i)
-    {
-        if (exec_path[i] == '/')
-        {
-            path = exec_path.substr(0, i + 1);
-            break;
-        }
-    }
-    if (path.empty())
-    {
-        cppev::throw_runtime_error("find path error");
-    }
-
-    return path;
-}
-
-std::string ld_path = "";
+std::string ld_path;
 
 static void test_class(LoaderTestBase *base_cls)
 {
@@ -94,11 +74,7 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestDynamicLoader,
 
 int main(int argc, char **argv)
 {
-    cppev::ld_path = cppev::get_bin_directory_path(argv[0]) + cppev::ld_full_name;
-
-    std::cout << "dynamic library path : " << cppev::ld_path << std::endl;
-
+    cppev::ld_path = std::string(std::filesystem::path(argv[0]).parent_path()) + "/" + cppev::ld_full_name;
     testing::InitGoogleTest();
-
     return RUN_ALL_TESTS();
 }

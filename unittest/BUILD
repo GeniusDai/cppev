@@ -84,6 +84,12 @@ cc_test(
         "//src:cppev",
         "@googletest//:gtest_main",
     ],
+    data = [
+        "//unittest:hello.py",
+    ],
+    local_defines = [
+        "CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON",
+    ],
 )
 
 cc_test(

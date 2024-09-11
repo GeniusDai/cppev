@@ -1,9 +1,12 @@
 #include <thread>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include "cppev/subprocess.h"
 
 namespace cppev
 {
+
+std::string dirpath;
 
 TEST(TestSubprocessExecCmd, test_exec_cmd)
 {
@@ -30,12 +33,14 @@ TEST(TestSubprocessExecCmd, test_exec_cmd_python)
 {
     std::tuple<int, std::string, std::string> rets;
 
-    rets = subprocess::exec_cmd("./hello.py");
+    std::string pyfile = dirpath + "/hello.py";
+
+    rets = subprocess::exec_cmd(pyfile);
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 
-    rets = subprocess::exec_cmd("python3 hello.py");
+    rets = subprocess::exec_cmd(std::string("python3 ") + pyfile);
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
@@ -90,6 +95,7 @@ INSTANTIATE_TEST_SUITE_P(CppevTest, TestSubprocess,
 
 int main(int argc, char **argv)
 {
+    cppev::dirpath = std::string(std::filesystem::path(argv[0]).parent_path());
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }
