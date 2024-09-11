@@ -5,7 +5,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -16,7 +16,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -27,7 +27,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -38,7 +38,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -49,7 +49,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -60,7 +60,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -71,7 +71,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -82,8 +82,14 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
+    linkopts = select({
+        "@platforms//os:linux" : [
+            "-lstdc++fs",
+        ],
+        "@platforms//os:osx" : [],
+    }),
     data = [
         "//unittest:hello.py",
     ],
@@ -99,7 +105,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -110,7 +116,7 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
 )
 
@@ -156,8 +162,14 @@ cc_test(
     ],
     deps = [
         "//src:cppev",
-        "@googletest//:gtest_main",
+        "@googletest//:gtest",
     ],
+    linkopts = select({
+        "@platforms//os:linux" : [
+            "-lstdc++fs",
+        ],
+        "@platforms//os:osx" : [],
+    }),
     data = select({
         "@platforms//os:linux" : [
             ":libLoaderTestFunctions.so",

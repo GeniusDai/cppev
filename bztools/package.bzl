@@ -23,9 +23,8 @@ def _collect_files_aspect_impl(target, ctx):
     if hasattr(ctx.rule.attr, "dynamic_deps"):
         for dep in ctx.rule.attr.dynamic_deps:
             transitive += dep[CollectedFileInfo].files
-    
-    all_without_dup = []
 
+    all_without_dup = []
     dict = {}
     for file in direct+transitive:
         if dict.get(file.path) == None:

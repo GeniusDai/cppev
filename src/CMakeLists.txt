@@ -10,6 +10,7 @@ set (LIB
     lib/lock.cc
     lib/async_logger.cc
     lib/runnable.cc
+    lib/dynamic_loader.cc
 )
 
 add_library(cppev SHARED ${LIB})
