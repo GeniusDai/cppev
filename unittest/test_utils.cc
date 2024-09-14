@@ -121,7 +121,7 @@ class TestSignal
 {
 };
 
-const int delay = 50;
+const int delay = 100;
 
 void test_main_thread_signal_wait(int sig, bool block)
 {

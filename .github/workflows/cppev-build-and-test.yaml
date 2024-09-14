@@ -2,7 +2,7 @@ name: Cppev CI
 run-name: Cppev CI 🚀
 on: [push]
 jobs:
-  build-and-test-bazel:
+  bazel-build-and-test:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
@@ -18,9 +18,9 @@ jobs:
     - run: export PATH="~/go/bin:$PATH"
 
     - run: bazel build //...
-    - run: bazel test //... || bazel test //...
+    - run: bazel test //...
 
-  build-and-test-cmake:
+  cmake-build:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
