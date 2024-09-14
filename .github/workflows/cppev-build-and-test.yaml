@@ -2,7 +2,7 @@ name: Cppev CI
 run-name: Cppev CI 🚀
 on: [push]
 jobs:
-  build-and-test:
+  build-and-test-bazel:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
@@ -19,3 +19,28 @@ jobs:
 
     - run: bazel build //...
     - run: bazel test //... || bazel test //...
+
+  build-and-test-cmake:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+        cmake_build_type: [RelWithDebInfo]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT";
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: |
+        cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.cmake_build_type }}
