@@ -1,0 +1,25 @@
+name: Cppev CI
+run-name: Cppev CI 🚀
+on: [push]
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Go Ubuntu
+      if:   ${{ runner.os == 'Linux' }}
+      run:  sudo apt install -y golang
+    - name: Install Go macOS
+      if:   ${{ runner.os == 'macOS' }}
+      run:  brew install go
+    - run: go install github.com/bazelbuild/bazelisk@latest
+    - run: ln ~/go/bin/bazelisk ~/go/bin/bazel
+    - run: export PATH="~/go/bin:$PATH"
+    - run: bazel build //...
+    - run: bazel test //unittest:test_utils
+    - run: bazel test //unittest:test_scheduler
+    - run: bazel test //unittest:all
