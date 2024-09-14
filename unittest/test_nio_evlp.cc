@@ -95,13 +95,13 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
         listensock->listen();
         auto listensock1 = std::make_shared<nsocktcp>(std::move(*listensock));
         *listensock = std::move(*listensock1);
-        acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock), 
+        acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock),
             fd_event::fd_readable, callback);
 
         std::thread thr_cont([&]() {
             auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
             EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
-            cont_evlp.fd_register(std::dynamic_pointer_cast<nio>(connsock), 
+            cont_evlp.fd_register(std::dynamic_pointer_cast<nio>(connsock),
                 fd_event::fd_writable, callback);
         });
         thr_cont.join();
