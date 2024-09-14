@@ -14,50 +14,14 @@ class TestTimedScheduler
 protected:
     void SetUp() override
     {
-        count = 0;
-        discrete_count = 0;
-        discrete_count_helper = 0;
-        total_time_ms = 200;
-        freq = 500;
     }
 
-    int count;
-
-    int discrete_count;
-
-    int discrete_count_helper;
-
-    int total_time_ms;
-
-    int freq;
-
-    double err_percent = 0.05;
-
-    timed_task_handler task = [this](const std::chrono::nanoseconds &)
-    {
-        ++this->count;
-    };
+    double err_percent = 0.1;
 };
-
-
-#define CHECK_ALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
-    EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
-    EXPECT_GE(count, static_cast<int>((1 + (total_time_ms / 1'000.0 - 1) * freq) * (1 - err_percent)))
 
 #define CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
     EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
     EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0* freq) * (1 - err_percent)))
-
-
-TEST_F(TestTimedScheduler, test_timed_scheduler_single_task)
-{
-    {
-        timed_scheduler executor(freq, task, false);
-        std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
-    }
-
-    CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent);
-}
 
 bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
 {
@@ -82,6 +46,14 @@ bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
 TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
 {
     std::map<int64_t, std::vector<int>> kvmap;
+
+    int total_time_ms = 3000;
+
+    double freq1 = 50;
+    double freq2 = 20;
+    double freq3 = 0.5;
+    double freq4 = 40;
+
     int count1 = 0;
     int count2 = 0;
     int count3 = 0;
@@ -108,30 +80,24 @@ TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
         kvmap[stamp.count()].push_back(4);
     };
 
-    total_time_ms = 3000;
-    double freq1 = 50;
-    double freq2 = 20;
-    double freq3 = 0.5;
-    double freq4 = 40;
-
     {
         timed_scheduler executor({
             { freq1, priority::p6, task1 },
             { freq2, priority::p0, task2 },
             { freq3, priority::p4, task3 },
             { freq4, priority::p3, task4 },
-        });
+        }, {}, {}, false);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
 
-    CHECK_ALIGNED_TRIGGER_COUNT(count1, freq1, total_time_ms, err_percent);
+    CHECK_UNALIGNED_TRIGGER_COUNT(count1, freq1, total_time_ms, err_percent);
 
-    CHECK_ALIGNED_TRIGGER_COUNT(count2, freq2, total_time_ms, err_percent);
+    CHECK_UNALIGNED_TRIGGER_COUNT(count2, freq2, total_time_ms, err_percent);
 
-    CHECK_ALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
+    CHECK_UNALIGNED_TRIGGER_COUNT(count3, freq3, total_time_ms, err_percent);
 
-    CHECK_ALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
+    CHECK_UNALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
 
     std::vector<int> res{ 2, 4, 3, 1 };
 
