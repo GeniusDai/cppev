@@ -26,7 +26,7 @@ Support executable-file loading by subprocess, dynamic-library loading in runtim
 
 ### Others
 
-Support reactor / signal-handing / async-logger.
+Support reactor / signal-handing.
 
 # Usage
 
@@ -60,10 +60,6 @@ Build
 Run Unittest
 
         $ bazel test //...
-
-### Validated platforms
-
-Ubuntu-20.04 / CentOS-8 / macOS-Sonoma.
 
 # Getting Started
 
