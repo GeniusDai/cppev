@@ -7,7 +7,7 @@
 namespace cppev
 {
 
-const int delay = 50;
+const int delay = 100;
 
 class runnable_tester
 : public runnable
@@ -51,7 +51,7 @@ TEST(TestRunnable, test_wait_for_timeout)
 {
     runnable_tester tester;
     tester.run();
-    bool ok = tester.wait_for(std::chrono::milliseconds(1));
+    bool ok = tester.wait_for(std::chrono::milliseconds(delay / 2));
     EXPECT_FALSE(ok);
     tester.join();
 }
@@ -69,7 +69,7 @@ TEST(TestRunnable, test_send_signal)
 {
     runnable_tester_wait_for_signal tester;
     tester.run();
-    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay / 2));
     tester.send_signal(sig);
     tester.join();
 }
