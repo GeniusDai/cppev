@@ -1,7 +1,6 @@
 enable_testing()
 
 option(CPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH "enable dlopen env search test" OFF)
-option(CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON "enable execvp python script test" OFF)
 
 function(compile_and_enable_test testname_)
     add_executable(${testname_} ${testname_}.cc)
@@ -16,15 +15,13 @@ function(compile_and_enable_test testname_)
         message(STATUS "enable dlopen env search test")
         target_compile_definitions(${testname_} PRIVATE -DCPPEV_TEST_ENABLE_DLOPEN_ENV_SEARCH=1)
     endif()
-    if (CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON AND (${testname_} STREQUAL "test_subprocess"))
-        message(STATUS "enable execvp python script test")
-        target_compile_definitions(${testname_} PRIVATE -DCPPEV_TEST_ENABLE_SUBPROCESS_PYTHON=1)
-    endif()
 endfunction(compile_and_enable_test)
 
 add_library(LoaderTestImpl SHARED LoaderTestImpl.cc)
 add_library(LoaderTestFunctions SHARED LoaderTestFunctions.cc)
 target_link_libraries(LoaderTestFunctions LoaderTestImpl cppev)
+
+file(COPY hello.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 compile_and_enable_test(test_async_logger)
 compile_and_enable_test(test_thread_pool)

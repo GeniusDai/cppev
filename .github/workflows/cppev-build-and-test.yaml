@@ -12,6 +12,9 @@ jobs:
     - uses: actions/setup-go@v5
       with:
         go-version: '>=1.20.0'
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
     - run: go install github.com/bazelbuild/bazelisk@latest
     - run: ln ~/go/bin/bazelisk ~/go/bin/bazel

@@ -28,7 +28,6 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 }
 
-#ifdef CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON
 TEST(TestSubprocessExecCmd, test_exec_cmd_python)
 {
     std::tuple<int, std::string, std::string> rets;
@@ -45,7 +44,6 @@ TEST(TestSubprocessExecCmd, test_exec_cmd_python)
     EXPECT_STREQ(std::get<1>(rets).c_str(), "hello\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
 }
-#endif
 
 class TestSubprocess
 : public testing::TestWithParam<std::tuple<std::string, int>>

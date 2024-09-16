@@ -93,9 +93,6 @@ cc_test(
     data = [
         "//unittest:hello.py",
     ],
-    local_defines = [
-        "CPPEV_TEST_ENABLE_SUBPROCESS_PYTHON",
-    ],
 )
 
 cc_test(
