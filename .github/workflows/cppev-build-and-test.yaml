@@ -17,8 +17,7 @@ jobs:
         python-version: '3.11'
 
     - run: go install github.com/bazelbuild/bazelisk@latest
-    - run: ln ~/go/bin/bazelisk ~/go/bin/bazel
-    - run: export PATH="~/go/bin:$PATH"
+    - run: ln $(go env GOPATH)/bin/bazelisk $(go env GOPATH)/bin/bazel
 
     - run: bazel build //...
     - run: bazel test //...
