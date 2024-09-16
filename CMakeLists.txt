@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project(cppev)
 
-if (CMAKE_HOST_UNIX)
-    message(STATUS "Platform : Unix")
-endif()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
@@ -18,8 +14,7 @@ if (GTest_FOUND)
 endif()
 
 install(
-    TARGETS cppev
-    LIBRARY DESTINATION lib
+    TARGETS cppev LIBRARY DESTINATION lib
 )
 install(
     DIRECTORY src/include/cppev DESTINATION include
