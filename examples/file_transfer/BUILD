@@ -4,20 +4,20 @@ cc_binary(
         "config.h",
         "file_transfer_client.cc",
     ],
-    deps = [
-        "//src:cppev",
-    ],
     dynamic_deps = [
         "//src:cppev_dynamic",
     ],
     linkopts = select({
-        "@platforms//os:linux":  [
+        "@platforms//os:linux": [
             "-Wl,-rpath,$ORIGIN/../../src",
         ],
         "@platforms//os:osx": [],
     }),
     visibility = [
         "//examples:__pkg__",
+    ],
+    deps = [
+        "//src:cppev",
     ],
 )
 
@@ -27,19 +27,19 @@ cc_binary(
         "config.h",
         "file_transfer_server.cc",
     ],
-    deps = [
-        "//src:cppev",
-    ],
     dynamic_deps = [
         "//src:cppev_dynamic",
     ],
     linkopts = select({
-        "@platforms//os:linux":  [
+        "@platforms//os:linux": [
             "-Wl,-rpath,$ORIGIN/../../src",
         ],
         "@platforms//os:osx": [],
     }),
     visibility = [
         "//examples:__pkg__",
+    ],
+    deps = [
+        "//src:cppev",
     ],
 )

@@ -80,18 +80,18 @@ cc_test(
     srcs = [
         "test_subprocess.cc",
     ],
+    data = [
+        "//unittest:hello.py",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-lstdc++fs",
+        ],
+        "@platforms//os:osx": [],
+    }),
     deps = [
         "//src:cppev",
         "@googletest//:gtest",
-    ],
-    linkopts = select({
-        "@platforms//os:linux" : [
-            "-lstdc++fs",
-        ],
-        "@platforms//os:osx" : [],
-    }),
-    data = [
-        "//unittest:hello.py",
     ],
 )
 
@@ -121,34 +121,34 @@ cc_binary(
     name = "libLoaderTestFunctions.so",
     srcs = [
         "LoaderTestBase.h",
-        "LoaderTestImpl.h",
-        "LoaderTestImpl.cc",
         "LoaderTestFunctions.cc",
+        "LoaderTestImpl.cc",
+        "LoaderTestImpl.h",
     ],
     copts = [
         "-fPIC",
     ],
+    linkshared = True,
     target_compatible_with = [
         "@platforms//os:linux",
     ],
-    linkshared = True,
 )
 
 cc_binary(
     name = "libLoaderTestFunctions.dylib",
     srcs = [
         "LoaderTestBase.h",
-        "LoaderTestImpl.h",
-        "LoaderTestImpl.cc",
         "LoaderTestFunctions.cc",
+        "LoaderTestImpl.cc",
+        "LoaderTestImpl.h",
     ],
     copts = [
         "-fPIC",
     ],
+    linkshared = True,
     target_compatible_with = [
         "@platforms//os:osx",
     ],
-    linkshared = True,
 )
 
 # Attention! The function dlerror and dlsym is undefined in the test_dynamic_loader.pic.o
@@ -159,22 +159,22 @@ cc_test(
         "LoaderTestBase.h",
         "test_dynamic_loader.cc",
     ],
+    data = select({
+        "@platforms//os:linux": [
+            ":libLoaderTestFunctions.so",
+        ],
+        "@platforms//os:osx": [
+            ":libLoaderTestFunctions.dylib",
+        ],
+    }),
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-lstdc++fs",
+        ],
+        "@platforms//os:osx": [],
+    }),
     deps = [
         "//src:cppev",
         "@googletest//:gtest",
     ],
-    linkopts = select({
-        "@platforms//os:linux" : [
-            "-lstdc++fs",
-        ],
-        "@platforms//os:osx" : [],
-    }),
-    data = select({
-        "@platforms//os:linux" : [
-            ":libLoaderTestFunctions.so",
-        ],
-        "@platforms//os:osx" : [
-            ":libLoaderTestFunctions.dylib",
-        ],
-    }),
 )

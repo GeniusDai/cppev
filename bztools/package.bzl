@@ -26,12 +26,12 @@ def _collect_files_aspect_impl(target, ctx):
 
     all_without_dup = []
     dict = {}
-    for file in direct+transitive:
+    for file in direct + transitive:
         if dict.get(file.path) == None:
             all_without_dup.append(file)
             dict[file.path] = ""
 
-    return CollectedFileInfo(files=all_without_dup)
+    return CollectedFileInfo(files = all_without_dup)
 
 collect_files_aspect = aspect(
     implementation = _collect_files_aspect_impl,
@@ -47,9 +47,9 @@ def _package_files_impl(ctx):
         inputs += dep[CollectedFileInfo].files
     inputs = depset(inputs).to_list()
 
-    outputs = [ ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name)) ]
+    outputs = [ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))]
 
-    command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([ f.path for f in inputs]))
+    command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([f.path for f in inputs]))
 
     print("Package command: {}".format(command))
 

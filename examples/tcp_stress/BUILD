@@ -4,11 +4,11 @@ cc_binary(
         "config.h",
         "simple_client.cc",
     ],
-    deps = [
-        "//src:cppev",
-    ],
     visibility = [
         "//examples:__pkg__",
+    ],
+    deps = [
+        "//src:cppev",
     ],
 )
 
@@ -18,10 +18,10 @@ cc_binary(
         "config.h",
         "simple_server.cc",
     ],
-    deps = [
-        "//src:cppev",
-    ],
     visibility = [
         "//examples:__pkg__",
+    ],
+    deps = [
+        "//src:cppev",
     ],
 )

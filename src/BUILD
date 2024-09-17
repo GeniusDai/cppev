@@ -1,10 +1,10 @@
 cc_library(
     name = "cppev",
-    hdrs = glob([
-        "include/cppev/*.h",
-    ]),
     srcs = glob([
         "lib/*.cc",
+    ]),
+    hdrs = glob([
+        "include/cppev/*.h",
     ]),
     includes = [
         "include/",
@@ -12,24 +12,24 @@ cc_library(
     linkopts = [
         "-lpthread",
     ] + select({
-        "@platforms//os:linux" : [
+        "@platforms//os:linux": [
             "-lrt",
             "-ldl",
         ],
-        "@platforms//os:osx" : [],
+        "@platforms//os:osx": [],
     }),
+    linkstatic = True,
     visibility = [
         "//visibility:public",
     ],
-    linkstatic = True,
 )
 
 cc_shared_library(
     name = "cppev_dynamic",
-    deps = [
-        "cppev",
-    ],
     visibility = [
         "//visibility:public",
+    ],
+    deps = [
+        "cppev",
     ],
 )
