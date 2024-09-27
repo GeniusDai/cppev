@@ -18,7 +18,6 @@ cc_library(
         ],
         "@platforms//os:osx": [],
     }),
-    linkstatic = True,
     visibility = [
         "//visibility:public",
     ],

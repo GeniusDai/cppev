@@ -1,25 +1,18 @@
 CollectedFileInfo = provider(
-    doc = "",
+    doc = "Collect executables and dynamic libraries.",
     fields = {
         "files": "List[File]; The collected files.",
     },
 )
 
 def _collect_files_aspect_impl(target, ctx):
-    print("Collect file aspect in {}({})".format(ctx.rule.kind, target.label))
+    print("Aspect for file collection in {}({})".format(ctx.rule.kind, target.label))
 
-    # Collect the binaries except .a.
-    # If you don't want to include the .so produced by cc_library, please use linkstatic=True.
-    # If you want to include .so in srcs, please add it explicitly.
     direct = []
     for file in target[DefaultInfo].files.to_list():
-        if file.extension != "a":
-            direct.append(file)
+        direct.append(file)
 
     transitive = []
-    if hasattr(ctx.rule.attr, "deps"):
-        for dep in ctx.rule.attr.deps:
-            transitive += dep[CollectedFileInfo].files
     if hasattr(ctx.rule.attr, "dynamic_deps"):
         for dep in ctx.rule.attr.dynamic_deps:
             transitive += dep[CollectedFileInfo].files
@@ -43,8 +36,8 @@ collect_files_aspect = aspect(
 
 def _package_files_impl(ctx):
     inputs = []
-    for dep in ctx.attr.files:
-        inputs += dep[CollectedFileInfo].files
+    for file in ctx.attr.files:
+        inputs += file[CollectedFileInfo].files
     inputs = depset(inputs).to_list()
 
     outputs = [ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))]
@@ -54,7 +47,7 @@ def _package_files_impl(ctx):
     print("Package command: {}".format(command))
 
     ctx.actions.run_shell(
-        mnemonic = "SystemPackage",
+        mnemonic = "PackageFiles",
         command = command,
         inputs = inputs,
         outputs = outputs,
