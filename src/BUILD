@@ -25,6 +25,13 @@ cc_library(
 
 cc_shared_library(
     name = "cppev_dynamic",
+    user_link_flags = select({
+        "@platforms//os:linux": [
+            "-Wl,--no-undefined",
+        ],
+        # osx -undefined is deprecated
+        "@platforms//os:osx": [],
+    }),
     visibility = [
         "//visibility:public",
     ],
