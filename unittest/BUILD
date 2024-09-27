@@ -125,9 +125,6 @@ cc_binary(
         "LoaderTestImpl.cc",
         "LoaderTestImpl.h",
     ],
-    copts = [
-        "-fPIC",
-    ],
     linkshared = True,
     target_compatible_with = [
         "@platforms//os:linux",
@@ -142,16 +139,14 @@ cc_binary(
         "LoaderTestImpl.cc",
         "LoaderTestImpl.h",
     ],
-    copts = [
-        "-fPIC",
-    ],
     linkshared = True,
     target_compatible_with = [
         "@platforms//os:osx",
     ],
 )
 
-# Attention! The function dlerror and dlsym is undefined in the test_dynamic_loader.pic.o
+# Attention! In ubuntu-20.04.
+# The function dlerror and dlsym is undefined in the test_dynamic_loader.pic.o
 # and cc_shared_library won't transfer linkopts. So cannot use //src:cppev_dynamic.
 cc_test(
     name = "test_dynamic_loader",
