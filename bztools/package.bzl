@@ -5,17 +5,35 @@ CollectedFileInfo = provider(
     },
 )
 
+ATTR_ASPECTS = [
+    "data",
+    "srcs",
+    "deps",
+    "dynamic_deps",
+]
+
+PACKAGE_RULES = [
+    "cc_binary",
+    "cc_shared_library",
+    "py_library",
+    "py_binary",
+]
+
 def _collect_files_aspect_impl(target, ctx):
     print("Aspect for file collection in {}({})".format(ctx.rule.kind, target.label))
 
     direct = []
-    for file in target[DefaultInfo].files.to_list():
-        direct.append(file)
+    if ctx.rule.kind in PACKAGE_RULES:
+        for file in target[DefaultInfo].files.to_list():
+            direct.append(file)
 
     transitive = []
-    if hasattr(ctx.rule.attr, "dynamic_deps"):
-        for dep in ctx.rule.attr.dynamic_deps:
-            transitive += dep[CollectedFileInfo].files
+    for attr in ATTR_ASPECTS:
+        if not hasattr(ctx.rule.attr, attr):
+            continue
+        for dep in getattr(ctx.rule.attr, attr):
+            if CollectedFileInfo in dep:
+                transitive += dep[CollectedFileInfo].files
 
     all_without_dup = []
     dict = {}
@@ -28,10 +46,7 @@ def _collect_files_aspect_impl(target, ctx):
 
 collect_files_aspect = aspect(
     implementation = _collect_files_aspect_impl,
-    attr_aspects = [
-        "deps",
-        "dynamic_deps",
-    ],
+    attr_aspects = ATTR_ASPECTS,
 )
 
 def _package_files_impl(ctx):

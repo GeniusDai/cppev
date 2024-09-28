@@ -75,13 +75,21 @@ cc_test(
     ],
 )
 
+py_binary(
+    name = "hello",
+    srcs = [
+        "hello.py",
+    ],
+    main = "hello.py",
+)
+
 cc_test(
     name = "test_subprocess",
     srcs = [
         "test_subprocess.cc",
     ],
     data = [
-        "//unittest:hello.py",
+        "hello",
     ],
     linkopts = select({
         "@platforms//os:linux": [
@@ -89,6 +97,10 @@ cc_test(
         ],
         "@platforms//os:osx": [],
     }),
+    linkstatic = True,
+    visibility = [
+        "//examples:__pkg__",
+    ],
     deps = [
         "//src:cppev",
         "@googletest//:gtest",
@@ -168,6 +180,10 @@ cc_test(
         ],
         "@platforms//os:osx": [],
     }),
+    linkstatic = True,
+    visibility = [
+        "//examples:__pkg__",
+    ],
     deps = [
         "//src:cppev",
         "@googletest//:gtest",
