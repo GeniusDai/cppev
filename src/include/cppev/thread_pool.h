@@ -95,36 +95,15 @@ class task_queue
 {
     friend class thread_pool_task_queue_runnable;
 public:
-    task_queue() noexcept
-    : stop_(false)
-    {
-    }
+    task_queue() noexcept;
 
     virtual ~task_queue() = default;
 
-    void add_task(const thread_pool_task_handler &h) noexcept
-    {
-        std::unique_lock<std::mutex> lock(lock_);
-        queue_.push(h);
-        cond_.notify_one();
-    }
+    void add_task(const thread_pool_task_handler &h) noexcept;
 
-    void add_task(thread_pool_task_handler &&h) noexcept
-    {
-        std::unique_lock<std::mutex> lock(lock_);
-        queue_.push(std::forward<thread_pool_task_handler>(h));
-        cond_.notify_one();
-    }
+    void add_task(thread_pool_task_handler &&h) noexcept;
 
-    void add_task(const std::vector<thread_pool_task_handler> &vh) noexcept
-    {
-        std::unique_lock<std::mutex> lock(lock_);
-        for (const auto &h : vh)
-        {
-            queue_.push(h);
-        }
-        cond_.notify_all();
-    }
+    void add_task(const std::vector<thread_pool_task_handler> &vh) noexcept;
 
 protected:
     std::queue<thread_pool_task_handler> queue_;
@@ -145,35 +124,7 @@ public:
     {
     }
 
-    void run_impl() override
-    {
-        thread_pool_task_handler handler;
-        while(true)
-        {
-            {
-                std::unique_lock<std::mutex> lock(task_queue_->lock_);
-                if (task_queue_->queue_.empty())
-                {
-                    if (task_queue_->stop_)
-                    {
-                        break;
-                    }
-                    task_queue_->cond_.wait(lock, [this]()->bool
-                    {
-                        return task_queue_->queue_.size() || task_queue_->stop_;
-                    });
-                    if (task_queue_->queue_.empty() && task_queue_->stop_)
-                    {
-                        break;
-                    }
-                }
-                handler = std::move(task_queue_->queue_.front());
-                task_queue_->queue_.pop();
-            }
-            task_queue_->cond_.notify_all();
-            handler();
-        }
-    }
+    void run_impl() override;
 
 private:
     task_queue *task_queue_;
@@ -183,10 +134,7 @@ class thread_pool_task_queue final
 : public task_queue, public thread_pool<thread_pool_task_queue_runnable, task_queue *>
 {
 public:
-    thread_pool_task_queue(int thr_num)
-    : task_queue(), thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
-    {
-    }
+    thread_pool_task_queue(int thr_num);
 
     thread_pool_task_queue(const thread_pool_task_queue &) = delete;
     thread_pool_task_queue &operator=(const thread_pool_task_queue &) = delete;
@@ -195,15 +143,7 @@ public:
 
     ~thread_pool_task_queue() = default;
 
-    void stop() noexcept
-    {
-        {
-            std::unique_lock<std::mutex> lock(lock_);
-            stop_ = true;
-            cond_.notify_all();
-        }
-        join();
-    }
+    void stop() noexcept;
 };
 
 }   // namespace task_queue

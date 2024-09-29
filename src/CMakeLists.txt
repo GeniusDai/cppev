@@ -11,6 +11,7 @@ set (LIB
     lib/async_logger.cc
     lib/runnable.cc
     lib/dynamic_loader.cc
+    lib/thread_pool.cc
 )
 
 add_library(cppev SHARED ${LIB})
