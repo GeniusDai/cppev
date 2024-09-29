@@ -31,9 +31,9 @@ TEST_F(TestNio, test_diskfile)
     int fd;
 
     fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
-    std::shared_ptr<nstream> iofw(new nstream(fd));
+    auto iofw = std::make_shared<nstream>(fd);
     fd = open(file, O_RDONLY);
-    std::shared_ptr<nstream> iofr(new nstream(fd));
+    auto iofr = std::make_shared<nstream>(fd);
 
     iofw->wbuffer().put_string(str);
     iofw->write_all();

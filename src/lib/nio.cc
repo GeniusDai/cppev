@@ -888,7 +888,7 @@ std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
         }
         else
         {
-            sockfds.emplace_back(new nsocktcp(sockfd, family_));
+            sockfds.emplace_back(std::make_shared<nsocktcp>(sockfd, family_));
             if (family_ == family::local)
             {
                 sockfds.back()->peer_ = peer_;
@@ -1019,7 +1019,7 @@ std::shared_ptr<nsockudp> get_nsockudp(family f)
     {
         throw_system_error("socket error");
     }
-    std::shared_ptr<nsockudp> sock(new nsockudp(fd, f));
+    std::shared_ptr<nsockudp> sock = std::make_shared<nsockudp>(fd, f);
     sock->rbuffer().resize(sysconfig::udp_buffer_size);
     sock->wbuffer().resize(sysconfig::udp_buffer_size);
     return sock;
