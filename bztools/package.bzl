@@ -35,7 +35,7 @@ def _collect_files_aspect_impl(target, ctx):
             if CollectedFileInfo in dep:
                 transitive += dep[CollectedFileInfo].files
 
-    return CollectedFileInfo(files = direct + transitive)
+    return CollectedFileInfo(files = depset(direct + transitive).to_list())
 
 collect_files_aspect = aspect(
     implementation = _collect_files_aspect_impl,
