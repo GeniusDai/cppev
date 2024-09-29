@@ -31,6 +31,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - uses: actions/setup-cpp@v1
+      with:
+        tools: googletest
+
     - name: Set reusable strings
       id: strings
       shell: bash
@@ -46,3 +50,7 @@ jobs:
     - name: Build
       run: |
         cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.cmake_build_type }}
+
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.cmake_build_type }}
