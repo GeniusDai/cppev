@@ -57,35 +57,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
     const fd_event_handler &handler, bool activate, priority prio)
 {
 #ifdef CPPEV_DEBUG
-    log::info << "Eventloop [Action:register] ";
-    log::info << "[Fd:" << iop->fd() << "] ";
-    if (static_cast<bool>(ev_type & fd_event::fd_readable))
-    {
-        log::info << "[Event:readable] ";
-    }
-    if (static_cast<bool>(ev_type & fd_event::fd_writable))
-    {
-        log::info << "[Event:writable] ";
-    }
-
-    if (handler)
-    {
-        log::info << "[Callback:not-null] ";
-    }
-    else
-    {
-        log::info << "[Callback:null] ";
-    }
-
-    if (activate)
-    {
-        log::info << "[Activate:true]";
-    }
-    else
-    {
-        log::info << "[Activate:false]";
-    }
-    log::info << log::endl;
+    PRINT_FD_REGISTER_DEBUG();
 #endif  // CPPEV_DEBUG
     iop->set_evlp(*this);
     if (handler)
@@ -108,25 +80,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
 void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool deactivate)
 {
 #ifdef CPPEV_DEBUG
-    log::info << "[Action:remove] ";
-    log::info << "[Fd:" << iop->fd() << "] ";
-    if (clean)
-    {
-        log::info << "[Clean:true] ";
-    }
-    else
-    {
-        log::info << "[Clean:false] ";
-    }
-    if (deactivate)
-    {
-        log::info << "[Deactivate:true]";
-    }
-    else
-    {
-        log::info << "[Deactivate:false]";
-    }
-    log::info << log::endl;
+    PRINT_FD_REMOVE_DEBUG();
 #endif  // CPPEV_DEBUG
     if (deactivate)
     {
@@ -162,16 +116,7 @@ void event_loop::loop_once(int timeout)
             if (static_cast<bool>(std::get<3>(begin->second) & fd_map_to_event(evs[i].events)))
             {
 #ifdef CPPEV_DEBUG
-                log::info << "Enqueue ";
-                if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))
-                {
-                    log::info << "[Event:readable] ";
-                }
-                if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_writable))
-                {
-                    log::info << "[Event:writable] ";
-                }
-                log::info << "[Fd:" << fd << "]"<< log::endl;
+                PRINT_LOOP_DEBUG();
 #endif  //  CPPEV_DEBUG
                 fd_cbs_.emplace(
                     std::get<0>(begin->second),

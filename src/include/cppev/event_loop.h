@@ -11,9 +11,6 @@
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/utils.h"
-#ifdef CPPEV_DEBUG
-#include "cppev/async_logger.h"
-#endif  // CPPEV_DEBUG
 
 namespace cppev
 {
@@ -46,30 +43,15 @@ public:
     event_loop(event_loop &&) = delete;
     event_loop &operator=(event_loop &&) = delete;
 
-    virtual ~event_loop() noexcept
-    {
-        close(ev_fd_);
-    }
+    virtual ~event_loop() noexcept;
 
-    int ev_fd() const noexcept
-    {
-        return ev_fd_;
-    }
+    int ev_fd() const noexcept;
 
-    void *data() const noexcept
-    {
-        return data_;
-    }
+    void *data() const noexcept;
 
-    void *back() const noexcept
-    {
-        return back_;
-    }
+    void *back() const noexcept;
 
-    int ev_loads() const noexcept
-    {
-        return fds_.size();
-    }
+    int ev_loads() const noexcept;
 
     // Register fd event to event pollor
     // @param iop       nio smart pointer
@@ -91,27 +73,10 @@ public:
     void loop_once(int timeout = -1);
 
     // Loop infinitely
-    void loop_forever(int timeout = -1)
-    {
-        while(!stop_)
-        {
-            loop_once(timeout);
-        }
-    }
+    void loop_forever(int timeout = -1);
 
     // Stop loop infinitely
-    void stop_loop_forever()
-    {
-        stop_ = true;
-        auto iopps = nio_factory::get_pipes();
-        iopps[0]->set_evlp(*this);
-        fd_event_handler handler = [](const std::shared_ptr<nio> &iop)
-        {
-            iop->evlp().fd_remove(iop);
-        };
-        this->fd_register(std::dynamic_pointer_cast<nio>(iopps[0]), fd_event::fd_readable,
-            handler, true, priority::p6);
-    }
+    void stop_loop_forever();
 
 private:
     // Used for registering callback for event loop
@@ -140,5 +105,73 @@ private:
 };
 
 }   // namespace cppev
+
+#ifdef CPPEV_DEBUG
+
+#include "cppev/async_logger.h"
+
+#define PRINT_FD_REGISTER_DEBUG()                           \
+log::info << "Eventloop [Action:register] ";                \
+log::info << "[Fd:" << iop->fd() << "] ";                   \
+if (static_cast<bool>(ev_type & fd_event::fd_readable))     \
+{                                                           \
+    log::info << "[Event:readable] ";                       \
+}                                                           \
+if (static_cast<bool>(ev_type & fd_event::fd_writable))     \
+{                                                           \
+    log::info << "[Event:writable] ";                       \
+}                                                           \
+if (handler)                                                \
+{                                                           \
+    log::info << "[Callback:not-null] ";                    \
+}                                                           \
+else                                                        \
+{                                                           \
+    log::info << "[Callback:null] ";                        \
+}                                                           \
+if (activate)                                               \
+{                                                           \
+    log::info << "[Activate:true]";                         \
+}                                                           \
+else                                                        \
+{                                                           \
+    log::info << "[Activate:false]";                        \
+}                                                           \
+log::info << log::endl
+
+#define PRINT_FD_REMOVE_DEBUG()                             \
+log::info << "[Action:remove] ";                            \
+log::info << "[Fd:" << iop->fd() << "] ";                   \
+if (clean)                                                  \
+{                                                           \
+    log::info << "[Clean:true] ";                           \
+}                                                           \
+else                                                        \
+{                                                           \
+    log::info << "[Clean:false] ";                          \
+}                                                           \
+if (deactivate)                                             \
+{                                                           \
+    log::info << "[Deactivate:true]";                       \
+}                                                           \
+else                                                        \
+{                                                           \
+    log::info << "[Deactivate:false]";                      \
+}                                                           \
+log::info << log::endl
+
+#define PRINT_LOOP_DEBUG()                                                  \
+log::info << "Enqueue ";                                                    \
+if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))  \
+{                                                                           \
+    log::info << "[Event:readable] ";                                       \
+}                                                                           \
+if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_writable))  \
+{                                                                           \
+    log::info << "[Event:writable] ";                                       \
+}                                                                           \
+log::info << "[Fd:" << fd << "]"<< log::endl
+
+#endif  // CPPEV_DEBUG
 
 #endif  // event_loop.h
