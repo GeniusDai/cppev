@@ -119,10 +119,7 @@ class thread_pool_task_queue_runnable final
 : public runnable
 {
 public:
-    thread_pool_task_queue_runnable(task_queue *task_queue) noexcept
-    : task_queue_(task_queue)
-    {
-    }
+    thread_pool_task_queue_runnable(task_queue *task_queue) noexcept;
 
     void run_impl() override;
 

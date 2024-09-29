@@ -36,6 +36,11 @@ void task_queue::add_task(const std::vector<thread_pool_task_handler> &vh) noexc
 }
 
 
+thread_pool_task_queue_runnable::thread_pool_task_queue_runnable(task_queue *task_queue) noexcept
+: task_queue_(task_queue)
+{
+}
+
 void thread_pool_task_queue_runnable::run_impl()
 {
     thread_pool_task_handler handler;
