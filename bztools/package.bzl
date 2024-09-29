@@ -35,14 +35,7 @@ def _collect_files_aspect_impl(target, ctx):
             if CollectedFileInfo in dep:
                 transitive += dep[CollectedFileInfo].files
 
-    all_without_dup = []
-    dict = {}
-    for file in direct + transitive:
-        if dict.get(file.path) == None:
-            all_without_dup.append(file)
-            dict[file.path] = ""
-
-    return CollectedFileInfo(files = all_without_dup)
+    return CollectedFileInfo(files = direct + transitive)
 
 collect_files_aspect = aspect(
     implementation = _collect_files_aspect_impl,
