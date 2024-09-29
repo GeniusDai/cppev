@@ -10,57 +10,56 @@
 namespace cppev
 {
 
-class buffer final
+template <typename Char>
+class basic_buffer final
 {
     // Q: Why the two classes should be friend?
     // A: To save a memory copy.
     friend class nstream;
     friend class nsockudp;
-
-    static_assert(sizeof(char) == 1, "basic data of buffer is not ok!");
 public:
-    buffer() noexcept
-    : buffer(1)
+    basic_buffer() noexcept
+    : basic_buffer(1)
     {
     }
 
-    explicit buffer(int cap) noexcept
+    explicit basic_buffer(int cap) noexcept
     : cap_(cap), start_(0), offset_(0)
     {
         if (cap_ < 1)
         {
-            throw_logic_error("buffer size shall not be less than 1 byte!");
+            throw_logic_error("buffer size shall not be less than 1!");
         }
-        buffer_ = std::unique_ptr<char[]>(new char[cap_]);
+        buffer_ = std::make_unique<Char[]>(cap_);
         if (cap_)
         {
             memset(buffer_.get(), 0, cap_);
         }
     }
 
-    buffer(const buffer &other) noexcept
+    basic_buffer(const basic_buffer &other) noexcept
     {
         copy(other);
     }
 
-    buffer &operator=(const buffer &other) noexcept
+    basic_buffer &operator=(const basic_buffer &other) noexcept
     {
         copy(other);
         return *this;
     }
 
-    buffer(buffer &&other) noexcept = default;
+    basic_buffer(basic_buffer &&other) noexcept = default;
 
-    buffer &operator=(buffer &&other) = default;
+    basic_buffer &operator=(basic_buffer &&other) = default;
 
-    ~buffer() = default;
+    ~basic_buffer() = default;
 
-    const char &operator[](int i) const noexcept
+    const Char &operator[](int i) const noexcept
     {
         return buffer_[start_ + i];
     }
 
-    char &operator[](int i) noexcept
+    Char &operator[](int i) noexcept
     {
         return buffer_[start_ + i];
     }
@@ -75,12 +74,12 @@ public:
         return cap_;
     }
 
-    const char *rawbuf() const noexcept
+    const Char *rawbuf() const noexcept
     {
         return buffer_.get() + start_;
     }
 
-    char *rawbuf() noexcept
+    Char *rawbuf() noexcept
     {
         return buffer_.get() + start_;
     }
@@ -100,7 +99,7 @@ public:
         {
             cap_ *= 2;
         }
-        std::unique_ptr<char[]> nbuffer = std::unique_ptr<char[]>(new char[cap_]);
+        std::unique_ptr<Char[]> nbuffer = std::make_unique<Char[]>(cap_);
         memset(nbuffer.get(), 0, cap_);
         for (int i = start_; i < offset_; ++i)
         {
@@ -134,10 +133,10 @@ public:
         offset_ = 0;
     }
 
-    // Produce chars to buffer
-    // @param ptr : Pointer to char array may contain '\0'
-    // @param len : Char array length that copies to buffer
-    void produce(const char *ptr, int len) noexcept
+    // Produce Chars to buffer.
+    // @param ptr : Pointer to Char array.
+    // @param len : Char array length that copies to buffer.
+    void produce(const Char *ptr, int len) noexcept
     {
         resize(offset_ + len);
         for (int i = 0; i < len; ++i)
@@ -146,7 +145,7 @@ public:
         }
     }
 
-    // Consume chars from buffer
+    // Consume Chars from buffer
     // @param len : Char array length that consumes, -1 means all.
     void consume(int len = -1) noexcept
     {
@@ -161,16 +160,16 @@ public:
         }
     }
 
-    // Produce string to buffer
-    // @param str : string to put
+    // Produce string to buffer.
+    // @param str : string to put.
     void put_string(const std::string &str) noexcept
     {
         produce(str.c_str(), str.size());
     }
 
-    // Get string from buffer
+    // Get string from buffer.
     // @param len: Char array length that consumes, -1 means all.
-    // @param remove : whether consumes the char array.
+    // @param remove : whether consumes the Char array.
     std::string get_string(int len = -1, bool remove = true) noexcept
     {
         if (len == -1)
@@ -196,21 +195,24 @@ private:
     int offset_;
 
     // Heap buffer
-    std::unique_ptr<char[]> buffer_;
+    std::unique_ptr<Char[]> buffer_;
 
     // Copy function for copy contructor and copy assignment
-    void copy(const buffer &other) noexcept
+    void copy(const basic_buffer &other) noexcept
     {
         if (&other != this)
         {
             this->cap_ = other.cap_;
             this->start_ = other.start_;
             this->offset_ = other.offset_;
-            this->buffer_ = std::make_unique<char[]>(cap_);
+            this->buffer_ = std::make_unique<Char[]>(cap_);
             memcpy(this->buffer_.get(), other.buffer_.get(), cap_);
         }
     }
 };
+
+static_assert(sizeof(char) == 1, "basic data of buffer is not ok!");
+using buffer = basic_buffer<char>;
 
 }   // namespace cppev
 
