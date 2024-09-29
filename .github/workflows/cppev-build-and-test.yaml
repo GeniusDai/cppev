@@ -22,11 +22,14 @@ jobs:
     - run: bazel build //...
     - run: bazel test //...
 
+    - run: bazel build --define cppev_debug=true //...
+    - run: bazel test --define cppev_debug=true //...
+
   cmake-build:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, ubuntu-20.04 ]
-        cmake_build_type: [RelWithDebInfo]
+        cmake_build_type: [ RelWithDebInfo ]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
