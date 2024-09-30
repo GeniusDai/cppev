@@ -15,8 +15,8 @@ ATTR_ASPECTS = [
 PACKAGE_RULES = [
     "cc_binary",
     "cc_shared_library",
-    "py_library",
     "py_binary",
+    "py_library",
 ]
 
 def _collect_files_aspect_impl(target, ctx):
@@ -24,6 +24,8 @@ def _collect_files_aspect_impl(target, ctx):
 
     direct = []
     if ctx.rule.kind in PACKAGE_RULES:
+        if DefaultInfo not in target:
+            fail("{} doesn't have DefaultInfo!".format(target.label))
         for file in target[DefaultInfo].files.to_list():
             direct.append(file)
 
@@ -38,19 +40,25 @@ def _collect_files_aspect_impl(target, ctx):
     return CollectedFileInfo(files = depset(direct + transitive).to_list())
 
 collect_files_aspect = aspect(
+    doc = "Collect file info.",
     implementation = _collect_files_aspect_impl,
     attr_aspects = ATTR_ASPECTS,
+    provides = [
+        CollectedFileInfo,
+    ],
 )
 
 def _package_files_impl(ctx):
     inputs = []
     for file in ctx.attr.files:
+        if CollectedFileInfo not in file:
+            fail("{} doesn't have CollectedFileInfo!".format(file.label))
         inputs += file[CollectedFileInfo].files
     inputs = depset(inputs).to_list()
 
     outputs = [ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))]
 
-    command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([f.path for f in inputs]))
+    command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([file.path for file in inputs]))
 
     print("Package command: {}".format(command))
 
@@ -64,6 +72,7 @@ def _package_files_impl(ctx):
     return DefaultInfo(files = depset(outputs))
 
 package_files = rule(
+    doc = "Package files using tar.",
     implementation = _package_files_impl,
     attrs = {
         "files": attr.label_list(
@@ -71,6 +80,10 @@ package_files = rule(
             aspects = [
                 collect_files_aspect,
             ],
+            mandatory = True,
         ),
     },
+    provides = [
+        DefaultInfo,
+    ],
 )
