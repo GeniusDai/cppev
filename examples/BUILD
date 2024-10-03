@@ -6,6 +6,7 @@ load("//bztools:package.bzl", "package_files")
 package_files(
     name = "cppev_examples",
     testonly = True,
+    dev = True,
     files = [
         "//examples/file_transfer:file_transfer_client",
         "//examples/file_transfer:file_transfer_server",
