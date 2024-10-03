@@ -18,6 +18,7 @@ cc_binary(
         "config.h",
         "simple_server.cc",
     ],
+    linkstatic = False,
     visibility = [
         "//examples:__pkg__",
     ],
