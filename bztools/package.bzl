@@ -1,7 +1,7 @@
 CollectedFileInfo = provider(
     doc = "Collect executables and dynamic libraries.",
     fields = {
-        "files": "List[File]; The collected files.",
+        "files": "depset[File]; The collected files.",
     },
 )
 
@@ -22,22 +22,20 @@ PACKAGE_RULES = [
 def _collect_files_aspect_impl(target, ctx):
     print("Aspect for file collection in {}({})".format(ctx.rule.kind, target.label))
 
-    direct = []
+    transitive = []
     if ctx.rule.kind in PACKAGE_RULES:
         if DefaultInfo not in target:
             fail("{} doesn't have DefaultInfo!".format(target.label))
-        for file in target[DefaultInfo].files.to_list():
-            direct.append(file)
+        transitive.append(target[DefaultInfo].files)
 
-    transitive = []
     for attr in ATTR_ASPECTS:
         if not hasattr(ctx.rule.attr, attr):
             continue
         for dep in getattr(ctx.rule.attr, attr):
             if CollectedFileInfo in dep:
-                transitive += dep[CollectedFileInfo].files
+                transitive.append(dep[CollectedFileInfo].files)
 
-    return CollectedFileInfo(files = depset(direct + transitive).to_list())
+    return CollectedFileInfo(files = depset(transitive = transitive))
 
 collect_files_aspect = aspect(
     doc = "Collect file info.",
@@ -49,12 +47,13 @@ collect_files_aspect = aspect(
 )
 
 def _package_files_impl(ctx):
-    inputs = []
+    transitive = []
     for file in ctx.attr.files:
         if CollectedFileInfo not in file:
             fail("{} doesn't have CollectedFileInfo!".format(file.label))
-        inputs += file[CollectedFileInfo].files
-    inputs = depset(inputs).to_list()
+        transitive.append(file[CollectedFileInfo].files)
+
+    inputs = depset(transitive = transitive).to_list()
 
     outputs = [ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))]
 
