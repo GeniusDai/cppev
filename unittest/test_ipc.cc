@@ -95,8 +95,6 @@ TEST_F(TestIpc, test_sem_shm_by_fork)
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(200));
-
         shared_memory shm(name_, shm_size);
         shared_memory shm1(std::move(shm));
         memcpy(shm1.ptr(), "cppev", 5);
