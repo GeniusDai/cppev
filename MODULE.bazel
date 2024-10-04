@@ -8,3 +8,8 @@
 module(name = "cppev")
 
 bazel_dep(name = "googletest", version = "1.11.0")
+
+register_toolchains(
+    "//bztools:shell_command_linux_toolchain",
+    "//bztools:shell_command_osx_toolchain",
+)

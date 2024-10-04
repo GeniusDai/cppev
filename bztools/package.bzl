@@ -65,6 +65,10 @@ collect_files_aspect = aspect(
 )
 
 def _package_files_impl(ctx):
+    toolchain_info = ctx.toolchains["//bztools:toolchain_type"].shell_command_info
+    cp = toolchain_info.cp
+    tar = toolchain_info.tar
+
     run_files_transitive = []
     dev_files_transitive = []
     for file in ctx.attr.files:
@@ -88,14 +92,14 @@ def _package_files_impl(ctx):
             file_target = ctx.actions.declare_file(file_target_path)
             ctx.actions.run_shell(
                 mnemonic = "CopyFile",
-                command = "/bin/cp -p -L {} {}".format(file_origin.path, file_target.dirname),
+                command = "{} -p -L {} {}".format(cp, file_origin.path, file_target.dirname),
                 inputs = [file_origin],
                 outputs = [file_target],
             )
             files_to_package.append(file_target)
 
     tarball = ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))
-    command = "/usr/bin/tar -h -zcvf {} {}".format(tarball.path, " ".join([file.path for file in files_to_package]))
+    command = "{} -h -zcvf {} {}".format(tar, tarball.path, " ".join([file.path for file in files_to_package]))
     ctx.actions.run_shell(
         mnemonic = "PackageFiles",
         command = command,
@@ -124,5 +128,8 @@ package_files = rule(
     },
     provides = [
         DefaultInfo,
+    ],
+    toolchains = [
+        "//bztools:toolchain_type",
     ],
 )
