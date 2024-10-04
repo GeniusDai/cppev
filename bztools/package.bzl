@@ -98,12 +98,18 @@ def _package_files_impl(ctx):
             )
             files_to_package.append(file_target)
 
+    manifest_of_files = ctx.actions.declare_file("{}.manifest".format(ctx.label.name))
+    ctx.actions.write(
+        output = manifest_of_files,
+        content = "{}\n".format("\n".join([file.path for file in files_to_package])),
+    )
+
     tarball = ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))
-    command = "{} -h -zcvf {} {}".format(tar, tarball.path, " ".join([file.path for file in files_to_package]))
+    command = "{} -h -czvf {} --files-from {}".format(tar, tarball.path, manifest_of_files.path)
     ctx.actions.run_shell(
         mnemonic = "PackageFiles",
         command = command,
-        inputs = files_to_package,
+        inputs = [manifest_of_files] + files_to_package,
         outputs = [tarball],
     )
 
