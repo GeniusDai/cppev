@@ -26,6 +26,9 @@ def _collect_files_aspect_impl(target, ctx):
         fail("{} doesn't have DefaultInfo!".format(target.label))
     if ctx.rule.kind == "cc_binary":
         run_files_transitive.append(target[DefaultInfo].files)
+
+        # The dynamic library in runfiles is introduced by two symbolic links pointing to
+        # the same file in $output_path. It may cause a file duplication issue but it's OK.
         run_files_transitive.append(target[DefaultInfo].default_runfiles.files)
     elif ctx.rule.kind == "cc_library" and ctx.attr.dev:
         dev_files_direct += ctx.rule.files.hdrs
@@ -70,32 +73,37 @@ def _package_files_impl(ctx):
         run_files_transitive.append(file[CollectedFileInfo].run_files)
         dev_files_transitive.append(file[CollectedFileInfo].dev_files)
 
-    output_files = []
+    files_hash = {
+        "run": run_files_transitive,
+        "dev": dev_files_transitive,
+    }
 
-    inputs = sorted(depset(transitive = run_files_transitive).to_list())
-    outputs = [ctx.actions.declare_file("{}_run.tar.gz".format(ctx.label.name))]
-    command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([file.path for file in inputs]))
+    files_to_package = []
+
+    for prefix in ["run", "dev"]:
+        file_origins = sorted(depset(transitive = files_hash[prefix]).to_list())
+        for file_origin in file_origins:
+            file_origin_dir = file_origin.dirname.removeprefix(ctx.bin_dir.path + "/")
+            file_target_path = "{}/{}/{}/{}".format(ctx.label.name, prefix, file_origin_dir, file_origin.basename)
+            file_target = ctx.actions.declare_file(file_target_path)
+            ctx.actions.run_shell(
+                mnemonic = "CopyFile",
+                command = "/bin/cp -p -L {} {}".format(file_origin.path, file_target.dirname),
+                inputs = [file_origin],
+                outputs = [file_target],
+            )
+            files_to_package.append(file_target)
+
+    tarball = ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))
+    command = "/usr/bin/tar -h -zcvf {} {}".format(tarball.path, " ".join([file.path for file in files_to_package]))
     ctx.actions.run_shell(
-        mnemonic = "PackageRunFiles",
+        mnemonic = "PackageFiles",
         command = command,
-        inputs = inputs,
-        outputs = outputs,
+        inputs = files_to_package,
+        outputs = [tarball],
     )
-    output_files += outputs
 
-    if ctx.attr.dev:
-        inputs = sorted(depset(transitive = dev_files_transitive).to_list())
-        outputs = [ctx.actions.declare_file("{}_dev.tar.gz".format(ctx.label.name))]
-        command = "/usr/bin/tar -h -zcvf {} {}".format(outputs[0].path, " ".join([file.path for file in inputs]))
-        ctx.actions.run_shell(
-            mnemonic = "PackageDevFiles",
-            command = command,
-            inputs = inputs,
-            outputs = outputs,
-        )
-        output_files += outputs
-
-    return DefaultInfo(files = depset(output_files))
+    return DefaultInfo(files = depset([tarball]))
 
 package_files = rule(
     doc = "Package files using tar.",
