@@ -84,9 +84,13 @@ def _package_files_impl(ctx):
 
     files_to_package = []
 
+    excludes = {target.label: "" for target in ctx.attr.excludes}
+
     for prefix in ["run", "dev"]:
         file_origins = sorted(depset(transitive = files_hash[prefix]).to_list())
         for file_origin in file_origins:
+            if file_origin.owner in excludes:
+                continue
             file_origin_dir = file_origin.dirname.removeprefix(ctx.bin_dir.path + "/")
             file_target_path = "{}/{}/{}/{}".format(ctx.label.name, prefix, file_origin_dir, file_origin.basename)
             file_target = ctx.actions.declare_file(file_target_path)
@@ -129,7 +133,11 @@ package_files = rule(
         "dev": attr.bool(
             doc = "For collect_files_aspect.",
             default = False,
-            mandatory = False,
+        ),
+        "excludes": attr.label_list(
+            doc = "Targets not to be packaged.",
+            default = [],
+            allow_files = True,
         ),
     },
     provides = [

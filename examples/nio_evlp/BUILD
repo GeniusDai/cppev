@@ -1,3 +1,5 @@
+package(default_visibility = ["//examples:__pkg__"])
+
 cc_library(
     name = "lib",
     hdrs = [

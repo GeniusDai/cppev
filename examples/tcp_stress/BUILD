@@ -4,6 +4,7 @@ cc_binary(
         "config.h",
         "simple_client.cc",
     ],
+    linkstatic = False,
     visibility = [
         "//examples:__pkg__",
     ],
