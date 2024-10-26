@@ -162,7 +162,7 @@ public:
 
     // Produce string to buffer.
     // @param str : string to put.
-    void put_string(const std::string &str) noexcept
+    void put_string(const std::basic_string<Char> &str) noexcept
     {
         produce(str.c_str(), str.size());
     }
@@ -170,13 +170,13 @@ public:
     // Get string from buffer.
     // @param len: Char array length that consumes, -1 means all.
     // @param remove : whether consumes the Char array.
-    std::string get_string(int len = -1, bool remove = true) noexcept
+    std::basic_string<Char> get_string(int len = -1, bool remove = true) noexcept
     {
         if (len == -1)
         {
             len = size();
         }
-        std::string str(buffer_.get() + start_, len);
+        std::basic_string<Char> str(buffer_.get() + start_, len);
         if (remove)
         {
             consume(len);

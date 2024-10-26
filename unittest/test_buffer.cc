@@ -81,6 +81,11 @@ TEST_F(TestBuffer, test_copy_move)
     EXPECT_EQ(b.rawbuf(), nullptr);
 }
 
+TEST_F(TestBuffer, test_compilation)
+{
+    basic_buffer<int> a;
+}
+
 }   // namespace cppev
 
 int main(int argc, char **argv)
