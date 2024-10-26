@@ -211,7 +211,6 @@ private:
     }
 };
 
-static_assert(sizeof(char) == 1, "basic data of buffer is not ok!");
 using buffer = basic_buffer<char>;
 
 }   // namespace cppev

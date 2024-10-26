@@ -140,7 +140,7 @@ typedef pid_t tid_t;
 #elif defined(__APPLE__)
 typedef uint64_t tid_t;
 #else
-static_assert(false, "platform not supported");
+#error "platform not supported"
 #endif
 
 tid_t gettid() noexcept;
