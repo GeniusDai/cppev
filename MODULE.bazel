@@ -7,6 +7,7 @@
 
 module(name = "cppev")
 
+bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "googletest", version = "1.11.0")
 
 register_toolchains(
