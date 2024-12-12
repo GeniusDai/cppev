@@ -75,21 +75,13 @@ cc_test(
     ],
 )
 
-py_binary(
-    name = "hello",
-    srcs = [
-        "hello.py",
-    ],
-    main = "hello.py",
-)
-
 cc_test(
     name = "test_subprocess",
     srcs = [
         "test_subprocess.cc",
     ],
     data = [
-        "hello",
+        "hello.py",
     ],
     linkopts = select({
         "@platforms//os:linux": [
