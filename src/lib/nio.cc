@@ -388,7 +388,7 @@ static void set_path(sockaddr_storage &addr, const char *path)
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
-static std::tuple<std::string, int, family> query_ip_port_family(sockaddr_storage &addr)
+static std::tuple<std::string, int, family> query_ip_port_family(const sockaddr_storage &addr)
 {
     int port;
     char ip[sizeof(sockaddr_storage)];
