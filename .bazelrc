@@ -1,5 +1,5 @@
 build --cxxopt="-std=c++17"
-build --cxxopt="-O2"
+build --cxxopt="-O3"
 build --cxxopt="-Wall"
 build --cxxopt="-Wextra"
 test --local_test_jobs=1

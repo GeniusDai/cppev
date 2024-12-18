@@ -20,7 +20,7 @@ option(CPPEV_DEBUG "print debug log" OFF)
 add_library(cppev SHARED ${LIB})
 
 target_include_directories(cppev PUBLIC include)
-target_compile_options(cppev PUBLIC -O2 -Wall -Wextra)
+target_compile_options(cppev PUBLIC -O3 -Wall -Wextra)
 target_link_libraries(cppev dl pthread)
 if (CPPEV_DEBUG)
     target_compile_definitions(cppev PRIVATE -DCPPEV_DEBUG)
