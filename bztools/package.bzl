@@ -14,8 +14,6 @@ ATTR_ASPECTS = [
 ]
 
 def _collect_files_aspect_impl(target, ctx):
-    print("Aspect for file collection in {}({})".format(ctx.rule.kind, target.label))
-
     run_files_direct = []
     run_files_transitive = []
 
@@ -28,7 +26,7 @@ def _collect_files_aspect_impl(target, ctx):
         run_files_transitive.append(target[DefaultInfo].files)
 
         # The dynamic library in runfiles is introduced by two symbolic links pointing to
-        # the same file in $output_path. It may cause a file duplication issue but it's OK.
+        # the same file, which causes the file duplication issue but it's OK.
         run_files_transitive.append(target[DefaultInfo].default_runfiles.files)
     elif ctx.rule.kind == "cc_library" and ctx.attr.dev:
         dev_files_direct += ctx.rule.files.hdrs
@@ -94,9 +92,16 @@ def _package_files_impl(ctx):
             file_origin_dir = file_origin.dirname.removeprefix(ctx.bin_dir.path + "/")
             file_target_path = "{}/{}/{}/{}".format(ctx.label.name, prefix, file_origin_dir, file_origin.basename)
             file_target = ctx.actions.declare_file(file_target_path)
-            ctx.actions.run_shell(
+            args = ctx.actions.args()
+            args.add("-p")
+            args.add("-L")
+            args.add(file_origin.path)
+            args.add(file_target.dirname)
+            ctx.actions.run(
                 mnemonic = "CopyFile",
-                command = "{} -p -L {} {}".format(cp, file_origin.path, file_target.dirname),
+                progress_message = "Copying file for package",
+                executable = cp,
+                arguments = [args],
                 inputs = [file_origin],
                 outputs = [file_target],
             )
@@ -109,10 +114,17 @@ def _package_files_impl(ctx):
     )
 
     tarball = ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))
-    command = "{} -h -czvf {} --files-from {}".format(tar, tarball.path, manifest_of_files.path)
-    ctx.actions.run_shell(
+    args = ctx.actions.args()
+    args.add("-h")
+    args.add("-czvf")
+    args.add(tarball.path)
+    args.add("--files-from")
+    args.add(manifest_of_files.path)
+    ctx.actions.run(
         mnemonic = "PackageFiles",
-        command = command,
+        progress_message = "Packaging files to generate the tarball",
+        executable = tar,
+        arguments = [args],
         inputs = [manifest_of_files] + files_to_package,
         outputs = [tarball],
     )
