@@ -3,8 +3,11 @@
 
 #include "cppev/utils.h"
 #include <mutex>
+#include <condition_variable>
 #include <string>
+#include <sys/time.h>
 #include <semaphore.h>
+#include <pthread.h>
 
 namespace cppev
 {
@@ -176,7 +179,7 @@ private:
 class pshared_cond final
 {
 public:
-    using condition = std::function<bool()>;
+    using predicate = std::function<bool()>;
 
     pshared_cond();
 
@@ -189,7 +192,52 @@ public:
 
     void wait(std::unique_lock<pshared_lock> &lock);
 
-    void wait(std::unique_lock<pshared_lock> &lock, const condition &cond);
+    void wait(std::unique_lock<pshared_lock> &lock, const predicate &pred);
+
+    template<class Rep, class Period>
+    std::cv_status wait_for(
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::duration<Rep, Period> &rel_time
+    )
+    {
+        // The implementation uses system clock to align with the standard library.
+        auto n_rel_time = std::chrono::duration_cast<std::chrono::nanoseconds>(rel_time).count();
+        timeval tv;
+        int ret = gettimeofday(&tv, nullptr);
+        if (ret != 0)
+        {
+            throw_system_error("gettimeofday error");
+        }
+        auto n_abs_time = n_rel_time + tv.tv_sec * 1'000'000'000 + tv.tv_usec * 1'000;
+        timespec ts;
+        ts.tv_sec = n_abs_time / 1'000'000'000;
+        ts.tv_nsec = n_abs_time % 1'000'000'000;
+        ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
+        std::cv_status status = std::cv_status::no_timeout;
+        if (ret != 0)
+        {
+            if (ret == EINVAL)
+            {
+                throw_system_error("pthread_cond_wait error", ret);
+            }
+            else if (ret == ETIMEDOUT)
+            {
+                status = std::cv_status::timeout;
+            }
+        }
+        return status;
+    }
+
+    template<class Rep, class Period>
+    bool wait_for(
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::duration<Rep, Period> &rel_time,
+        const predicate &pred
+    )
+    {
+        wait_for(lock, rel_time);
+        return pred();
+    }
 
     void notify_one();
 

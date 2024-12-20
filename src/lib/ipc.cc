@@ -286,9 +286,9 @@ void pshared_cond::wait(std::unique_lock<pshared_lock> &lock)
     }
 }
 
-void pshared_cond::wait(std::unique_lock<pshared_lock> &lock, const condition &cond)
+void pshared_cond::wait(std::unique_lock<pshared_lock> &lock, const predicate &pred)
 {
-    while (!cond())
+    while (!pred())
     {
         wait(lock);
     }

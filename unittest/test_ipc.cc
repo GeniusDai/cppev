@@ -42,7 +42,7 @@ struct TestStructBase
     }
 };
 
-const int delay = 50;
+const int delay = 100;
 
 TEST_F(TestIpcByFork, test_sem_shm_by_fork)
 {
@@ -198,7 +198,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         bool ready;
     };
 
-    int NUMBER = 100;
+    const int NUMBER = 100;
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -207,11 +207,14 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
     else if (pid == 0)
     {
         semaphore sem(name_);
-        sem.acquire();
-        sem.unlink();
-
         shared_memory shm(name_, sizeof(TestStruct));
-        TestStruct *ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+        TestStruct *ptr = shm.construct<TestStruct>();
+        EXPECT_EQ(ptr, reinterpret_cast<TestStruct *>(shm.ptr()));
+        ASSERT_TRUE(shm.creator());
+
+        // Test-1
+        sem.release();
+        printf("test_sem_shm_lock_cond_by_fork process-1 test-1\n");
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
@@ -224,20 +227,80 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         EXPECT_TRUE(ptr->lock.try_lock());
         ptr->lock.unlock();
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+
+        for (int i = 0; i < 10; ++i)
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::cv_status status = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay));
+            ASSERT_EQ(status, std::cv_status::timeout);
+        }
+
+        // Test-2
+        ptr->ready = false;
+        sem.release();
+        printf("test_sem_shm_lock_cond_by_fork process-1 test-2\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            ptr->ready = true;
+            ptr->cond.notify_one();
+            std::cv_status status = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay*3));
+            ASSERT_EQ(status, std::cv_status::no_timeout);
+        }
+
+        // Test-3
+        auto pred = [ptr, &NUMBER](){ return ptr->var == NUMBER; };
+
+        ptr->var = NUMBER + 1;
+        ptr->ready = false;
+        sem.release();
+        printf("test_sem_shm_lock_cond_by_fork process-1 test-3\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            ptr->ready = true;
+            ptr->cond.notify_one();
+            bool success = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay*3), pred);
+            ASSERT_TRUE(success);
+        }
+
+        // // Test-4
+        ptr->var = NUMBER + 1;
+        ptr->ready = false;
+        ASSERT_FALSE(pred());
+        sem.release();
+        printf("test_sem_shm_lock_cond_by_fork process-1 test-4\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            ptr->ready = true;
+            ptr->cond.notify_one();
+            auto start = std::chrono::system_clock::now();
+            bool success = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay), pred);
+            auto end = std::chrono::system_clock::now();
+            std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>((end -start)).count() << std::endl;
+            ASSERT_FALSE(success);
+        }
+
+        // Finish
+        sem.acquire();
+        printf("test_sem_shm_lock_cond_by_fork process-1 finish\n");
         ptr->~TestStruct();
         shm.unlink();
-
+        sem.unlink();
         _exit(0);
     }
     else
     {
-        shared_memory shm(name_, sizeof(TestStruct));
-        TestStruct *ptr = shm.construct<TestStruct>();
-        EXPECT_EQ(ptr, reinterpret_cast<TestStruct *>(shm.ptr()));
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2*delay));
         semaphore sem(name_);
-        sem.release();
+
+        // Test-1
+        sem.acquire();
+        shared_memory shm(name_, sizeof(TestStruct));
+        TestStruct *ptr = reinterpret_cast<TestStruct *>(shm.ptr());
+        printf("test_sem_shm_lock_cond_by_fork process-2 test-1\n");
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
@@ -245,14 +308,65 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             {
                 ptr->cond.wait(lock);
             }
-
             EXPECT_EQ(ptr->var, NUMBER);
+            ptr->cond.notify_one();
+        }
+        printf("test_sem_shm_lock_cond_by_fork process-2 test-1 finish\n");
 
+        // Test-2
+        sem.acquire();
+        printf("test_sem_shm_lock_cond_by_fork process-2 test-2\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            if(!ptr->ready)
+            {
+                ptr->cond.wait(lock);
+            }
+            EXPECT_TRUE(ptr->ready);
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));
             ptr->cond.notify_one();
         }
 
+        // Test-3
+        sem.acquire();
+        printf("test_sem_shm_lock_cond_by_fork process-2 test-3\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            if(!ptr->ready)
+            {
+                ptr->cond.wait(lock);
+            }
+            ASSERT_TRUE(ptr->ready);
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+            ptr->var = NUMBER;
+            ptr->cond.notify_one();
+        }
+
+        // // Test-4
+        sem.acquire();
+        printf("test_sem_shm_lock_cond_by_fork process-2 test-4\n");
+
+        {
+            std::unique_lock<pshared_lock> lock(ptr->lock);
+            if(!ptr->ready)
+            {
+                ptr->cond.wait(lock);
+            }
+            ASSERT_TRUE(ptr->ready);
+            lock.unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay*3));
+            lock.lock();
+            ptr->var = NUMBER;
+            ptr->cond.notify_one();
+        }
+
+        // Finish
+        sem.release();
         int ret = -1;
         waitpid(pid, &ret, 0);
+        printf("test_sem_shm_lock_cond_by_fork process-2 finish\n");
         EXPECT_EQ(ret, 0);
     }
 

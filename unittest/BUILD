@@ -34,8 +34,8 @@ cc_test(
 cc_test(
     name = "test_ipc",
     srcs = [
-        "test_ipc.cc",
         "config.h",
+        "test_ipc.cc",
     ],
     deps = [
         "//src:cppev",
@@ -68,8 +68,8 @@ cc_test(
 cc_test(
     name = "test_lock",
     srcs = [
-        "test_lock.cc",
         "config.h",
+        "test_lock.cc",
     ],
     deps = [
         "//src:cppev",
