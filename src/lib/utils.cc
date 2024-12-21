@@ -15,22 +15,16 @@
 namespace cppev
 {
 
-time_t time()
-{
-    time_t t = ::time(nullptr);
-    if (t == -1)
-    {
-        throw_system_error("time error");
-    }
-    return t;
-}
-
 std::string timestamp(time_t t, const char *format)
 {
     static_assert(std::is_signed<time_t>::value, "time_t is not signed!");
     if (t < 0)
     {
-        t = time();
+        t = time(nullptr);
+        if (t == -1)
+        {
+            throw_system_error("time error");
+        }
     }
     if (format == nullptr)
     {

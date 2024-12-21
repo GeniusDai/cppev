@@ -55,8 +55,6 @@ struct tuple_greater
 /*
  * Chrono
  */
-time_t time();
-
 std::string timestamp(time_t t = -1, const char *format = nullptr);
 
 template <typename Clock = std::chrono::system_clock>
