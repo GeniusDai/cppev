@@ -194,25 +194,48 @@ public:
 
     void wait(std::unique_lock<pshared_lock> &lock, const predicate &pred);
 
-    template<class Rep, class Period>
+    template <class Rep, class Period>
     std::cv_status wait_for(
         std::unique_lock<pshared_lock> &lock,
         const std::chrono::duration<Rep, Period> &rel_time
     )
     {
+        return wait_until(lock, std::chrono::steady_clock::now() + rel_time);
+    }
+
+    template <class Rep, class Period>
+    bool wait_for(
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::duration<Rep, Period> &rel_time,
+        const predicate &pred
+    )
+    {
+        return wait_until(lock, std::chrono::steady_clock::now() + rel_time, pred);
+    }
+
+    template <class Clock, class Duration>
+    std::cv_status wait_until(
+        std::unique_lock<pshared_lock>& lock,
+        const std::chrono::time_point<Clock, Duration> &abs_time
+    )
+    {
         // The implementation uses system clock to align with the standard library.
-        auto n_rel_time = std::chrono::duration_cast<std::chrono::nanoseconds>(rel_time).count();
-        timeval tv;
-        int ret = gettimeofday(&tv, nullptr);
-        if (ret != 0)
-        {
-            throw_system_error("gettimeofday error");
-        }
-        auto n_abs_time = n_rel_time + tv.tv_sec * 1'000'000'000 + tv.tv_usec * 1'000;
+        auto sys_abs_time = std::chrono::system_clock::now() + (abs_time - Clock::now());
+        return wait_until(lock, sys_abs_time);
+    }
+
+    template <class Duration>
+    std::cv_status wait_until(
+        std::unique_lock<pshared_lock>& lock,
+        const std::chrono::time_point<std::chrono::system_clock, Duration> &abs_time
+    )
+    {
+        auto n_abs_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            abs_time.time_since_epoch()).count();
         timespec ts;
         ts.tv_sec = n_abs_time / 1'000'000'000;
         ts.tv_nsec = n_abs_time % 1'000'000'000;
-        ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
+        int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
         std::cv_status status = std::cv_status::no_timeout;
         if (ret != 0)
         {
@@ -228,15 +251,21 @@ public:
         return status;
     }
 
-    template<class Rep, class Period>
-    bool wait_for(
-        std::unique_lock<pshared_lock> &lock,
-        const std::chrono::duration<Rep, Period> &rel_time,
-        const predicate &pred
+    template <class Clock, class Duration>
+    bool wait_until(
+        std::unique_lock<pshared_lock>& lock,
+        const std::chrono::time_point<Clock, Duration> &abs_time,
+        predicate pred
     )
     {
-        wait_for(lock, rel_time);
-        return pred();
+        while (!pred())
+        {
+            if (wait_until(lock, abs_time) == std::cv_status::timeout)
+            {
+                return pred();
+            }
+        }
+        return true;
     }
 
     void notify_one();
