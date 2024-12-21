@@ -10,7 +10,8 @@
 #include "cppev/utils.h"
 
 // Q1 : Why a new thread library ?
-// A1 : std::thread doesn't support pthread_cancel and pthread_kill.
+// A1 : Previously std::thread doesn't support pthread_cancel and pthread_kill, but now
+//      std::jthread is recommended. Or if you prefer subthread implemented by subclass.
 
 // Q2 : Is runnable a full encapsulation of pthread ?
 // A2 : Remain components of pthread:

@@ -12,7 +12,7 @@ Support readable / writable event handling by io-multiplexing.
 
 ### Multithreading
 
-Support subthread / threadpool.
+Support subthread / threadpool / signal-handing / async-logger / reactor.
 
 ### Interprocess Communication
 
@@ -23,10 +23,6 @@ Support mutex / condition-variable / read-write-lock shared among processes.
 ### Binary File Loading
 
 Support executable-file loading by subprocess, dynamic-library loading in runtime.
-
-### Others
-
-Support reactor / signal-handing.
 
 # Usage
 
