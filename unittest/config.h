@@ -1,6 +1,12 @@
+#ifndef _cppev_unittest_config_h_6C0224787A17_
+#define _cppev_unittest_config_h_6C0224787A17_
+
 #include <mutex>
 #include <thread>
 #include <vector>
+
+namespace cppev
+{
 
 template <typename Mutex>
 void performance_test(Mutex &lock)
@@ -31,3 +37,7 @@ void performance_test(Mutex &lock)
 
     EXPECT_EQ(count, add_num * thr_num);
 }
+
+}   // namespace cpepv
+
+#endif  // config.h
