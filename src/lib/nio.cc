@@ -766,21 +766,21 @@ int nsocktcp::get_so_error() const
     return optval;
 }
 
-void nsocktcp::shutdown(shut_mode howto) noexcept
+void nsocktcp::shutdown(shutdown_mode howto) noexcept
 {
     switch (howto)
     {
-    case shut_mode::shut_rd :
+    case shutdown_mode::shutdown_rd :
     {
         ::shutdown(fd_, SHUT_RD);
         break;
     }
-    case shut_mode::shut_wr :
+    case shutdown_mode::shutdown_wr :
     {
         ::shutdown(fd_, SHUT_WR);
         break;
     }
-    case shut_mode::shut_rdwr :
+    case shutdown_mode::shutdown_rdwr :
     {
         ::shutdown(fd_, SHUT_RDWR);
         break;

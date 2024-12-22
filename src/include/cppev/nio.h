@@ -259,11 +259,11 @@ protected:
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
-enum class shut_mode
+enum class shutdown_mode
 {
-    shut_rd,
-    shut_wr,
-    shut_rdwr
+    shutdown_rd,
+    shutdown_wr,
+    shutdown_rdwr,
 };
 
 class nsocktcp final
@@ -297,7 +297,7 @@ public:
     std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
 
     // shutdown: IPv4 / IPv6 / Unix-domain
-    void shutdown(shut_mode howto) noexcept;
+    void shutdown(shutdown_mode howto) noexcept;
 
     // whether connect is established, used by tcp client
     bool check_connect() const;

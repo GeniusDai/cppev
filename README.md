@@ -63,4 +63,6 @@ Please see the examples along with a tutorial.
 
 # Issues and Maintenance
 
-Repo will be long-term maintained, if you found any shortage or any new feature nice to have, feel free to raise an issue.
+Repo is long-term maintained, currently API stability is not guaranteed.
+
+If you found any shortage or any new feature nice to have, please feel free to raise an issue.

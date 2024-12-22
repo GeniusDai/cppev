@@ -38,7 +38,7 @@ TEST_P(TestDynamicLoader, test_base_impl_new_delete_loader)
 {
     auto p = GetParam();
 
-    dynamic_loader dyld(std::get<0>(p));
+    dynamic_loader dyld(std::get<0>(p), dyld_mode::lazy);
 
     auto *constructor = dyld.load<LoaderTestBaseConstructorType>("LoaderTestBaseConstructorImpl");
     auto *destructor = dyld.load<LoaderTestBaseDestructorType>("LoaderTestBaseDestructorImpl");
@@ -53,7 +53,7 @@ TEST_P(TestDynamicLoader, test_base_impl_new_delete_loader)
 TEST_P(TestDynamicLoader, test_base_impl_shared_ptr_loader)
 {
     auto p = GetParam();
-    dynamic_loader dyld(std::get<0>(p));
+    dynamic_loader dyld(std::get<0>(p), dyld_mode::now);
 
     auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
 

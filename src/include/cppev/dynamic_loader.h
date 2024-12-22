@@ -8,10 +8,18 @@
 namespace cppev
 {
 
+enum class dyld_mode
+{
+    lazy,
+    now,
+};
+
 class dynamic_loader
 {
 public:
-    explicit dynamic_loader(const std::string &filename);
+
+
+    explicit dynamic_loader(const std::string &filename, dyld_mode mode);
 
     dynamic_loader(const dynamic_loader&) = delete;
     dynamic_loader &operator=(const dynamic_loader&) = delete;
