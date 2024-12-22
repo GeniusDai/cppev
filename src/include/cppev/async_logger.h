@@ -1,11 +1,8 @@
 #ifndef _async_logger_h_6C0224787A17_
 #define _async_logger_h_6C0224787A17_
 
-#include <unordered_map>
-#include <tuple>
 #include <mutex>
 #include <condition_variable>
-#include <shared_mutex>
 #include <memory>
 #include "cppev/buffer.h"
 #include "cppev/utils.h"

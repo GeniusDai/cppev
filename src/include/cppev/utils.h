@@ -14,7 +14,7 @@
 namespace cppev
 {
 
-enum priority
+enum class priority
 {
     p0 = 20,
     p1 = 19,

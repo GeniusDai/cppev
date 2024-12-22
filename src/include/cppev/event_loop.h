@@ -60,7 +60,7 @@ public:
     // @param activate  whether register fd to os io-multiplexing api
     // @param prio      event priority
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = p0);
+        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = priority::p0);
 
     // Remove fd event(s) from event pollor
     // @param iop           nio smart pointer
@@ -92,10 +92,10 @@ private:
     void *back_;
 
     // Tuple : priority, nio, callback, event
-    std::unordered_multimap<int, std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event>> fds_;
+    std::unordered_multimap<int, std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event>> fds_;
 
     // Tuple : priority, nio, callback
-    std::priority_queue<std::tuple<int, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_cbs_;
+    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_cbs_;
 
     // Activate events, used for kqueue only
     std::unordered_map<int, fd_event> fd_events_;
