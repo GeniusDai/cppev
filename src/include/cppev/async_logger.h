@@ -1,5 +1,5 @@
-#ifndef _async_logger_h_6C0224787A17_
-#define _async_logger_h_6C0224787A17_
+#ifndef _cppev_async_logger_h_6C0224787A17_
+#define _cppev_async_logger_h_6C0224787A17_
 
 #include <mutex>
 #include <condition_variable>

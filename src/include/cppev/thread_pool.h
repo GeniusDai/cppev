@@ -1,5 +1,5 @@
-#ifndef _thread_pool_h_6C0224787A17_
-#define _thread_pool_h_6C0224787A17_
+#ifndef _cppev_thread_pool_h_6C0224787A17_
+#define _cppev_thread_pool_h_6C0224787A17_
 
 #include <vector>
 #include <memory>

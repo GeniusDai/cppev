@@ -1,5 +1,5 @@
-#ifndef _tcp_stress_config_h_6C0224787A17_
-#define _tcp_stress_config_h_6C0224787A17_
+#ifndef _cppev_tcp_stress_config_h_6C0224787A17_
+#define _cppev_tcp_stress_config_h_6C0224787A17_
 
 /*
  * Concurrency Number

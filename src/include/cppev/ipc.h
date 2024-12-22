@@ -1,5 +1,5 @@
-#ifndef _ipc_h_6C0224787A17_
-#define _ipc_h_6C0224787A17_
+#ifndef _cppev_ipc_h_6C0224787A17_
+#define _cppev_ipc_h_6C0224787A17_
 
 #include "cppev/utils.h"
 #include <mutex>

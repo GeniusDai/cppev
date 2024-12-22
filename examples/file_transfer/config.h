@@ -1,5 +1,5 @@
-#ifndef _file_transfer_config_h_6C0224787A17_
-#define _file_transfer_config_h_6C0224787A17_
+#ifndef _cppev_file_transfer_config_h_6C0224787A17_
+#define _cppev_file_transfer_config_h_6C0224787A17_
 
 const int PORT = 8891;
 

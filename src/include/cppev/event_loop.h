@@ -1,5 +1,5 @@
-#ifndef _event_loop_h_6C0224787A17_
-#define _event_loop_h_6C0224787A17_
+#ifndef _cppev_event_loop_h_6C0224787A17_
+#define _cppev_event_loop_h_6C0224787A17_
 
 #include <unordered_map>
 #include <memory>
