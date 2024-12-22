@@ -1,10 +1,12 @@
-#include "LoaderTestBase.h"
+#pragma once
+
+#include "DynamicLoaderTestInterface.h"
 
 namespace cppev
 {
 
-class LoaderTestImpl
-: public LoaderTestBase
+class DynamicLoaderTestImpl
+: public DynamicLoaderTestInterface
 {
 public:
     std::string add(int x, int y) const noexcept override;

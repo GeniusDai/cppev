@@ -3,12 +3,12 @@
 #include <gtest/gtest.h>
 #include "cppev/utils.h"
 #include "cppev/dynamic_loader.h"
-#include "LoaderTestBase.h"
+#include "DynamicLoaderTestInterface.h"
 
 namespace cppev
 {
 
-std::string ld_full_name = std::string("libLoaderTestFunctions") +
+std::string ld_full_name = std::string("libDynamicLoaderTestImplFunctions") +
 #ifdef __linux__
 ".so";
 #else
@@ -17,14 +17,14 @@ std::string ld_full_name = std::string("libLoaderTestFunctions") +
 
 std::string ld_path;
 
-static void test_class(LoaderTestBase *base_cls)
+static void test_class(DynamicLoaderTestInterface *base_cls)
 {
     EXPECT_EQ(base_cls->add(66, 66), std::to_string(66 + 66));
     EXPECT_EQ(base_cls->add("66", "66"), "6666");
     EXPECT_EQ(base_cls->type(), "impl");
-    EXPECT_EQ(base_cls->LoaderTestBase::type(), "base");
+    EXPECT_EQ(base_cls->DynamicLoaderTestInterface::type(), "base");
     EXPECT_EQ(base_cls->base(), "base");
-    EXPECT_EQ(base_cls->LoaderTestBase::base(), "base");
+    EXPECT_EQ(base_cls->DynamicLoaderTestInterface::base(), "base");
     base_cls->set_var(66);
     EXPECT_EQ(base_cls->get_var(), 66);
 }
@@ -40,10 +40,10 @@ TEST_P(TestDynamicLoader, test_base_impl_new_delete_loader)
 
     dynamic_loader dyld(std::get<0>(p), dyld_mode::lazy);
 
-    auto *constructor = dyld.load<LoaderTestBaseConstructorType>("LoaderTestBaseConstructorImpl");
-    auto *destructor = dyld.load<LoaderTestBaseDestructorType>("LoaderTestBaseDestructorImpl");
+    auto *constructor = dyld.load<DynamicLoaderTestInterfaceConstructorType>("DynamicLoaderTestImplConstructor");
+    auto *destructor = dyld.load<DynamicLoaderTestInterfaceDestructorType>("DynamicLoaderTestImplDestructor");
 
-    LoaderTestBase *base_cls = constructor();
+    DynamicLoaderTestInterface *base_cls = constructor();
 
     test_class(base_cls);
 
@@ -55,9 +55,9 @@ TEST_P(TestDynamicLoader, test_base_impl_shared_ptr_loader)
     auto p = GetParam();
     dynamic_loader dyld(std::get<0>(p), dyld_mode::now);
 
-    auto *shared_ptr_constructor = dyld.load<LoaderTestBaseSharedPtrConstructorType>("LoaderTestBaseSharedPtrConstructorImpl");
+    auto *shared_ptr_constructor = dyld.load<DynamicLoaderTestInterfaceSharedPtrConstructorType>("DynamicLoaderTestImplSharedPtrConstructor");
 
-    std::shared_ptr<LoaderTestBase> shared_base_cls = shared_ptr_constructor();
+    std::shared_ptr<DynamicLoaderTestInterface> shared_base_cls = shared_ptr_constructor();
 
     test_class(shared_base_cls.get());
 }

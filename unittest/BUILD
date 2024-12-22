@@ -124,12 +124,12 @@ cc_test(
 )
 
 cc_binary(
-    name = "libLoaderTestFunctions.so",
+    name = "libDynamicLoaderTestImplFunctions.so",
     srcs = [
-        "LoaderTestBase.h",
-        "LoaderTestFunctions.cc",
-        "LoaderTestImpl.cc",
-        "LoaderTestImpl.h",
+        "DynamicLoaderTestInterface.h",
+        "DynamicLoaderTestImplFunctions.cc",
+        "DynamicLoaderTestImpl.cc",
+        "DynamicLoaderTestImpl.h",
     ],
     linkshared = True,
     target_compatible_with = [
@@ -138,12 +138,12 @@ cc_binary(
 )
 
 cc_binary(
-    name = "libLoaderTestFunctions.dylib",
+    name = "libDynamicLoaderTestImplFunctions.dylib",
     srcs = [
-        "LoaderTestBase.h",
-        "LoaderTestFunctions.cc",
-        "LoaderTestImpl.cc",
-        "LoaderTestImpl.h",
+        "DynamicLoaderTestInterface.h",
+        "DynamicLoaderTestImplFunctions.cc",
+        "DynamicLoaderTestImpl.cc",
+        "DynamicLoaderTestImpl.h",
     ],
     linkshared = True,
     target_compatible_with = [
@@ -157,15 +157,15 @@ cc_binary(
 cc_test(
     name = "test_dynamic_loader",
     srcs = [
-        "LoaderTestBase.h",
+        "DynamicLoaderTestInterface.h",
         "test_dynamic_loader.cc",
     ],
     data = select({
         "@platforms//os:linux": [
-            ":libLoaderTestFunctions.so",
+            ":libDynamicLoaderTestImplFunctions.so",
         ],
         "@platforms//os:osx": [
-            ":libLoaderTestFunctions.dylib",
+            ":libDynamicLoaderTestImplFunctions.dylib",
         ],
     }),
     linkopts = select({

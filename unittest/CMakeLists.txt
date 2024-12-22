@@ -17,9 +17,9 @@ function(compile_and_enable_test testname_)
     endif()
 endfunction(compile_and_enable_test)
 
-add_library(LoaderTestImpl SHARED LoaderTestImpl.cc)
-add_library(LoaderTestFunctions SHARED LoaderTestFunctions.cc)
-target_link_libraries(LoaderTestFunctions LoaderTestImpl cppev)
+add_library(DynamicLoaderTestImpl SHARED DynamicLoaderTestImpl.cc)
+add_library(DynamicLoaderTestImplFunctions SHARED DynamicLoaderTestImplFunctions.cc)
+target_link_libraries(DynamicLoaderTestImplFunctions DynamicLoaderTestImpl cppev)
 
 file(COPY hello.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

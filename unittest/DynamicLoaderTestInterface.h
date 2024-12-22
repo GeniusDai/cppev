@@ -1,13 +1,15 @@
+#pragma once
+
 #include <string>
 #include <memory>
 
 namespace cppev
 {
 
-class LoaderTestBase
+class DynamicLoaderTestInterface
 {
 public:
-    virtual ~LoaderTestBase() = default;
+    virtual ~DynamicLoaderTestInterface() = default;
     virtual std::string add(int, int) const noexcept = 0;
     virtual std::string add(const std::string &, const std::string &) const noexcept = 0;
 
@@ -35,11 +37,11 @@ private:
     int var;
 };
 
-typedef LoaderTestBase *LoaderTestBaseConstructorType();
+using DynamicLoaderTestInterfaceConstructorType = DynamicLoaderTestInterface *();
 
-typedef void LoaderTestBaseDestructorType(LoaderTestBase *);
+using DynamicLoaderTestInterfaceDestructorType = void (DynamicLoaderTestInterface *);
 
 // Not recommended due to warned by clang -Wreturn-type-c-linkage.
-typedef std::shared_ptr<LoaderTestBase> LoaderTestBaseSharedPtrConstructorType();
+using DynamicLoaderTestInterfaceSharedPtrConstructorType = std::shared_ptr<DynamicLoaderTestInterface> ();
 
 }   // namespace cppev
