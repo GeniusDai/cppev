@@ -60,9 +60,3 @@ Run Unittest
 # Getting Started
 
 Please see the examples along with a tutorial.
-
-# Issues and Maintenance
-
-Repo is long-term maintained, currently API stability is not guaranteed.
-
-If you found any shortage or any new feature nice to have, please feel free to raise an issue.
