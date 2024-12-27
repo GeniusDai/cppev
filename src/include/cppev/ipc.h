@@ -19,25 +19,8 @@ public:
 
     shared_memory(const shared_memory &) = delete;
     shared_memory &operator=(const shared_memory &) = delete;
-
-    shared_memory(shared_memory &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<shared_memory>(other));
-    }
-
-    shared_memory &operator=(shared_memory &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<shared_memory>(other));
-        return *this;
-    }
+    shared_memory(shared_memory &&other) noexcept;
+    shared_memory &operator=(shared_memory &&other) noexcept;
 
     ~shared_memory() noexcept;
 
@@ -54,34 +37,14 @@ public:
 
     void unlink();
 
-    void *ptr() const noexcept
-    {
-        return ptr_;
-    }
+    void *ptr() const noexcept;
 
-    int size() const noexcept
-    {
-        return size_;
-    }
+    int size() const noexcept;
 
-    bool creator() const noexcept
-    {
-        return creator_;
-    }
+    bool creator() const noexcept;
 
 private:
-    void move(shared_memory &&other) noexcept
-    {
-        this->name_ = other.name_;
-        this->size_ = other.size_;
-        this->ptr_ = other.ptr_;
-        this->creator_ = other.creator_;
-
-        other.name_ = "";
-        other.size_ = 0;
-        other.ptr_ = nullptr;
-        other.creator_ = false;
-    }
+    void move(shared_memory &&other) noexcept;
 
     std::string name_;
 
@@ -99,25 +62,8 @@ public:
 
     semaphore(const semaphore &) = delete;
     semaphore &operator=(const semaphore &) = delete;
-
-    semaphore(semaphore &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return;
-        }
-        move(std::forward<semaphore>(other));
-    }
-
-    semaphore &operator=(semaphore &&other) noexcept
-    {
-        if (&other == this)
-        {
-            return *this;
-        }
-        move(std::forward<semaphore>(other));
-        return *this;
-    }
+    semaphore(semaphore &&other) noexcept;
+    semaphore &operator=(semaphore &&other) noexcept;
 
     ~semaphore() noexcept;
 
@@ -129,22 +75,10 @@ public:
 
     void unlink();
 
-    bool creator() const noexcept
-    {
-        return creator_;
-    }
+    bool creator() const noexcept;
 
 private:
-    void move(semaphore &&other) noexcept
-    {
-        this->name_ = other.name_;
-        this->sem_ = other.sem_;
-        this->creator_ = other.creator_;
-
-        other.name_ = "";
-        other.sem_ = SEM_FAILED;
-        other.creator_ = false;
-    }
+    void move(semaphore &&other) noexcept;
 
     std::string name_;
 
@@ -213,17 +147,6 @@ public:
         return wait_until(lock, std::chrono::steady_clock::now() + rel_time, pred);
     }
 
-    template <class Clock, class Duration>
-    std::cv_status wait_until(
-        std::unique_lock<pshared_lock>& lock,
-        const std::chrono::time_point<Clock, Duration> &abs_time
-    )
-    {
-        // The implementation uses system clock to align with the standard library.
-        auto sys_abs_time = std::chrono::system_clock::now() + (abs_time - Clock::now());
-        return wait_until(lock, sys_abs_time);
-    }
-
     template <class Duration>
     std::cv_status wait_until(
         std::unique_lock<pshared_lock>& lock,
@@ -235,6 +158,8 @@ public:
         timespec ts;
         ts.tv_sec = n_abs_time / 1'000'000'000;
         ts.tv_nsec = n_abs_time % 1'000'000'000;
+
+        // The implementation uses system clock to align with the standard library.
         int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
         std::cv_status status = std::cv_status::no_timeout;
         if (ret != 0)
@@ -249,6 +174,16 @@ public:
             }
         }
         return status;
+    }
+
+    template <class Clock, class Duration>
+    std::cv_status wait_until(
+        std::unique_lock<pshared_lock>& lock,
+        const std::chrono::time_point<Clock, Duration> &abs_time
+    )
+    {
+        auto sys_abs_time = std::chrono::system_clock::now() + (abs_time - Clock::now());
+        return wait_until(lock, sys_abs_time);
     }
 
     template <class Clock, class Duration>

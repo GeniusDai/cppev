@@ -62,6 +62,25 @@ shared_memory::shared_memory(const std::string &name, int size, mode_t mode)
     }
 }
 
+shared_memory::shared_memory(shared_memory &&other) noexcept
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<shared_memory>(other));
+}
+
+shared_memory &shared_memory::operator=(shared_memory &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<shared_memory>(other));
+    return *this;
+}
+
 shared_memory::~shared_memory() noexcept
 {
     if (ptr_ != nullptr && size_ != 0)
@@ -76,6 +95,34 @@ void shared_memory::unlink()
     {
         throw_system_error("shm_unlink error");
     }
+}
+
+void *shared_memory::ptr() const noexcept
+{
+    return ptr_;
+}
+
+int shared_memory::size() const noexcept
+{
+    return size_;
+}
+
+bool shared_memory::creator() const noexcept
+{
+    return creator_;
+}
+
+void shared_memory::move(shared_memory &&other) noexcept
+{
+    this->name_ = other.name_;
+    this->size_ = other.size_;
+    this->ptr_ = other.ptr_;
+    this->creator_ = other.creator_;
+
+    other.name_ = "";
+    other.size_ = 0;
+    other.ptr_ = nullptr;
+    other.creator_ = false;
 }
 
 
@@ -114,6 +161,25 @@ semaphore::semaphore(const std::string &name, mode_t mode)
             throw_system_error("sem_open error");
         }
     }
+}
+
+semaphore::semaphore(semaphore &&other) noexcept
+{
+    if (&other == this)
+    {
+        return;
+    }
+    move(std::forward<semaphore>(other));
+}
+
+semaphore &semaphore::operator=(semaphore &&other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+    move(std::forward<semaphore>(other));
+    return *this;
 }
 
 semaphore::~semaphore() noexcept
@@ -168,6 +234,22 @@ void semaphore::unlink()
     {
         throw_system_error("sem_unlink error");
     }
+}
+
+bool semaphore::creator() const noexcept
+{
+    return creator_;
+}
+
+void semaphore::move(semaphore &&other) noexcept
+{
+    this->name_ = other.name_;
+    this->sem_ = other.sem_;
+    this->creator_ = other.creator_;
+
+    other.name_ = "";
+    other.sem_ = SEM_FAILED;
+    other.creator_ = false;
 }
 
 
