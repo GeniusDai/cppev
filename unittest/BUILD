@@ -126,10 +126,10 @@ cc_test(
 cc_binary(
     name = "libDynamicLoaderTestImplFunctions.so",
     srcs = [
-        "DynamicLoaderTestInterface.h",
-        "DynamicLoaderTestImplFunctions.cc",
         "DynamicLoaderTestImpl.cc",
         "DynamicLoaderTestImpl.h",
+        "DynamicLoaderTestImplFunctions.cc",
+        "DynamicLoaderTestInterface.h",
     ],
     linkshared = True,
     target_compatible_with = [
@@ -140,10 +140,10 @@ cc_binary(
 cc_binary(
     name = "libDynamicLoaderTestImplFunctions.dylib",
     srcs = [
-        "DynamicLoaderTestInterface.h",
-        "DynamicLoaderTestImplFunctions.cc",
         "DynamicLoaderTestImpl.cc",
         "DynamicLoaderTestImpl.h",
+        "DynamicLoaderTestImplFunctions.cc",
+        "DynamicLoaderTestInterface.h",
     ],
     linkshared = True,
     target_compatible_with = [

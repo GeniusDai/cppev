@@ -1,5 +1,4 @@
 #include "cppev/sysconfig.h"
-#include <sys/socket.h>
 
 namespace cppev
 {
@@ -7,16 +6,13 @@ namespace cppev
 namespace sysconfig
 {
 
-// buffer size for udp socket
+// Buffer size for udp socket
 int udp_buffer_size = 2048;
 
-// param size for epoll_create()/epoll_wait()/kevent()
+// File descriptor numbers for each epoll / kevent
 int event_number = 2048;
 
-// hashed logger thread buffer outdate timespan in seconds
-int buffer_outdate = 30;
-
-// batch size for IO
+// Default batch size for stream's read and write
 int buffer_io_step = 1024;
 
 }   // namespace sysconfig

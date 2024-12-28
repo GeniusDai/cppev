@@ -9,16 +9,13 @@ namespace cppev
 namespace sysconfig
 {
 
-// buffer size for udp socket
+// Buffer size for udp socket
 extern int udp_buffer_size;
 
-// param size for epoll / kevent
+// File descriptor numbers for each epoll / kevent
 extern int event_number;
 
-// logger thread buffer outdate timespan in seconds
-extern int buffer_outdate;
-
-// batch size for IO
+// Default batch size for stream's read and write
 extern int buffer_io_step;
 
 }   // namespace sysconfig

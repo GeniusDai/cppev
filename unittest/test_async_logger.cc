@@ -19,15 +19,6 @@ class TestAsyncLogger
 : public testing::Test
 {
 protected:
-    void SetUp() override
-    {
-        sysconfig::buffer_outdate = 1;
-    }
-
-    void TearDown() override
-    {
-    }
-
     int thr_num = 50;
 
     int loop_num = 100;
