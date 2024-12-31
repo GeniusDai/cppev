@@ -11,6 +11,6 @@ bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "googletest", version = "1.14.0")
 
 register_toolchains(
-    "//bztools:shell_command_linux_toolchain",
-    "//bztools:shell_command_osx_toolchain",
+    "//bztools/shell:linux_command_toolchain",
+    "//bztools/shell:osx_command_toolchain",
 )

@@ -63,7 +63,7 @@ collect_files_aspect = aspect(
 )
 
 def _package_files_impl(ctx):
-    toolchain_info = ctx.toolchains["//bztools:toolchain_type"].shell_command_info
+    toolchain_info = ctx.toolchains["//bztools/shell:toolchain_type"].shell_command_info
     cp = toolchain_info.cp
     tar = toolchain_info.tar
 
@@ -156,6 +156,6 @@ package_files = rule(
         DefaultInfo,
     ],
     toolchains = [
-        "//bztools:toolchain_type",
+        "//bztools/shell:toolchain_type",
     ],
 )
