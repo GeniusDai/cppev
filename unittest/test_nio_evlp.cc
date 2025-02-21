@@ -115,6 +115,22 @@ TEST_F(TestNio, test_tcp_connect_with_evlp)
     std::cout << "listening loop finish" << std::endl;
     EXPECT_EQ(acpt_count, 2);
     EXPECT_EQ(cont_count, 2);
+
+    std::thread thr1([&]() {
+        acpt_evlp.loop_once();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    acpt_evlp.stop_loop_once();
+    thr1.join();
+    std::cout << "loop once stopped" << std::endl;
+
+    std::thread thr2([&]() {
+        acpt_evlp.loop_forever();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    acpt_evlp.stop_loop_forever();
+    thr2.join();
+    std::cout << "loop forever stopped" << std::endl;
 }
 
 

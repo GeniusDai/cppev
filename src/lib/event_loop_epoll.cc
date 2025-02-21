@@ -15,7 +15,7 @@
 namespace cppev
 {
 
-static uint32_t fd_map_to_sys(fd_event ev)
+static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
 {
     int flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
@@ -29,7 +29,7 @@ static uint32_t fd_map_to_sys(fd_event ev)
     return flags;
 }
 
-static fd_event fd_map_to_event(uint32_t ev)
+static fd_event fd_event_map_sys_to_wrapper(uint32_t ev)
 {
     fd_event flags = static_cast<fd_event>(0);
     if (ev & EPOLLIN)
@@ -43,8 +43,8 @@ static fd_event fd_map_to_event(uint32_t ev)
     return flags;
 }
 
-event_loop::event_loop(void *data, void *back)
-: data_(data), back_(back), stop_(false)
+event_loop::event_loop(void *data, void *owner)
+: data_(data), owner_(owner), stop_(false)
 {
     ev_fd_ = epoll_create(sysconfig::event_number);
     if (ev_fd_ < 0)
@@ -69,7 +69,7 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
     {
         struct epoll_event ev;
         ev.data.fd = iop->fd();
-        ev.events = fd_map_to_sys(ev_type);
+        ev.events = fd_event_map_wrapper_to_sys(ev_type);
         if (epoll_ctl(ev_fd_, EPOLL_CTL_ADD, iop->fd(), &ev) < 0)
         {
             throw_system_error(std::string("epoll_ctl add error for fd ").append(std::to_string(iop->fd())));
@@ -105,33 +105,37 @@ void event_loop::loop_once(int timeout)
     {
         throw_system_error("epoll_wait error");
     }
-    for (int i = 0; i < nums; ++i)
+    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_callbacks;
     {
         std::unique_lock<std::mutex> lock(lock_);
-        int fd = evs[i].data.fd;
-        auto range = fds_.equal_range(fd);
-        auto begin = range.first, end = range.second;
-        while (begin != end)
+        for (int i = 0; i < nums; ++i)
         {
-            if (static_cast<bool>(std::get<3>(begin->second) & fd_map_to_event(evs[i].events)))
+            int fd = evs[i].data.fd;
+            auto range = fds_.equal_range(fd);
+            auto begin = range.first, end = range.second;
+            while (begin != end)
             {
+                if (static_cast<bool>(std::get<3>(begin->second) & fd_event_map_sys_to_wrapper(evs[i].events)))
+                {
 #ifdef CPPEV_DEBUG
-                PRINT_LOOP_DEBUG();
+                    PRINT_LOOP_DEBUG();
 #endif  //  CPPEV_DEBUG
-                fd_cbs_.emplace(
-                    std::get<0>(begin->second),
-                    std::get<1>(begin->second),
-                    std::get<2>(begin->second)
-                );
+                    fd_callbacks.emplace(
+                        std::get<0>(begin->second),
+                        std::get<1>(begin->second),
+                        std::get<2>(begin->second)
+                    );
+                }
+                ++begin;
             }
-            ++begin;
         }
     }
+
     // 2. Pop from priority queue
-    while (fd_cbs_.size())
+    while (fd_callbacks.size())
     {
-        auto ev = fd_cbs_.top();
-        fd_cbs_.pop();
+        auto ev = fd_callbacks.top();
+        fd_callbacks.pop();
         (*std::get<2>(ev))(std::get<1>(ev));
     }
 

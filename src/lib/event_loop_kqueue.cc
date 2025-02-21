@@ -16,7 +16,7 @@
 namespace cppev
 {
 
-static uint32_t fd_map_to_sys(fd_event ev)
+static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
 {
     int flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
@@ -30,7 +30,7 @@ static uint32_t fd_map_to_sys(fd_event ev)
     return flags;
 }
 
-static fd_event fd_map_to_event(uint32_t ev)
+static fd_event fd_event_map_sys_to_wrapper(uint32_t ev)
 {
     fd_event flags = static_cast<fd_event>(0);
     if (ev == EVFILT_READ)
@@ -44,8 +44,8 @@ static fd_event fd_map_to_event(uint32_t ev)
     return flags;
 }
 
-event_loop::event_loop(void *data, void *back)
-: data_(data), back_(back), stop_(false)
+event_loop::event_loop(void *data, void *owner)
+: data_(data), owner_(owner), stop_(false)
 {
     ev_fd_ = kqueue();
     if (ev_fd_ < 0)
@@ -83,8 +83,8 @@ void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
 
         // Register event to kqueue
         struct kevent ev;
-        //     &kev, ident,     filter,                  flags,             fflags, data, udata);
-        EV_SET(&ev,  iop->fd(), fd_map_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0,      0,    nullptr);
+        //     &kev, ident,     filter,                                flags,             fflags, data, udata);
+        EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0,      0,    nullptr);
         if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
         {
             throw_system_error(std::string("kevent add error for fd ").append(std::to_string(iop->fd())));
@@ -116,8 +116,8 @@ void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool dea
             {
                 continue;
             }
-            //     &kev, ident,     filter,                       flags,     fflags, data, udata
-            EV_SET(&ev,  iop->fd(), fd_map_to_sys(all_events[i]), EV_DELETE, 0,      0,    nullptr);
+            //     &kev, ident,     filter,                                     flags,     fflags, data, udata
+            EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(all_events[i]), EV_DELETE, 0,      0,    nullptr);
             if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
             {
                 throw_system_error(std::string("kevent del error for fd ").append(std::to_string(iop->fd())));
@@ -148,33 +148,37 @@ void event_loop::loop_once(int timeout)
         ts.tv_nsec = (timeout % 1000) * 1000 * 1000;
         nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, &ts);
     }
-    for (int i = 0; i < nums; ++i)
+    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_callbacks;
     {
         std::unique_lock<std::mutex> lock(lock_);
-        int fd = evs[i].ident;
-        auto range = fds_.equal_range(fd);
-        auto begin = range.first, end = range.second;
-        while (begin != end)
+        for (int i = 0; i < nums; ++i)
         {
-            if (static_cast<bool>(std::get<3>(begin->second) & fd_map_to_event(evs[i].filter)))
+            int fd = evs[i].ident;
+            auto range = fds_.equal_range(fd);
+            auto begin = range.first, end = range.second;
+            while (begin != end)
             {
+                if (static_cast<bool>(std::get<3>(begin->second) & fd_event_map_sys_to_wrapper(evs[i].filter)))
+                {
 #ifdef CPPEV_DEBUG
-                PRINT_LOOP_DEBUG();
+                    PRINT_LOOP_DEBUG();
 #endif  //  CPPEV_DEBUG
-                fd_cbs_.emplace(
-                    std::get<0>(begin->second),
-                    std::get<1>(begin->second),
-                    std::get<2>(begin->second)
-                );
+                    fd_callbacks.emplace(
+                        std::get<0>(begin->second),
+                        std::get<1>(begin->second),
+                        std::get<2>(begin->second)
+                    );
+                }
+                ++begin;
             }
-            ++begin;
         }
     }
+
     // 2. Pop from priority queue
-    while (fd_cbs_.size())
+    while (fd_callbacks.size())
     {
-        auto ev = fd_cbs_.top();
-        fd_cbs_.pop();
+        auto ev = fd_callbacks.top();
+        fd_callbacks.pop();
         (*std::get<2>(ev))(std::get<1>(ev));
     }
 }

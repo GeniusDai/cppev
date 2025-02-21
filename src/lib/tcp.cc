@@ -134,7 +134,7 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
 
-    iohandler *pseudo_this = reinterpret_cast<iohandler *>(iopt->evlp().back());
+    iohandler *pseudo_this = reinterpret_cast<iohandler *>(iopt->evlp().owner());
     iopt->evlp().fd_remove(iop, true);      // remove previous callback
 
     if (!iopt->check_connect())
@@ -263,7 +263,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
     iops->read_all(1);
 
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
-    connector *pseudo_this = reinterpret_cast<connector *>(iops->evlp().back());
+    connector *pseudo_this = reinterpret_cast<connector *>(iops->evlp().owner());
     {
         std::unique_lock<std::mutex> _(pseudo_this->lock_);
         pseudo_this->hosts_.swap(hosts);

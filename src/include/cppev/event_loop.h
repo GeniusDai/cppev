@@ -36,7 +36,7 @@ using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
 class event_loop
 {
 public:
-    explicit event_loop(void *data = nullptr, void *back = nullptr);
+    explicit event_loop(void *data = nullptr, void *owner = nullptr);
 
     event_loop(const event_loop &) = delete;
     event_loop &operator=(const event_loop &) = delete;
@@ -45,62 +45,72 @@ public:
 
     virtual ~event_loop() noexcept;
 
-    int ev_fd() const noexcept;
+    // External data for eventloop.
+    void *data() noexcept;
 
-    void *data() const noexcept;
+    // External data for eventloop.
+    const void *data() const noexcept;
 
-    void *back() const noexcept;
+    // External class owns eventloop.
+    void *owner() noexcept;
 
+    // External class owns eventloop.
+    const void *owner() const noexcept;
+
+    // Workloads of the event loop fd.
     int ev_loads() const noexcept;
 
-    // Register fd event to event pollor
-    // @param iop       nio smart pointer
-    // @param ev_type   event type
-    // @param handler   fd event handler
-    // @param activate  whether register fd to os io-multiplexing api
-    // @param prio      event priority
+    // Register fd event to event pollor.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
+    // @param handler   fd event handler.
+    // @param activate  whether register fd to os io-multiplexing api.
+    // @param prio      event priority.
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
         const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = priority::p0);
 
-    // Remove fd event(s) from event pollor
-    // @param iop           nio smart pointer
-    // @param clean         whether clean callbacks stored in eventloop
+    // Remove fd event(s) from event pollor.
+    // @param iop           nio smart pointer.
+    // @param clean         whether clean callbacks stored in eventloop.
     // @param deactivate    whether remove fd from os io-multiplexing api (parameter is provided due to
-    //                      the io-multiplexing api may cause program get killed when fd is closed)
+    //                      the io-multiplexing api may cause program get killed when fd is closed).
     void fd_remove(const std::shared_ptr<nio> &iop, bool clean = true, bool deactivate = true);
 
-    // Wait for events, only loop once, timeout unit is millisecond
+    // Wait for events, only loop once, timeout unit is millisecond.
     void loop_once(int timeout = -1);
 
-    // Loop infinitely
+    // Stop loop once.
+    void stop_loop_once();
+
+    // Wait for events, loop infinitely, timeout unit is millisecond.
     void loop_forever(int timeout = -1);
 
-    // Stop loop infinitely
+    // Stop loop infinitely.
     void stop_loop_forever();
 
 private:
-    // Used for registering callback for event loop
+    // Protect the internal data structures to guarantee thread safety of "register / remove / loop".
     std::mutex lock_;
 
-    // Event watcher fd
+    // Event watcher fd.
     int ev_fd_;
 
-    // External data for eventloop
+    // External data for eventloop.
     void *data_;
 
-    // External class contains eventloop
-    void *back_;
+    // External class which owns eventloop.
+    void *owner_;
 
-    // Tuple : priority, nio, callback, event
+    // Fd --> (priority, nio, callback, event), one fd may have more than one event registered.
     std::unordered_multimap<int, std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event>> fds_;
 
-    // Tuple : priority, nio, callback
-    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_cbs_;
-
-    // Activate events, used for kqueue only
+#ifdef __APPLE__
+    // Activate events, read / write events are merged to one fd_event.
+    // For kqueue only since EPOLL_CTL_DEL deletes all events for the fd.
     std::unordered_map<int, fd_event> fd_events_;
+#endif
 
-    // Whether loop forever shall be stopped
+    // Whether loop forever shall be stopped.
     bool stop_;
 };
 
