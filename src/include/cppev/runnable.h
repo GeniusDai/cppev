@@ -9,16 +9,18 @@
 #include <pthread.h>
 #include "cppev/utils.h"
 
-// Q1 : Why a new thread library ?
-// A1 : Previously std::thread doesn't support pthread_cancel and pthread_kill, but now
-//      std::jthread is recommended. Or if you prefer subthread implemented by subclass.
+/*
+    Q1 : Why a new thread library ?
+    A1 : Previously std::thread doesn't support pthread_cancel and pthread_kill, but now
+        std::jthread is recommended. Or if you prefer subthread implemented by subclass.
 
-// Q2 : Is runnable a full encapsulation of pthread ?
-// A2 : Remain components of pthread:
-//      1) Per-Thread Context Routines : better use "thread_local".
-//      2) Cleanup Routines : just coding in "run_impl".
-//      3) Thread Routines : These routines are not essential
-//         pthread_exit / pthread_once / pthread_self / pthread_equal
+    Q2 : Is runnable a full encapsulation of pthread ?
+    A2 : Remain components of pthread:
+        1) Per-Thread Context Routines : better use "thread_local".
+        2) Cleanup Routines : just coding in "run_impl".
+        3) Thread Routines : These routines are not essential
+            pthread_exit / pthread_once / pthread_self / pthread_equal
+ */
 
 namespace cppev
 {

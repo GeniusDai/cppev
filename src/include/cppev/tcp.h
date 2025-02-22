@@ -15,19 +15,20 @@
 #include "cppev/thread_pool.h"
 #include "cppev/async_logger.h"
 
-// Q1: The architecture(Reactor-Impl)?
-// A1:  1) Support tcp's client(web-crawler) and server.
-//      2) Using multi-threading(N+M), each thread works with an specific io-multiplexing.
-//      3) N threads deal with the syn_sent / listening socket, M threads(thread-pool) deal with the connected socket.
-// Q2: The comparation of other implementation?
-// A2:  1) Compared with "one or two io-multiplexing"(Reactor-Impl1).
-//         Reactor-Impl1 distributes sockets to the thread-pool when sockets are readable /writable,
-//         thread-pool registers sockets back after reading / writing. Reactor-Impl1 absolutely causes
-//         multi-threads's operation on one data structure, on two aspects lower the performance assume
-//         for Linux tcp server: the epolls' RB-tree (1) size expansion; (2) being operated by multi-threads.
-//         Although Reactor-Impl's coding is more complex.
-//      2) Compared with "nginx"(Reactor-Impl2).
-//         Reactor-Impl2 doesn't treat listening socket's event as higher priority, but Reactor-Impl does.
+/*
+    Q1: The architecture(Reactor-Impl)?
+    A1: 1) Support tcp's client(web-crawler) and server.
+        2) Using multi-threading(N+M), each thread works with an specific io-multiplexing.
+        3) N threads deal with the syn_sent / listening socket, M threads(thread-pool) deal with the connected socket.
+    Q2: The comparation of other implementation?
+    A2: 1) Compared with "one or two io-multiplexing"(Reactor-Impl1).
+            Reactor-Impl1 distributes sockets to the thread-pool when sockets are readable / writable,
+            thread-pool registers sockets back after reading / writing. Assume for Linux tcp server Reactor-Impl1
+            lower the performance due to the epolls' RB-tree size expansion and being operated by multi-threads.
+            Although Reactor-Impl's coding is more complex.
+        2) Compared with "nginx"(Reactor-Impl2).
+            Reactor-Impl2 doesn't treat listening socket's event as higher priority, but Reactor-Impl does.
+ */
 
 namespace cppev
 {
