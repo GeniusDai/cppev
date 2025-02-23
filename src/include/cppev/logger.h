@@ -16,7 +16,8 @@ namespace cppev
 {
 
 // Log severity levels
-enum class log_level {
+enum class log_level
+{
     debug,
     info,
     warning,
@@ -24,34 +25,43 @@ enum class log_level {
 };
 
 /// Thread-safe logger implementation with multiple output support
-class logger {
+class logger
+{
 public:
     /// Singleton access point
-    static logger& get_instance() {
+    static logger& get_instance()
+    {
         static logger instance;
         return instance;
     }
 
     /// Set minimum log severity level
-    void set_log_level(log_level level) {
+    void set_log_level(log_level level)
+    {
         std::lock_guard<std::mutex> lock(mtx);
         current_level = level;
     }
 
     /// Add output stream destination
-    void add_output_stream(std::ostream& output) {
+    void add_output_stream(std::ostream& output)
+    {
         std::lock_guard<std::mutex> lock(mtx);
         output_streams.push_back(&output);
     }
 
     /// Get current log level
-    log_level get_log_level() const { return current_level; }
+    log_level get_log_level() const
+    {
+        return current_level;
+    }
 
     /// Core logging method
-    void write_log(log_level level, const std::string& file,
-                int line, const std::string& message) {
-        if (level < current_level) return;
-
+    void write_log(log_level level, const std::string& file, int line, const std::string& message)
+    {
+        if (level < current_level)
+        {
+            return;
+        }
         std::stringstream log_entry;
         add_timestamp(log_entry);
         add_thread_id(log_entry);
@@ -60,8 +70,10 @@ public:
         log_entry << message << std::endl;
 
         std::lock_guard<std::mutex> lock(mtx);
-        for (auto& stream : output_streams) {
-            if (stream) {
+        for (auto& stream : output_streams)
+        {
+            if (stream)
+            {
                 *stream << log_entry.str();
                 stream->flush();
             }
@@ -69,23 +81,33 @@ public:
     }
 
 private:
-    logger() : current_level(log_level::info) {
+    logger()
+    : current_level(log_level::info)
+    {
         output_streams.push_back(&std::cout);
     }
 
     // Convert log level to string representation
-    std::string level_to_string(log_level level) const {
-        switch (level) {
-            case log_level::debug:   return "DEBUG";
-            case log_level::info:    return "INFO";
-            case log_level::warning: return "WARNING";
-            case log_level::error:   return "ERROR";
-            default:                 return "UNKNOWN";
+    std::string level_to_string(log_level level) const
+    {
+        switch (level)
+        {
+            case log_level::debug:
+                return "DEBUG";
+            case log_level::info:
+                return "INFO";
+            case log_level::warning:
+                return "WARNING";
+            case log_level::error:
+                return "ERROR";
+            default:
+                return "UNKNOWN";
         }
     }
 
     // Add timestamp with millisecond precision
-    void add_timestamp(std::ostream& os) {
+    void add_timestamp(std::ostream& os)
+    {
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -96,7 +118,8 @@ private:
     }
 
     // Add thread ID information
-    void add_thread_id(std::ostream& os) {
+    void add_thread_id(std::ostream& os)
+    {
         os << " [Thread:";
 #ifdef __linux__
         os << "0x";
@@ -110,33 +133,40 @@ private:
 };
 
 /// Helper class for constructing log messages
-class log_message {
+class log_message
+{
 public:
     // Constructor for stream-style logging
     log_message(log_level level, const char* file, int line)
-        : message_level(level), source_file(file), line_number(line) {}
+    : message_level(level), source_file(file), line_number(line)
+    {
+    }
 
     // Constructor for printf-style formatting
-    log_message(log_level level, const char* file, int line,
-             const char* format, ...)
-        : message_level(level), source_file(file), line_number(line) {
+    log_message(log_level level, const char* file, int line, const char* format, ...)
+    : message_level(level), source_file(file), line_number(line)
+    {
         va_list args;
         va_start(args, format);
         format_message(format, args);
         va_end(args);
     }
 
-    ~log_message() {
-        logger::get_instance().write_log(message_level, source_file,
-                                     line_number, message_buffer.str());
+    ~log_message()
+    {
+        logger::get_instance().write_log(message_level, source_file, line_number, message_buffer.str());
     }
 
     // Stream interface for chaining operations
-    std::ostringstream& stream() { return message_buffer; }
+    std::ostringstream& stream()
+    {
+        return message_buffer;
+    }
 
 private:
     // Safe formatted string implementation
-    void format_message(const char* format, va_list args) {
+    void format_message(const char* format, va_list args)
+    {
         va_list argsCopy;
         va_copy(argsCopy, args);
 
@@ -144,7 +174,10 @@ private:
         int length = vsnprintf(nullptr, 0, format, argsCopy);
         va_end(argsCopy);
 
-        if (length <= 0) return;
+        if (length <= 0)
+        {
+            return;
+        }
 
         // Create buffer and format message
         std::vector<char> buffer(length + 1);
