@@ -11,15 +11,14 @@ cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppe
     cppev::log::info << iops->rbuffer().size() << " " << iops->rbuffer().get_string() << " --> ";
     cppev::log::info << "sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << " | ";
     cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << cppev::log::endl;
-    iop->evlp().fd_remove(iop);
+    iop->evlp().fd_remove_and_deactivate(iop, cppev::fd_event::fd_readable);
 };
 
 cppev::fd_event_handler listening_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
-    std::shared_ptr<cppev::nsocktcp> conn = iopt->accept(1)[0];
-    iop->evlp().fd_register(std::dynamic_pointer_cast<cppev::nio>(conn),
-        cppev::fd_event::fd_readable, accepted_socket_callback, true);
+    std::shared_ptr<cppev::nio> conn = std::dynamic_pointer_cast<cppev::nio>(iopt->accept(1).front());
+    iop->evlp().fd_register_and_activate(conn, cppev::fd_event::fd_readable, accepted_socket_callback);
 };
 
 void start_server_loop()
@@ -38,9 +37,9 @@ void start_server_loop()
     tcp_ipv6->listen();
     tcp_unix->listen();
 
-    evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
-    evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
-    evlp.fd_register(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
 
     evlp.loop_forever();
 }

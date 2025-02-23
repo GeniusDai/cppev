@@ -55,9 +55,20 @@ cc_test(
 )
 
 cc_test(
-    name = "test_nio_evlp",
+    name = "test_nio",
     srcs = [
-        "test_nio_evlp.cc",
+        "test_nio.cc",
+    ],
+    deps = [
+        "//src:cppev",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "test_evlp",
+    srcs = [
+        "test_evlp.cc",
     ],
     deps = [
         "//src:cppev",

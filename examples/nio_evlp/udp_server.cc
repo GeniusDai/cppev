@@ -22,9 +22,9 @@ void start_server_loop()
     udp_ipv6->bind(         UDP_IPV6_PORT   );
     udp_unix->bind_unix(    UDP_UNIX_PATH   , true);
 
-    evlp.fd_register(udp_ipv4, cppev::fd_event::fd_readable, binding_socket_callback);
-    evlp.fd_register(udp_ipv6, cppev::fd_event::fd_readable, binding_socket_callback);
-    evlp.fd_register(udp_unix, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_ipv4, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_ipv6, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_unix, cppev::fd_event::fd_readable, binding_socket_callback);
 
     evlp.loop_forever();
 }

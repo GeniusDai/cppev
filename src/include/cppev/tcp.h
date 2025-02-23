@@ -13,7 +13,6 @@
 #include "cppev/event_loop.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
-#include "cppev/async_logger.h"
 
 /*
     Q1: The architecture(Reactor-Impl)?

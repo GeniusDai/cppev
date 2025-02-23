@@ -41,6 +41,7 @@ cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::n
     }
     fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
     cache->setfd(iopt->fd() ,fd);
+    LOG_INFO << "creating file complete";
 };
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
@@ -50,12 +51,12 @@ cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cp
     auto iops = cache->getfd(iopt->fd());
     iops->wbuffer().put_string(iopt->rbuffer().get_string());
     iops->write_all();
-    cppev::log::info << "writing chunk to file complete" << cppev::log::endl;
+    LOG_INFO << "writing chunk to file complete";
 };
 
 cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "receiving file complete" << cppev::log::endl;
+    LOG_INFO << "receiving file complete";
 };
 
 int main(int argc, char **argv)
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
 
     client.shutdown();
 
-    cppev::log::info << "main thread exited" << cppev::log::endl;
+    LOG_INFO << "main thread exited";
 
     return 0;
 }

@@ -4,7 +4,7 @@
 /*
  * Concurrency Number
  */
-#ifdef __APPLE__
+#if 1
     const int IPV4_CONCURRENCY = 100;
     const int IPV6_CONCURRENCY = 100;
     const int UNIX_CONCURRENCY = 100;

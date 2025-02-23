@@ -5,7 +5,8 @@
  */
 
 #include "config.h"
-#include "cppev/cppev.h"
+#include "cppev/tcp.h"
+#include "cppev/logger.h"
 
 /*
  * Define Handler
@@ -20,26 +21,25 @@
  */
 cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "connect succeed with fd " << iopt->fd() << cppev::log::endl;
+    LOG_DEBUG_FMT("Fd %d on accept finish", iopt->fd());
 };
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "[fd] " << iopt->fd() << " | [callback] read_complete" << cppev::log::endl;
-    cppev::log::info << "[fd] " << iopt->fd() << " | [message] " << iopt->rbuffer().rawbuf() << cppev::log::endl;
     iopt->wbuffer().put_string(iopt->rbuffer().get_string());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     cppev::reactor::async_write(iopt);
+    LOG_DEBUG_FMT("Fd %d on read finish", iopt->fd());
 };
 
 cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "[fd] " << iopt->fd() << " | [callback] write_complete" << cppev::log::endl;
+    LOG_DEBUG_FMT("Fd %d on write finish", iopt->fd());
 };
 
 cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    cppev::log::info << "Connection " << iopt->fd() << " closed by opposite host" << cppev::log::endl;
+    LOG_DEBUG_FMT("Fd %d on close finish", iopt->fd());
 };
 
 /*
@@ -50,6 +50,8 @@ cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::ns
  */
 int main()
 {
+    cppev::logger::get_instance().set_log_level(cppev::log_level::debug);
+
     cppev::thread_block_signal(SIGINT);
 
     cppev::reactor::tcp_client client(CLIENT_WORKER_NUM, CONTOR_NUM);
@@ -70,7 +72,7 @@ int main()
 
     client.shutdown();
 
-    cppev::log::info << "main thread exited" << cppev::log::endl;
+    LOG_INFO << "main thread exited";
 
     return 0;
 }
