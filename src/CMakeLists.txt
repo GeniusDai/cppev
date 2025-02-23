@@ -9,7 +9,6 @@ set (LIB
     lib/subprocess.cc
     lib/ipc.cc
     lib/lock.cc
-    lib/async_logger.cc
     lib/runnable.cc
     lib/dynamic_loader.cc
     lib/thread_pool.cc

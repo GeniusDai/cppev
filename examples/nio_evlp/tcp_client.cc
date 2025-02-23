@@ -6,7 +6,7 @@ cppev::fd_event_handler connecting_socket_callback = [](const std::shared_ptr<cp
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     if (!iopt->check_connect())
     {
-        cppev::log::error << "fd " << iop->fd() << " failed to connect" << cppev::log::endl;
+        LOG_ERROR << "fd " << iop->fd() << " failed to connect";
         return;
     }
     iopt->wbuffer().produce(MSG, MSG_LEN);

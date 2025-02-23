@@ -1,15 +1,4 @@
 cc_test(
-    name = "test_async_logger",
-    srcs = [
-        "test_async_logger.cc",
-    ],
-    deps = [
-        "//src:cppev",
-        "@googletest//:gtest",
-    ],
-)
-
-cc_test(
     name = "test_buffer",
     srcs = [
         "test_buffer.cc",
