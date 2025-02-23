@@ -1,4 +1,5 @@
 set (LIB
+    lib/logger.cc
     lib/nio.cc
     lib/utils.cc
     lib/sysconfig.cc
