@@ -12,7 +12,7 @@ Support readable / writable event handling by io-multiplexing.
 
 ### Multithreading
 
-Support subthread / threadpool / signal-handing / async-logger / reactor.
+Support subthread / threadpool / signal-handing.
 
 ### Interprocess Communication
 
@@ -56,7 +56,3 @@ Build
 Run Unittest
 
         $ bazel test //...
-
-# Getting Started
-
-Please see the examples along with a tutorial.

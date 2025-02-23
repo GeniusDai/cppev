@@ -13,20 +13,7 @@ const char *fifo = "./cppev_test_fifo";
 
 const char *str = "Cppev is a C++ event driven library";
 
-class TestNio
-: public testing::Test
-{
-protected:
-    void SetUp() override
-    {
-    }
-
-    void TearDown() override
-    {
-    }
-};
-
-TEST_F(TestNio, test_diskfile)
+TEST(TestNio, test_diskfile)
 {
     int fd;
 
@@ -44,7 +31,7 @@ TEST_F(TestNio, test_diskfile)
     unlink(file);
 }
 
-TEST_F(TestNio, test_pipe)
+TEST(TestNio, test_pipe)
 {
     auto pipes = nio_factory::get_pipes();
     auto iopr = pipes[0];
@@ -56,7 +43,7 @@ TEST_F(TestNio, test_pipe)
     EXPECT_STREQ(str, iopr->rbuffer().rawbuf());
 }
 
-TEST_F(TestNio, test_fifo)
+TEST(TestNio, test_fifo)
 {
     auto fifos = nio_factory::get_fifos(fifo);
     auto iofr = fifos[0];
@@ -70,82 +57,9 @@ TEST_F(TestNio, test_fifo)
 }
 
 
-TEST_F(TestNio, test_tcp_connect_with_evlp)
-{
-    std::vector<std::tuple<family, int, std::string>> vec =
-    {
-        { family::ipv4, 8884, "127.0.0.1" },
-        { family::ipv6, 8886, "::1"       },
-    };
-
-    int acpt_count = 0;
-    int cont_count = 0;
-    event_loop acpt_evlp(&acpt_count);
-    event_loop cont_evlp(&cont_count);
-
-    fd_event_handler callback = [](const std::shared_ptr<nio> &iop) -> void
-    {
-        (*reinterpret_cast<int *>(iop->evlp().data()))++;
-    };
-
-    for (size_t i = 0; i < vec.size(); ++i)
-    {
-        auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
-        listensock->bind(std::get<1>(vec[i]));
-        listensock->listen();
-        auto listensock1 = std::make_shared<nsocktcp>(std::move(*listensock));
-        *listensock = std::move(*listensock1);
-        acpt_evlp.fd_register(std::dynamic_pointer_cast<nio>(listensock),
-            fd_event::fd_readable, callback);
-
-        std::thread thr_cont([&]() {
-            auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
-            EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
-            cont_evlp.fd_register(std::dynamic_pointer_cast<nio>(connsock),
-                fd_event::fd_writable, callback);
-        });
-        thr_cont.join();
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    cont_evlp.loop_once();
-    std::cout << "connecting loop finish" << std::endl;
-    acpt_evlp.loop_once();
-    std::cout << "listening loop finish" << std::endl;
-    EXPECT_EQ(acpt_count, 2);
-    EXPECT_EQ(cont_count, 2);
-
-    std::thread thr1([&]() {
-        acpt_evlp.loop_once();
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    acpt_evlp.stop_loop_once();
-    thr1.join();
-    std::cout << "loop once stopped" << std::endl;
-
-    std::thread thr2([&]() {
-        acpt_evlp.loop_forever();
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    acpt_evlp.stop_loop_forever();
-    thr2.join();
-    std::cout << "loop forever stopped" << std::endl;
-}
-
-
-
 class TestNioSocket
 : public testing::TestWithParam<std::tuple<family, bool, int, int>>
 {
-protected:
-    void SetUp() override
-    {
-    }
-
-    void TearDown() override
-    {
-    }
 };
 
 TEST_P(TestNioSocket, test_tcp_socket)

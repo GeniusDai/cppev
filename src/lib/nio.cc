@@ -48,7 +48,7 @@ nio::~nio() noexcept
 {
     if (!closed_)
     {
-            close();
+        close();
     }
 }
 

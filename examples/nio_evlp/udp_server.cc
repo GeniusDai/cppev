@@ -5,9 +5,11 @@ cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev
 {
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = iopu->recv();
-    cppev::log::info << "udp bind sock readable --> fd " << iopu->fd() << " --> ";
-    cppev::log::info << iopu->rbuffer().size() << " " << iopu->rbuffer().get_string() <<  " --> ";
-    cppev::log::info << "peer: " << std::get<0>(cli) << " " << std::get<1>(cli) << cppev::log::endl;
+    auto message = iopu->rbuffer().get_string();
+    assert(message == std::string(MSG,10));
+    LOG_INFO_FMT("udp bind sock readable --> fd %d --> %s [%d] --> peer: %s %d",
+        iopu->fd(), message.c_str(), message.size(), std::get<0>(cli).c_str(), std::get<1>(cli));
+    LOG_INFO << "Whole message is: " << message;
 };
 
 void start_server_loop()
@@ -22,9 +24,9 @@ void start_server_loop()
     udp_ipv6->bind(         UDP_IPV6_PORT   );
     udp_unix->bind_unix(    UDP_UNIX_PATH   , true);
 
-    evlp.fd_register(udp_ipv4, cppev::fd_event::fd_readable, binding_socket_callback);
-    evlp.fd_register(udp_ipv6, cppev::fd_event::fd_readable, binding_socket_callback);
-    evlp.fd_register(udp_unix, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_ipv4, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_ipv6, cppev::fd_event::fd_readable, binding_socket_callback);
+    evlp.fd_register_and_activate(udp_unix, cppev::fd_event::fd_readable, binding_socket_callback);
 
     evlp.loop_forever();
 }

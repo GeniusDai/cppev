@@ -1,7 +1,7 @@
 #ifndef _cppev_cppev_h_6C0224787A17_
 #define _cppev_cppev_h_6C0224787A17_
 
-#include "cppev/async_logger.h"
+#include "cppev/logger.h"
 #include "cppev/buffer.h"
 #include "cppev/utils.h"
 #include "cppev/sysconfig.h"
@@ -11,7 +11,6 @@
 #include "cppev/nio.h"
 #include "cppev/runnable.h"
 #include "cppev/subprocess.h"
-#include "cppev/tcp.h"
 #include "cppev/thread_pool.h"
 
 #endif  // cppev.h

@@ -1,15 +1,14 @@
 set (LIB
+    lib/logger.cc
     lib/nio.cc
     lib/utils.cc
     lib/sysconfig.cc
     lib/event_loop_epoll.cc
     lib/event_loop_kqueue.cc
     lib/event_loop_common.cc
-    lib/tcp.cc
     lib/subprocess.cc
     lib/ipc.cc
     lib/lock.cc
-    lib/async_logger.cc
     lib/runnable.cc
     lib/dynamic_loader.cc
     lib/thread_pool.cc

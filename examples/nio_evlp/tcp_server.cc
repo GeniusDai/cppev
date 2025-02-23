@@ -5,21 +5,22 @@ cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppe
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
-    cppev::log::info << "tcp connection readable --> fd " << iops->fd() << " --> ";
     auto sock = iops->sockname();
     auto peer = iops->peername();
-    cppev::log::info << iops->rbuffer().size() << " " << iops->rbuffer().get_string() << " --> ";
-    cppev::log::info << "sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << " | ";
-    cppev::log::info << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer) << cppev::log::endl;
-    iop->evlp().fd_remove(iop);
+    auto message = iops->rbuffer().get_string();
+    assert(message == std::string(MSG,10));
+    LOG_INFO_FMT("tcp connection readable --> fd %d --> %s [%d] --> sock: %s %d | peer: %s %d",
+        iops->fd(), message.c_str(), message.size(),
+        std::get<0>(sock).c_str(), std::get<1>(sock), std::get<0>(peer).c_str(), std::get<1>(peer));
+    LOG_INFO << "Whole message is: " << message;
+    iop->evlp().fd_remove_and_deactivate(iop, cppev::fd_event::fd_readable);
 };
 
 cppev::fd_event_handler listening_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
-    std::shared_ptr<cppev::nsocktcp> conn = iopt->accept(1)[0];
-    iop->evlp().fd_register(std::dynamic_pointer_cast<cppev::nio>(conn),
-        cppev::fd_event::fd_readable, accepted_socket_callback, true);
+    std::shared_ptr<cppev::nio> conn = std::dynamic_pointer_cast<cppev::nio>(iopt->accept(1).front());
+    iop->evlp().fd_register_and_activate(conn, cppev::fd_event::fd_readable, accepted_socket_callback);
 };
 
 void start_server_loop()
@@ -38,9 +39,9 @@ void start_server_loop()
     tcp_ipv6->listen();
     tcp_unix->listen();
 
-    evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
-    evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
-    evlp.fd_register(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv4, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv6, cppev::fd_event::fd_readable, listening_socket_callback);
+    evlp.fd_register_and_activate(tcp_unix, cppev::fd_event::fd_readable, listening_socket_callback);
 
     evlp.loop_forever();
 }

@@ -1,2 +1,0 @@
-compile_target(file_transfer_server file_transfer_server.cc)
-compile_target(file_transfer_client file_transfer_client.cc)
