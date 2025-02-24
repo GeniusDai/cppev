@@ -5,12 +5,14 @@ cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppe
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
     iops->read_all();
-    LOG_INFO << "tcp connection readable --> fd " << iops->fd();
     auto sock = iops->sockname();
     auto peer = iops->peername();
-    LOG_INFO << iops->rbuffer().size() << " " << iops->rbuffer().get_string() << " --> "
-        << "sock: " << std::get<0>(sock) << " " << std::get<1>(sock) << " | "
-        << "peer: " << std::get<0>(peer) << " " << std::get<1>(peer);
+    auto message = iops->rbuffer().get_string();
+    assert(message == std::string(MSG,10));
+    LOG_INFO_FMT("tcp connection readable --> fd %d --> %s [%d] --> sock: %s %d | peer: %s %d",
+        iops->fd(), message.c_str(), message.size(),
+        std::get<0>(sock).c_str(), std::get<1>(sock), std::get<0>(peer).c_str(), std::get<1>(peer));
+    LOG_INFO << "Whole message is: " << message;
     iop->evlp().fd_remove_and_deactivate(iop, cppev::fd_event::fd_readable);
 };
 

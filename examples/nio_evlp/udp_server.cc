@@ -5,9 +5,11 @@ cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev
 {
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
     auto cli = iopu->recv();
-    LOG_INFO << "udp bind sock readable --> fd " << iopu->fd() << " --> "
-        << iopu->rbuffer().size() << " " << iopu->rbuffer().get_string() <<  " --> "
-        << "peer: " << std::get<0>(cli) << " " << std::get<1>(cli);
+    auto message = iopu->rbuffer().get_string();
+    assert(message == std::string(MSG,10));
+    LOG_INFO_FMT("udp bind sock readable --> fd %d --> %s [%d] --> peer: %s %d",
+        iopu->fd(), message.c_str(), message.size(), std::get<0>(cli).c_str(), std::get<1>(cli));
+    LOG_INFO << "Whole message is: " << message;
 };
 
 void start_server_loop()

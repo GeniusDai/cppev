@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include "cppev/nio.h"
 #include "cppev/event_loop.h"
+#include "cppev/logger.h"
 
 namespace cppev
 {
@@ -43,8 +44,9 @@ TEST(TestEvlp, test_enum_class_operator_xor)
 
 const char *str = "Cppev is a C++ event driven library";
 
-TEST(TestEvlp, test_tcp_connect_with_evlp)
+TEST(TestEvlp, test_tcp_connect_with_evlp_1)
 {
+    LOG_INFO << "test_tcp_connect_with_evlp_1";
     std::vector<std::tuple<family, int, std::string>> vec =
     {
         { family::ipv4, 8884, "127.0.0.1" },
@@ -57,17 +59,18 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
     int cont_count = 0;
     event_loop cont_evlp(&cont_count);
 
-    fd_event_handler acpt_callback = [&](const std::shared_ptr<nio> &iop)
+    fd_event_handler acpt_writable_callback = [](const std::shared_ptr<nio> &iop)
     {
-        (*reinterpret_cast<int *>(iop->evlp().data()))++;
+        auto dp = reinterpret_cast<int *>(iop->evlp().data());
+        dp ? ++(*dp) : 0;
         auto conns = std::dynamic_pointer_cast<nsocktcp>(iop)->accept();
         for (auto conn : conns)
         {
-            acpt_evlp.fd_register_and_activate(
+            iop->evlp().fd_register_and_activate(
                 std::static_pointer_cast<nio>(conn),
                 fd_event::fd_writable,
                 [](const std::shared_ptr<nio> &iop) {
-                    std::cout << "writeable event for connected socket triggered" << std::endl;
+                    LOG_INFO_FMT("Server side connected socket %d writable event triggered", iop->fd());
                     auto iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
                     iopt->wbuffer().put_string(str);
                     iopt->write_all();
@@ -77,11 +80,6 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
         }
     };
 
-    fd_event_handler cont_callback = [&](const std::shared_ptr<nio> &iop)
-    {
-        (*reinterpret_cast<int *>(iop->evlp().data()))++;
-    };
-
     for (size_t i = 0; i < vec.size(); ++i)
     {
         // Test Event Loop API
@@ -89,9 +87,9 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
         listensock->bind(std::get<1>(vec[i]));
         listensock->listen();
         auto acpt_niop = std::dynamic_pointer_cast<nio>(listensock);
-        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_callback);
+        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_writable_callback);
         acpt_evlp.fd_remove_and_deactivate_all(acpt_niop);
-        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_callback);
+        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_writable_callback);
     }
 
     std::thread thr_cont([&]() {
@@ -100,7 +98,14 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
             auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
             EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
             auto conn_niop = std::dynamic_pointer_cast<nio>(connsock);
-            cont_evlp.fd_register(conn_niop, fd_event::fd_writable, cont_callback);
+            cont_evlp.fd_register(conn_niop, fd_event::fd_writable,
+                [](const std::shared_ptr<nio> &iop)
+                {
+                    LOG_INFO_FMT("Client side connected socket %d writable event triggered", iop->fd());
+                    auto dp = reinterpret_cast<int *>(iop->evlp().data());
+                    dp ? ++(*dp) : 0;
+                }
+            );
             cont_evlp.fd_activate(conn_niop, fd_event::fd_writable);
             cont_evlp.fd_deactivate(conn_niop, fd_event::fd_writable);
             cont_evlp.fd_activate(conn_niop, fd_event::fd_writable);
@@ -118,8 +123,10 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
     acpt_evlp.loop_forever();
     thr_stop.join();
 
-    EXPECT_EQ(acpt_count, 2);
-    EXPECT_EQ(cont_count, 2);
+    EXPECT_EQ(acpt_count, vec.size());
+    EXPECT_EQ(cont_count, vec.size());
+
+    LOG_INFO << "server client test ended";
 
     std::thread thr1([&]() {
         acpt_evlp.loop_once();
@@ -127,7 +134,7 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     acpt_evlp.stop_loop_once();
     thr1.join();
-    std::cout << "loop once stopped" << std::endl;
+    LOG_INFO << "loop once stopped";
 
     std::thread thr2([&]() {
         acpt_evlp.loop_forever();
@@ -135,13 +142,88 @@ TEST(TestEvlp, test_tcp_connect_with_evlp)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     acpt_evlp.stop_loop_forever();
     thr2.join();
-    std::cout << "loop forever stopped" << std::endl;
+    LOG_INFO << "loop forever stopped";
+}
+
+TEST(TestEvlp, test_tcp_connect_with_evlp_2)
+{
+
+    LOG_INFO << "test_tcp_connect_with_evlp_2";
+
+    const std::string path = "/tmp/unittest_cppev_tcp_unix_6C0224787A17.sock";
+    const int port = 8889;
+
+    event_loop client_evlp;
+
+    fd_event_handler conn_callback = [](const std::shared_ptr<nio> &iop)
+    {
+        LOG_INFO << "Executing fd "<< iop->fd() << " fd_writable callback";
+        iop->evlp().fd_deactivate(iop, fd_event::fd_writable);
+        iop->evlp().fd_register_and_activate(
+            std::dynamic_pointer_cast<nio>(iop),
+            fd_event::fd_readable,
+            [](const std::shared_ptr<nio> &iop) {
+                LOG_INFO << "Executing fd "<< iop->fd() << " fd_readable callback";
+                std::dynamic_pointer_cast<nsocktcp>(iop)->read_all();
+                LOG_INFO << "Executing fd "<< iop->fd() << " received message : " << iop->rbuffer().get_string();
+            }
+        );
+    };
+
+    auto listensock1 = nio_factory::get_nsocktcp(family::local);
+    listensock1->bind_unix(path, true);
+    listensock1->listen();
+
+    auto listensock2 = nio_factory::get_nsocktcp(family::ipv6);
+    listensock2->bind(port);
+    listensock2->listen();
+
+    std::thread sub_thr([&]() {
+        auto connsock1 = nio_factory::get_nsocktcp(family::local);
+        bool succeed = connsock1->connect_unix(path);
+        ASSERT_TRUE(succeed);
+
+        auto connsock2 = nio_factory::get_nsocktcp(family::ipv6);
+        succeed = connsock2->connect("::1", port);
+        ASSERT_TRUE(succeed);
+
+        client_evlp.fd_register_and_activate(std::dynamic_pointer_cast<nio>(connsock1),
+            fd_event::fd_writable, conn_callback);
+        client_evlp.fd_register_and_activate(std::dynamic_pointer_cast<nio>(connsock2),
+            fd_event::fd_writable, conn_callback);
+        client_evlp.loop_forever();
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    auto conns1 = listensock1->accept();
+    EXPECT_TRUE(conns1.size() == 1);
+    auto connsock1 = conns1[0];
+
+    auto conns2 = listensock2->accept();
+    EXPECT_TRUE(conns2.size() == 1);
+    auto connsock2 = conns2[0];
+
+    for (int i = 0; i < 2; ++i)
+    {
+        connsock1->wbuffer().put_string(str);
+        connsock1->write_all();
+        connsock2->wbuffer().put_string(str);
+        connsock2->write_all();
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+
+    LOG_INFO << "To leave";
+
+    client_evlp.stop_loop_forever();
+    sub_thr.join();
 }
 
 }   // namespace cppev
 
 int main(int argc, char **argv)
 {
+    cppev::logger::get_instance().set_log_level(cppev::log_level::debug);
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }

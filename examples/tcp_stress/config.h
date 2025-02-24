@@ -4,14 +4,14 @@
 /*
  * Concurrency Number
  */
-#if 1
-    const int IPV4_CONCURRENCY = 100;
-    const int IPV6_CONCURRENCY = 100;
-    const int UNIX_CONCURRENCY = 100;
+#ifdef __linux__
+const int IPV4_CONCURRENCY = 8000;
+const int IPV6_CONCURRENCY = 8000;
+const int UNIX_CONCURRENCY = 2000;
 #else
-    const int IPV4_CONCURRENCY = 8000;
-    const int IPV6_CONCURRENCY = 8000;
-    const int UNIX_CONCURRENCY = 2000;
+const int IPV4_CONCURRENCY = 100;
+const int IPV6_CONCURRENCY = 100;
+const int UNIX_CONCURRENCY = 100;
 #endif
 
 const int SERVER_WORKER_NUM = 32;
