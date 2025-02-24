@@ -15,13 +15,20 @@
 namespace cppev
 {
 
+// Define color macros
+#define RESET_COLOR   "\033[0m"   // Reset to default color
+#define DEBUG_COLOR   "\033[34m"  // Light blue for DEBUG messages
+#define INFO_COLOR    "\033[32m"  // Green for INFO messages
+#define WARNING_COLOR "\033[33m"  // Yellow for WARNING messages
+#define ERROR_COLOR   "\033[31m"  // Red for ERROR messages
+
 // Log severity levels
 enum class log_level
 {
     debug,
     info,
     warning,
-    error
+    error,
 };
 
 // Thread-safe logger implementation with multiple output support
@@ -49,15 +56,23 @@ private:
     // Convert log level to string representation
     std::string level_to_string(log_level level) const;
 
+    // Add color
+    void add_color(std::ostream& os, log_level level);
+
     // Add timestamp with millisecond precision
     void add_timestamp(std::ostream& os);
 
     // Add thread ID information
     void add_thread_id(std::ostream& os);
 
-    log_level current_level;
-    std::vector<std::ostream*> output_streams;
-    mutable std::mutex mtx;
+    // Reset color
+    void reset_color(std::ostream& os);
+
+    log_level current_level_;
+
+    std::vector<std::ostream*> output_streams_;
+
+    std::mutex mtx_;
 };
 
 // Helper class for constructing log messages
@@ -79,11 +94,17 @@ private:
     // Safe formatted string implementation
     void format_message(const char* format, va_list args);
 
-    log_level message_level;
-    const char* source_file;
-    int line_number;
-    std::ostringstream message_buffer;
+    log_level message_level_;
+
+    const char* source_file_;
+
+    int line_number_;
+
+    std::ostringstream message_buffer_;
 };
+
+}   // namespace cppev
+
 
 // Macro helpers for log interface generation
 #define LOG_BASE(level) \
@@ -94,7 +115,6 @@ private:
     if (level < cppev::logger::get_instance().get_log_level()) ; \
     else cppev::log_message(level, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-}   // namespace cppev
 
 // Stream-style logging macros
 #define LOG_DEBUG   LOG_BASE(cppev::log_level::debug)
