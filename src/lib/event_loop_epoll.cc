@@ -15,9 +15,11 @@
 namespace cppev
 {
 
-static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
+using ev_type_of_epoll = decltype(epoll_event::events);
+
+static ev_type_of_epoll fd_event_map_wrapper_to_sys(fd_event ev)
 {
-    int flags = 0;
+    ev_type_of_epoll flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
     {
         flags |= EPOLLIN;
@@ -29,7 +31,7 @@ static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
     return flags;
 }
 
-static fd_event fd_event_map_sys_to_wrapper(uint32_t ev)
+static fd_event fd_event_map_sys_to_wrapper(ev_type_of_epoll ev)
 {
     fd_event flags = static_cast<fd_event>(0);
     if (ev & EPOLLIN)
@@ -53,92 +55,94 @@ event_loop::event_loop(void *data, void *owner)
     }
 }
 
-void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &handler, bool activate, priority prio)
+void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-#ifdef CPPEV_DEBUG
-    PRINT_FD_REGISTER_DEBUG();
-#endif  // CPPEV_DEBUG
-    iop->set_evlp(*this);
-    if (handler)
+    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
+    auto ep_ctl = EPOLL_CTL_ADD;
+    if (fd_event_masks_.count(iop->fd()))
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(handler), ev_type));
+        if (static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type))
+        {
+            throw_logic_error(std::string("add existent event for fd ").append(std::to_string(iop->fd())));
+        }
+        ep_ctl = EPOLL_CTL_MOD;
     }
-    if (activate)
+    fd_event_masks_[iop->fd()] |= ev_type;
+    struct epoll_event ev;
+    ev.data.fd = iop->fd();
+    ev.events = fd_event_map_wrapper_to_sys(fd_event_masks_[iop->fd()]);
+    // LOG_DEBUG_FMT("Mod or add events to %d for fd %d", ev.events, iop->fd());
+    if (epoll_ctl(ev_fd_, ep_ctl, iop->fd(), &ev) < 0)
+    {
+        std::unordered_map<int, std::string> err_hash = {
+            { EPOLL_CTL_ADD, "EPOLL_CTL_ADD" },
+            { EPOLL_CTL_MOD, "EPOLL_CTL_MOD" },
+        };
+        throw_system_error(std::string(err_hash[ep_ctl]).append(" error for fd ").append(std::to_string(iop->fd())));
+    }
+}
+
+void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+{
+    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
+    if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
+    {
+        throw_logic_error(std::string("delete nonexistent event for fd ").append(std::to_string(iop->fd())));
+    }
+    fd_event_masks_[iop->fd()] ^= ev_type;
+    if (!static_cast<bool>(fd_event_masks_[iop->fd()]))
+    {
+        fd_event_masks_.erase(iop->fd());
+    }
+    if (fd_event_masks_.count(iop->fd()))
     {
         struct epoll_event ev;
         ev.data.fd = iop->fd();
-        ev.events = fd_event_map_wrapper_to_sys(ev_type);
-        if (epoll_ctl(ev_fd_, EPOLL_CTL_ADD, iop->fd(), &ev) < 0)
+        ev.events = fd_event_map_wrapper_to_sys(fd_event_masks_[iop->fd()]);
+        // LOG_DEBUG_FMT("Mod events to %d for fd %d", ev.events, iop->fd());
+        if (epoll_ctl(ev_fd_, EPOLL_CTL_MOD, iop->fd(), &ev) < 0)
         {
-            throw_system_error(std::string("epoll_ctl add error for fd ").append(std::to_string(iop->fd())));
+            throw_system_error(std::string("EPOLL_CTL_MOD error for fd ").append(std::to_string(iop->fd())));
         }
     }
-}
-
-void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool deactivate)
-{
-#ifdef CPPEV_DEBUG
-    PRINT_FD_REMOVE_DEBUG();
-#endif  // CPPEV_DEBUG
-    if (deactivate)
+    else
     {
+        // LOG_DEBUG_FMT("Delete all events for fd %d", iop->fd());
         if (epoll_ctl(ev_fd_, EPOLL_CTL_DEL, iop->fd(), nullptr) < 0)
         {
-            throw_system_error(std::string("epoll_ctl del error for fd ").append(std::to_string(iop->fd())));
+            throw_system_error(std::string("EPOLL_CTL_DEL error for fd ").append(std::to_string(iop->fd())));
         }
-    }
-    if (clean)
-    {
-        std::unique_lock<std::mutex> lock(lock_);
-        fds_.erase(iop->fd());
     }
 }
 
-void event_loop::loop_once(int timeout)
+std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(int timeout)
 {
-    // 1. Add to priority queue
     epoll_event evs[sysconfig::event_number];
     int nums = epoll_wait(ev_fd_, evs, sysconfig::event_number, timeout);
     if (nums < 0 && errno != EINTR)
     {
         throw_system_error("epoll_wait error");
     }
-    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_callbacks;
+    std::vector<std::tuple<int, fd_event>> fd_events;
+    for (int i = 0; i < nums; ++i)
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        for (int i = 0; i < nums; ++i)
+        int fd = evs[i].data.fd;
+        bool succeed = false;
+        fd_event ev = fd_event_map_sys_to_wrapper(evs[i].events);
+        for (auto event : { fd_event::fd_readable, fd_event::fd_writable })
         {
-            int fd = evs[i].data.fd;
-            auto range = fds_.equal_range(fd);
-            auto begin = range.first, end = range.second;
-            while (begin != end)
+            if (static_cast<bool>(ev & event))
             {
-                if (static_cast<bool>(std::get<3>(begin->second) & fd_event_map_sys_to_wrapper(evs[i].events)))
-                {
-#ifdef CPPEV_DEBUG
-                    PRINT_LOOP_DEBUG();
-#endif  //  CPPEV_DEBUG
-                    fd_callbacks.emplace(
-                        std::get<0>(begin->second),
-                        std::get<1>(begin->second),
-                        std::get<2>(begin->second)
-                    );
-                }
-                ++begin;
+                succeed = true;
+                fd_events.emplace_back(fd, event);
             }
         }
+        if (!succeed)
+        {
+            LOG_ERROR_FMT("Epoll event fd %d %d is invalid", fd, ev);
+        }
     }
-
-    // 2. Pop from priority queue
-    while (fd_callbacks.size())
-    {
-        auto ev = fd_callbacks.top();
-        fd_callbacks.pop();
-        (*std::get<2>(ev))(std::get<1>(ev));
-    }
-
+    return fd_events;
 }
 
 }   // namespace cppev

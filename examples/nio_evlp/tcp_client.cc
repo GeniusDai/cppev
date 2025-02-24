@@ -6,7 +6,7 @@ cppev::fd_event_handler connecting_socket_callback = [](const std::shared_ptr<cp
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     if (!iopt->check_connect())
     {
-        cppev::log::error << "fd " << iop->fd() << " failed to connect" << cppev::log::endl;
+        LOG_ERROR << "fd " << iop->fd() << " failed to connect";
         return;
     }
     iopt->wbuffer().produce(MSG, MSG_LEN);
@@ -26,9 +26,9 @@ void connect_to_servers()
     tcp_ipv6->connect(      "::1"      , TCP_IPV6_PORT  );
     tcp_unix->connect_unix( TCP_UNIX_PATH               );
 
-    evlp.fd_register(tcp_ipv4, cppev::fd_event::fd_writable, connecting_socket_callback);
-    evlp.fd_register(tcp_ipv6, cppev::fd_event::fd_writable, connecting_socket_callback);
-    evlp.fd_register(tcp_unix, cppev::fd_event::fd_writable, connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv4, cppev::fd_event::fd_writable, connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv6, cppev::fd_event::fd_writable, connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_unix, cppev::fd_event::fd_writable, connecting_socket_callback);
 
     // Connection is writable when second tcp shake hand is ok
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

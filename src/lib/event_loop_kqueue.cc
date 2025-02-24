@@ -16,9 +16,11 @@
 namespace cppev
 {
 
-static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
+using ev_type_of_kqueue = decltype(kevent::filter);
+
+static ev_type_of_kqueue fd_event_map_wrapper_to_sys(fd_event ev)
 {
-    int flags = 0;
+    ev_type_of_kqueue flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
     {
         flags |= EVFILT_READ;
@@ -30,9 +32,10 @@ static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
     return flags;
 }
 
-static fd_event fd_event_map_sys_to_wrapper(uint32_t ev)
+static fd_event fd_event_map_sys_to_wrapper(ev_type_of_kqueue ev)
 {
     fd_event flags = static_cast<fd_event>(0);
+    // EVFILT_READ and EVFILT_WRITE are mutually exclusive!!!
     if (ev == EVFILT_READ)
     {
         flags = fd_event::fd_readable;
@@ -54,87 +57,48 @@ event_loop::event_loop(void *data, void *owner)
     }
 }
 
-void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &handler, bool activate, priority prio)
+void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-#ifdef CPPEV_DEBUG
-    PRINT_FD_REGISTER_DEBUG();
-#endif  // CPPEV_DEBUG
-    iop->set_evlp(*this);
-    if (handler)
+    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
+    if (fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type))
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        fds_.emplace(iop->fd(), std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(handler), ev_type));
+        throw_logic_error(std::string("add existent event for fd ").append(std::to_string(iop->fd())));
     }
-    if (activate)
+    fd_event_masks_[iop->fd()] |= ev_type;
+    // Register event to kqueue
+    struct kevent ev;
+    //     &kev, ident,     filter,                               flags,             fflags, data, udata);
+    EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_ADD, 0,      0,    nullptr);
+    if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
     {
-        // Record event that has been register to kqueue
-        {
-            std::unique_lock<std::mutex> lock(lock_);
-            if (fd_events_.count(iop->fd()))
-            {
-                fd_events_[iop->fd()] = fd_events_[iop->fd()] | ev_type;
-            }
-            else
-            {
-                fd_events_[iop->fd()] = ev_type;
-            }
-        }
-
-        // Register event to kqueue
-        struct kevent ev;
-        //     &kev, ident,     filter,                                flags,             fflags, data, udata);
-        EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type) , EV_ADD | EV_CLEAR, 0,      0,    nullptr);
-        if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
-        {
-            throw_system_error(std::string("kevent add error for fd ").append(std::to_string(iop->fd())));
-        }
+        throw_system_error(std::string("kevent add error for fd ").append(std::to_string(iop->fd())));
     }
 }
 
-void event_loop::fd_remove(const std::shared_ptr<nio> &iop, bool clean, bool deactivate)
+void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-#ifdef CPPEV_DEBUG
-    PRINT_FD_REMOVE_DEBUG();
-#endif  // CPPEV_DEBUG
-    if (deactivate)
+    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
+    if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
     {
-        // Remove event records
-        fd_event ev_type;
-        {
-            std::unique_lock<std::mutex> lock(lock_);
-            ev_type = fd_events_[iop->fd()];
-            fd_events_.erase(iop->fd());
-        }
-
-        // Remove event from kqueue
-        struct kevent ev;
-        std::vector<fd_event> all_events{ fd_event::fd_readable, fd_event::fd_writable };
-        for (int i = 0; i < all_events.size(); ++i)
-        {
-            if (!static_cast<bool>(ev_type & all_events[i]))
-            {
-                continue;
-            }
-            //     &kev, ident,     filter,                                     flags,     fflags, data, udata
-            EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(all_events[i]), EV_DELETE, 0,      0,    nullptr);
-            if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
-            {
-                throw_system_error(std::string("kevent del error for fd ").append(std::to_string(iop->fd())));
-            }
-        }
+        throw_logic_error(std::string("delete nonexistent event for fd ").append(std::to_string(iop->fd())));
     }
-
-    if (clean)
+    fd_event_masks_[iop->fd()] ^= ev_type;
+    if (!static_cast<bool>(fd_event_masks_[iop->fd()]))
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        fds_.erase(iop->fd());
+        fd_event_masks_.erase(iop->fd());
+    }
+    // Remove event from kqueue
+    struct kevent ev;
+    //     &kev, ident,     filter,                               flags,     fflags, data, udata
+    EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_DELETE, 0,      0,    nullptr);
+    if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
+    {
+        throw_system_error(std::string("kevent del error for fd ").append(std::to_string(iop->fd())));
     }
 }
 
-void event_loop::loop_once(int timeout)
+std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(int timeout)
 {
-    // 1. Add to priority queue
     int nums;
     struct kevent evs[sysconfig::event_number];
     if (timeout < 0)
@@ -148,39 +112,26 @@ void event_loop::loop_once(int timeout)
         ts.tv_nsec = (timeout % 1000) * 1000 * 1000;
         nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, &ts);
     }
-    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>> > fd_callbacks;
+    std::vector<std::tuple<int, fd_event>> fd_events;
+    for (int i = 0; i < nums; ++i)
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        for (int i = 0; i < nums; ++i)
+        int fd = evs[i].ident;
+        bool succeed = false;
+        fd_event ev = fd_event_map_sys_to_wrapper(evs[i].filter);
+        for (auto event : { fd_event::fd_readable, fd_event::fd_writable })
         {
-            int fd = evs[i].ident;
-            auto range = fds_.equal_range(fd);
-            auto begin = range.first, end = range.second;
-            while (begin != end)
+            if (static_cast<bool>(ev & event))
             {
-                if (static_cast<bool>(std::get<3>(begin->second) & fd_event_map_sys_to_wrapper(evs[i].filter)))
-                {
-#ifdef CPPEV_DEBUG
-                    PRINT_LOOP_DEBUG();
-#endif  //  CPPEV_DEBUG
-                    fd_callbacks.emplace(
-                        std::get<0>(begin->second),
-                        std::get<1>(begin->second),
-                        std::get<2>(begin->second)
-                    );
-                }
-                ++begin;
+                succeed = true;
+                fd_events.emplace_back(fd, event);
             }
         }
+        if (!succeed)
+        {
+            LOG_ERROR_FMT("Kqueue event fd %d %d is invalid", fd, ev);
+        }
     }
-
-    // 2. Pop from priority queue
-    while (fd_callbacks.size())
-    {
-        auto ev = fd_callbacks.top();
-        fd_callbacks.pop();
-        (*std::get<2>(ev))(std::get<1>(ev));
-    }
+    return fd_events;
 }
 
 }   // namespace cppev

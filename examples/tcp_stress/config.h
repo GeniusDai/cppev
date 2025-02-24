@@ -4,19 +4,21 @@
 /*
  * Concurrency Number
  */
-#ifdef __APPLE__
-    const int IPV4_CONCURRENCY = 100;
-    const int IPV6_CONCURRENCY = 100;
-    const int UNIX_CONCURRENCY = 100;
-#else
-    const int IPV4_CONCURRENCY = 8000;
-    const int IPV6_CONCURRENCY = 8000;
-    const int UNIX_CONCURRENCY = 2000;
-#endif
-
+#ifdef __linux__
+const int IPV4_CONCURRENCY = 8000;
+const int IPV6_CONCURRENCY = 8000;
+const int UNIX_CONCURRENCY = 2000;
 const int SERVER_WORKER_NUM = 32;
 const int CLIENT_WORKER_NUM = 32;
 const int CONTOR_NUM = 3;
+#else
+const int IPV4_CONCURRENCY = 100;
+const int IPV6_CONCURRENCY = 100;
+const int UNIX_CONCURRENCY = 100;
+const int SERVER_WORKER_NUM = 3;
+const int CLIENT_WORKER_NUM = 3;
+const int CONTOR_NUM = 1;
+#endif
 
 const int   IPV4_PORT = 8884;
 const int   IPV6_PORT = 8886;

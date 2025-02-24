@@ -1,10 +1,3 @@
-config_setting(
-    name = "cppev_debug",
-    values = {
-        "define": "cppev_debug=true",
-    },
-)
-
 cc_library(
     name = "cppev",
     srcs = glob([
@@ -24,12 +17,6 @@ cc_library(
             "-ldl",
         ],
         "@platforms//os:osx": [],
-    }),
-    local_defines = select({
-        "//conditions:default": [],
-        "cppev_debug": [
-            "CPPEV_DEBUG",
-        ],
     }),
     visibility = [
         "//visibility:public",

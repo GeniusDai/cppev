@@ -7,10 +7,12 @@
 #include <queue>
 #include <tuple>
 #include <mutex>
+#include <condition_variable>
 #include <functional>
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
 #include "cppev/utils.h"
+#include "cppev/logger.h"
 
 namespace cppev
 {
@@ -21,17 +23,47 @@ enum class fd_event
     fd_writable = 1 << 1,
 };
 
-constexpr fd_event operator&(fd_event a, fd_event b)
+constexpr fd_event operator&(fd_event lhs, fd_event rhs)
 {
-    return static_cast<fd_event>(static_cast<int>(a) & static_cast<int>(b));
+    return static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
-constexpr fd_event operator|(fd_event a, fd_event b)
+constexpr fd_event operator|(fd_event lhs, fd_event rhs)
 {
-    return static_cast<fd_event>(static_cast<int>(a) | static_cast<int>(b));
+    return static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
+
+constexpr fd_event operator^(fd_event lhs, fd_event rhs)
+{
+    return static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+constexpr void operator&=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+constexpr void operator|=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+constexpr void operator^=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+extern std::unordered_map<fd_event, const char *> fd_event_debug;
 
 using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
+
+struct fd_event_hash
+{
+    std::size_t operator()(const std::tuple<int, fd_event> &ev) const noexcept
+    {
+        return std::hash<std::size_t>()((std::get<0>(ev)<<2) + static_cast<int>(std::get<1>(ev)));
+    }
+};
 
 class event_loop
 {
@@ -60,21 +92,45 @@ public:
     // Workloads of the event loop fd.
     int ev_loads() const noexcept;
 
-    // Register fd event to event pollor.
+    // Register fd event to event pollor but not activate in sys-io-multiplexing.
     // @param iop       nio smart pointer.
     // @param ev_type   event type.
     // @param handler   fd event handler.
-    // @param activate  whether register fd to os io-multiplexing api.
     // @param prio      event priority.
     void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-        const fd_event_handler &handler = fd_event_handler(), bool activate = true, priority prio = priority::p0);
+        const fd_event_handler &handler = fd_event_handler(), priority prio = priority::p0);
 
-    // Remove fd event(s) from event pollor.
+    // Activate fd event.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
+    void fd_activate(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Register fd event to event pollor and activate in sys-io-multiplexing.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
+    // @param handler   fd event handler.
+    // @param prio      event priority.
+    void fd_register_and_activate(const std::shared_ptr<nio> &iop, fd_event ev_type,
+        const fd_event_handler &handler = fd_event_handler(), priority prio = priority::p0);
+
+    // Remove fd event from event pollor but not deactivate in sys-io-multiplexing.
     // @param iop           nio smart pointer.
-    // @param clean         whether clean callbacks stored in eventloop.
-    // @param deactivate    whether remove fd from os io-multiplexing api (parameter is provided due to
-    //                      the io-multiplexing api may cause program get killed when fd is closed).
-    void fd_remove(const std::shared_ptr<nio> &iop, bool clean = true, bool deactivate = true);
+    // @param ev_type   event type.
+    void fd_remove(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Deactivate fd event.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
+    void fd_deactivate(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Remove fd event from event pollor and deactivate in sys-io-multiplexing.
+    // @param iop           nio smart pointer.
+    // @param ev_type   event type.
+    void fd_remove_and_deactivate(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Delete all event of the fd.
+    // @param iop           nio smart pointer.
+    void fd_remove_and_deactivate_all(const std::shared_ptr<nio> &iop);
 
     // Wait for events, only loop once, timeout unit is millisecond.
     void loop_once(int timeout = -1);
@@ -89,8 +145,33 @@ public:
     void stop_loop_forever();
 
 private:
+    // Helper function to register fd event to event pollor.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
+    // @param handler   fd event handler.
+    // @param prio      event priority.
+    void fd_register_nts(const std::shared_ptr<nio> &iop, fd_event ev_type,
+        const fd_event_handler &handler, priority prio);
+
+    // Helper function to remove fd event(s) from event pollor.
+    // @param iop           nio smart pointer.
+    void fd_remove_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Helper function.
+    void fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Helper function.
+    void fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
+
+    // Helper function.
+    std::vector<std::tuple<int, fd_event>> fd_io_multiplexing_wait_ts(int timeout);
+
     // Protect the internal data structures to guarantee thread safety of "register / remove / loop".
     std::mutex lock_;
+
+    // For thread sychronization in stopping loop. One possible way is using blocking io, but author has
+    // witnessed read a block io in osx cause cpu 100%.
+    std::condition_variable cond_;
 
     // Event watcher fd.
     int ev_fd_;
@@ -101,87 +182,20 @@ private:
     // External class which owns eventloop.
     void *owner_;
 
-    // Fd --> (priority, nio, callback, event), one fd may have more than one event registered.
-    std::unordered_multimap<int, std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>, fd_event>> fds_;
+    // Hash:   (fd, event) --> (priority, nio, callback).
+    std::unordered_map<
+        std::tuple<int, fd_event>,
+        std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>>,
+        fd_event_hash
+    > fd_event_datas_;
 
-#ifdef __APPLE__
-    // Activate events, read / write events are merged to one fd_event.
-    // For kqueue only since EPOLL_CTL_DEL deletes all events for the fd.
-    std::unordered_map<int, fd_event> fd_events_;
-#endif
+    // Hash:   fd --> fd_event
+    std::unordered_map<int, fd_event> fd_event_masks_;
 
-    // Whether loop forever shall be stopped.
+    // Whether loop shall be stopped.
     bool stop_;
 };
 
 }   // namespace cppev
-
-#ifdef CPPEV_DEBUG
-
-#include "cppev/async_logger.h"
-
-#define PRINT_FD_REGISTER_DEBUG()                           \
-log::info << "Eventloop [Action:register] ";                \
-log::info << "[Fd:" << iop->fd() << "] ";                   \
-if (static_cast<bool>(ev_type & fd_event::fd_readable))     \
-{                                                           \
-    log::info << "[Event:readable] ";                       \
-}                                                           \
-if (static_cast<bool>(ev_type & fd_event::fd_writable))     \
-{                                                           \
-    log::info << "[Event:writable] ";                       \
-}                                                           \
-if (handler)                                                \
-{                                                           \
-    log::info << "[Callback:not-null] ";                    \
-}                                                           \
-else                                                        \
-{                                                           \
-    log::info << "[Callback:null] ";                        \
-}                                                           \
-if (activate)                                               \
-{                                                           \
-    log::info << "[Activate:true]";                         \
-}                                                           \
-else                                                        \
-{                                                           \
-    log::info << "[Activate:false]";                        \
-}                                                           \
-log::info << log::endl
-
-#define PRINT_FD_REMOVE_DEBUG()                             \
-log::info << "[Action:remove] ";                            \
-log::info << "[Fd:" << iop->fd() << "] ";                   \
-if (clean)                                                  \
-{                                                           \
-    log::info << "[Clean:true] ";                           \
-}                                                           \
-else                                                        \
-{                                                           \
-    log::info << "[Clean:false] ";                          \
-}                                                           \
-if (deactivate)                                             \
-{                                                           \
-    log::info << "[Deactivate:true]";                       \
-}                                                           \
-else                                                        \
-{                                                           \
-    log::info << "[Deactivate:false]";                      \
-}                                                           \
-log::info << log::endl
-
-#define PRINT_LOOP_DEBUG()                                                  \
-log::info << "Enqueue ";                                                    \
-if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_readable))  \
-{                                                                           \
-    log::info << "[Event:readable] ";                                       \
-}                                                                           \
-if (static_cast<bool>(std::get<3>(begin->second) & fd_event::fd_writable))  \
-{                                                                           \
-    log::info << "[Event:writable] ";                                       \
-}                                                                           \
-log::info << "[Fd:" << fd << "]"<< log::endl
-
-#endif  // CPPEV_DEBUG
 
 #endif  // event_loop.h
