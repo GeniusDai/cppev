@@ -4,6 +4,10 @@
 cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    if (iops == nullptr)
+    {
+        cppev::throw_logic_error("server connected socket dynamic cast error!");
+    }
     iops->read_all();
     auto sock = iops->sockname();
     auto peer = iops->peername();
@@ -19,6 +23,10 @@ cppev::fd_event_handler accepted_socket_callback = [](const std::shared_ptr<cppe
 cppev::fd_event_handler listening_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    if (iopt == nullptr)
+    {
+        cppev::throw_logic_error("server listening socket dynamic cast error!");
+    }
     std::shared_ptr<cppev::nio> conn = std::dynamic_pointer_cast<cppev::nio>(iopt->accept(1).front());
     iop->evlp().fd_register_and_activate(conn, cppev::fd_event::fd_readable, accepted_socket_callback);
 };

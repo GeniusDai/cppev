@@ -4,6 +4,10 @@
 cppev::fd_event_handler connecting_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    if (iopt == nullptr)
+    {
+        cppev::throw_logic_error("client connect socket dynamic cast error!");
+    }
     if (!iopt->check_connect())
     {
         LOG_ERROR << "fd " << iop->fd() << " failed to connect";

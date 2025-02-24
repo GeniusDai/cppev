@@ -4,6 +4,10 @@
 cppev::fd_event_handler binding_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
+    if (iopu == nullptr)
+    {
+        cppev::throw_logic_error("server bind socket dynamic cast error!");
+    }
     auto cli = iopu->recv();
     auto message = iopu->rbuffer().get_string();
     assert(message == std::string(MSG,10));
