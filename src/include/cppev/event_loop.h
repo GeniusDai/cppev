@@ -148,14 +148,14 @@ private:
 
     // Helper function to wait for event(s) trigger, implementation specific.
     // @param timeout   timeout in millisecond, -1 means infinite.
-    // @return          list of fd with an event, readable and writable events are seperated.
+    // @return          list of fd with an event, events of one fd are seperated.
     std::vector<std::tuple<int, fd_event>> fd_io_multiplexing_wait_ts(int timeout);
 
     // Protect the internal data structures to guarantee thread safety of "register / remove / loop".
     std::mutex lock_;
 
     // For thread sychronization in stopping loop. One possible way is using blocking io, but author has
-    // witnessed read a block io in osx cause cpu 100%.
+    // witnessed read a block io in osx causing cpu 100%.
     std::condition_variable cond_;
 
     // Event watcher fd.

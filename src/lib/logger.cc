@@ -149,12 +149,12 @@ std::ostringstream &log_message::stream()
 
 void log_message::format_message(const char* format, va_list args)
 {
-    va_list argsCopy;
-    va_copy(argsCopy, args);
+    va_list args_copy;
+    va_copy(args_copy, args);
 
     // Determine required buffer size
-    int length = vsnprintf(nullptr, 0, format, argsCopy);
-    va_end(argsCopy);
+    int length = vsnprintf(nullptr, 0, format, args_copy);
+    va_end(args_copy);
 
     if (length <= 0)
     {
