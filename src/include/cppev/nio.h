@@ -150,7 +150,7 @@ public:
     int read_all(int step = sysconfig::buffer_io_step);
 
     // Write until block or unwritable
-    // @param len   Bytes to write in each loop
+    // @param step  Bytes to write in each loop
     // @return      Exact bytes that have been writen from wbuffer
     int write_all(int step = sysconfig::buffer_io_step);
 

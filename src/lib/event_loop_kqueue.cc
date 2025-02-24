@@ -56,7 +56,7 @@ event_loop::event_loop(void *data, void *owner)
 
 void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Activate %s for fd %d", fd_event_debug[ev_type], iop->fd());
+    LOG_DEBUG_FMT("Activate fd %d %s", iop->fd(), fd_event_debug[ev_type]);
     assert(fd_event_masks_.count(iop->fd()) ? !static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type) : true);
     fd_event_masks_[iop->fd()] |= ev_type;
     // Register event to kqueue
@@ -71,12 +71,13 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_
 
 void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Deactivate %s for fd %d", fd_event_debug[ev_type], iop->fd());
+    LOG_DEBUG_FMT("Deactivate fd %d %s", iop->fd(), fd_event_debug[ev_type]);
     if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
     {
         throw_logic_error(std::string("delete nonexistent event for fd ").append(std::to_string(iop->fd())));
     }
     fd_event_masks_[iop->fd()] ^= ev_type;
+    assert(!static_cast<bool>(fd_event_masks_[iop->fd()] & ev_type));
     if (!static_cast<bool>(fd_event_masks_[iop->fd()]))
     {
         fd_event_masks_.erase(iop->fd());
@@ -107,16 +108,22 @@ std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(in
         nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, &ts);
     }
     std::vector<std::tuple<int, fd_event>> fd_events;
-    std::vector<fd_event> all_events{ fd_event::fd_readable, fd_event::fd_writable };
     for (int i = 0; i < nums; ++i)
     {
         int fd = evs[i].ident;
-        for (int i = 0; i < all_events.size(); ++i)
+        bool succeed = false;
+        fd_event ev = fd_event_map_sys_to_wrapper(evs[i].filter);
+        for (auto event : { fd_event::fd_readable, fd_event::fd_writable })
         {
-            if (static_cast<bool>(all_events[i] & fd_event_map_sys_to_wrapper(evs[i].filter)))
+            if (static_cast<bool>(ev & event))
             {
-                fd_events.emplace_back(fd, all_events[i]);
+                succeed = true;
+                fd_events.emplace_back(fd, event);
             }
+        }
+        if (!succeed)
+        {
+            LOG_ERROR_FMT("Kqueue event fd %d %d is invalid", fd, ev);
         }
     }
     return fd_events;

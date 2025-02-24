@@ -7,6 +7,17 @@ namespace cppev
 namespace reactor
 {
 
+tp_shared_data::tp_shared_data(void *external_data_ptr)
+:
+    on_accept(idle_handler),
+    on_connect(idle_handler),
+    on_read_complete(idle_handler),
+    on_write_complete(idle_handler),
+    on_closed(idle_handler),
+    external_data_ptr(external_data_ptr)
+{
+}
+
 event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;
@@ -31,6 +42,16 @@ event_loop *tp_shared_data::minloads_get_evlp()
     return minloads_evlp;
 }
 
+void *tp_shared_data::external_data() noexcept
+{
+    return external_data_ptr;
+}
+
+const void *tp_shared_data::external_data() const noexcept
+{
+    return external_data_ptr;
+}
+
 
 void async_write(const std::shared_ptr<nsocktcp> &iopt)
 {
@@ -42,8 +63,21 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
     }
     else
     {
-        std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
-        iopt->evlp().fd_activate(iop, fd_event::fd_writable);
+        if (iopt->eof() || iopt->is_reset())
+        {
+            if (!iopt->is_closed())
+            {
+                dp->on_closed(iopt);
+                std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
+                iopt->evlp().fd_remove_and_deactivate_all(iop);
+                iopt->close();
+            }
+        }
+        else
+        {
+            std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
+            iopt->evlp().fd_activate(iop, fd_event::fd_writable);
+        }
     }
 }
 
@@ -59,6 +93,16 @@ void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 {
     return (reinterpret_cast<tp_shared_data *>(iopt->evlp().data()))->external_data();
 }
+
+size_t host_hash::operator()(const std::tuple<std::string, int, family> &h) const
+{
+    size_t ret = 0;
+    ret += std::hash<std::string>()(std::get<0>(h));
+    ret += static_cast<size_t>(std::get<1>(h)) * 100;
+    ret += static_cast<size_t>(std::get<2>(h)) * 10;
+    return ret;
+}
+
 
 const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
 
@@ -153,7 +197,9 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
 
 void iohandler::run_impl()
 {
+    LOG_INFO << "Thread iohandler starting";
     evlp_.loop_forever();
+    LOG_INFO << "Thread iohandler ending";
 }
 
 void iohandler::shutdown()
@@ -203,9 +249,11 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
 
 void acceptor::run_impl()
 {
+    LOG_INFO << "Thread acceptor starting";
     evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(sock_),
         fd_event::fd_readable, acceptor::on_acpt_readable);
     evlp_.loop_forever();
+    LOG_INFO << "Thread acceptor ending";
 }
 
 void acceptor::shutdown()
@@ -286,6 +334,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
             {
                 dp->minloads_get_evlp()->fd_register_and_activate(std::static_pointer_cast<nio>(sock),
                     fd_event::fd_writable, iohandler::on_cont_writable);
+                LOG_INFO_FMT("Connect socket %d succeed",iop->fd());
             }
             else
             {
@@ -308,9 +357,11 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 
 void connector::run_impl()
 {
+    LOG_INFO << "Thread connector starting";
     evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(rdp_),
         fd_event::fd_readable, connector::on_pipe_readable);
     evlp_.loop_forever();
+    LOG_INFO << "Thread connector ending";
 }
 
 void connector::shutdown()

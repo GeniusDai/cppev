@@ -55,14 +55,7 @@ class tcp_client;
 
 struct host_hash
 {
-    size_t operator()(const std::tuple<std::string, int, family> &h) const
-    {
-        size_t ret = 0;
-        ret += std::hash<std::string>()(std::get<0>(h));
-        ret += static_cast<size_t>(std::get<1>(h)) * 100;
-        ret += static_cast<size_t>(std::get<2>(h)) * 10;
-        return ret;
-    }
+    size_t operator()(const std::tuple<std::string, int, family> &h) const;
 };
 
 // Data used for event loop initialization
@@ -77,16 +70,7 @@ private:
 
 public:
     // All the five callbacks will be executed by worker thread
-    explicit tp_shared_data(void *external_data_ptr)
-    :
-        on_accept(idle_handler),
-        on_connect(idle_handler),
-        on_read_complete(idle_handler),
-        on_write_complete(idle_handler),
-        on_closed(idle_handler),
-        external_data_ptr(external_data_ptr)
-    {
-    }
+    explicit tp_shared_data(void *external_data_ptr);
 
     tp_shared_data(const tp_shared_data &) = delete;
     tp_shared_data &operator=(const tp_shared_data &) = delete;
@@ -117,15 +101,9 @@ public:
     event_loop *minloads_get_evlp();
 
     // External data defined by user
-    void *external_data() noexcept
-    {
-        return external_data_ptr;
-    }
+    void *external_data() noexcept;
 
-    const void *external_data() const noexcept
-    {
-        return external_data_ptr;
-    }
+    const void *external_data() const noexcept;
 
 private:
     // Event loops of thread pool, used for task assign

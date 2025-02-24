@@ -7,6 +7,7 @@
 #include <queue>
 #include <tuple>
 #include <mutex>
+#include <condition_variable>
 #include <functional>
 #include "cppev/nio.h"
 #include "cppev/sysconfig.h"
@@ -168,6 +169,10 @@ private:
     // Protect the internal data structures to guarantee thread safety of "register / remove / loop".
     std::mutex lock_;
 
+    // For thread sychronization in stopping loop. One possible way is using blocking io, but author has
+    // witnessed read a block io in osx cause cpu 100%.
+    std::condition_variable cond_;
+
     // Event watcher fd.
     int ev_fd_;
 
@@ -187,7 +192,7 @@ private:
     // Hash:   fd --> fd_event
     std::unordered_map<int, fd_event> fd_event_masks_;
 
-    // Whether loop forever shall be stopped.
+    // Whether loop shall be stopped.
     bool stop_;
 };
 
