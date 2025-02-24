@@ -23,35 +23,17 @@ enum class fd_event
     fd_writable = 1 << 1,
 };
 
-constexpr fd_event operator&(fd_event lhs, fd_event rhs)
-{
-    return static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
-}
+fd_event operator&(fd_event lhs, fd_event rhs);
 
-constexpr fd_event operator|(fd_event lhs, fd_event rhs)
-{
-    return static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
-}
+fd_event operator|(fd_event lhs, fd_event rhs);
 
-constexpr fd_event operator^(fd_event lhs, fd_event rhs)
-{
-    return static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
-}
+fd_event operator^(fd_event lhs, fd_event rhs);
 
-constexpr void operator&=(fd_event &lhs, fd_event rhs)
-{
-    lhs = static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
-}
+void operator&=(fd_event &lhs, fd_event rhs);
 
-constexpr void operator|=(fd_event &lhs, fd_event rhs)
-{
-    lhs = static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
-}
+void operator|=(fd_event &lhs, fd_event rhs);
 
-constexpr void operator^=(fd_event &lhs, fd_event rhs)
-{
-    lhs = static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
-}
+void operator^=(fd_event &lhs, fd_event rhs);
 
 extern std::unordered_map<fd_event, const char *> fd_event_debug;
 
@@ -59,10 +41,7 @@ using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
 
 struct fd_event_hash
 {
-    std::size_t operator()(const std::tuple<int, fd_event> &ev) const noexcept
-    {
-        return std::hash<std::size_t>()((std::get<0>(ev)<<2) + static_cast<int>(std::get<1>(ev)));
-    }
+    std::size_t operator()(const std::tuple<int, fd_event> &ev) const noexcept;
 };
 
 class event_loop
@@ -153,17 +132,23 @@ private:
     void fd_register_nts(const std::shared_ptr<nio> &iop, fd_event ev_type,
         const fd_event_handler &handler, priority prio);
 
-    // Helper function to remove fd event(s) from event pollor.
+    // Helper function to remove fd event from event pollor.
     // @param iop           nio smart pointer.
     void fd_remove_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function.
+    // Helper function to add fd event listening, implementation specific.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
     void fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function.
+    // Helper function to delete fd event listening, implementation specific.
+    // @param iop       nio smart pointer.
+    // @param ev_type   event type.
     void fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function.
+    // Helper function to wait for event(s) trigger, implementation specific.
+    // @param timeout   timeout in millisecond, -1 means infinite.
+    // @return          list of fd with an event, readable and writable events are seperated.
     std::vector<std::tuple<int, fd_event>> fd_io_multiplexing_wait_ts(int timeout);
 
     // Protect the internal data structures to guarantee thread safety of "register / remove / loop".

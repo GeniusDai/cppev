@@ -3,10 +3,46 @@
 namespace cppev
 {
 
+fd_event operator&(fd_event lhs, fd_event rhs)
+{
+    return static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+fd_event operator|(fd_event lhs, fd_event rhs)
+{
+    return static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+fd_event operator^(fd_event lhs, fd_event rhs)
+{
+    return static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+void operator&=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+void operator|=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+void operator^=(fd_event &lhs, fd_event rhs)
+{
+    lhs = static_cast<fd_event>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
 std::unordered_map<fd_event, const char *> fd_event_debug = {
     { fd_event::fd_readable, "fd_readable" },
     { fd_event::fd_writable, "fd_writable" },
 };
+
+std::size_t fd_event_hash::operator()(const std::tuple<int, fd_event> &ev) const noexcept
+{
+    return std::hash<std::size_t>()((std::get<0>(ev)<<2) + static_cast<int>(std::get<1>(ev)));
+}
+
 
 event_loop::~event_loop() noexcept
 {
