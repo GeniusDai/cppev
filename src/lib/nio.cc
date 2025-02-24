@@ -245,7 +245,7 @@ int nstream::write_chunk(int len)
             {
                 break;
             }
-            else if (errno == EPIPE)
+            else if (errno == EPIPE || errno == EBADF)
             {
                 eop_ = true;
                 break;
