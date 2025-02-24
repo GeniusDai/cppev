@@ -63,7 +63,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
     }
     else
     {
-        if (iopt->eof() || iopt->is_reset())
+        if (iopt->eop() || iopt->is_reset())
         {
             if (!iopt->is_closed())
             {
@@ -145,7 +145,7 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
         iopt->evlp().fd_deactivate(iop, fd_event::fd_writable);
         dp->on_write_complete(iopt);
     }
-    if ((iopt->eof() || iopt->is_reset()) && (!iopt->is_closed()))
+    if ((iopt->eop() || iopt->is_reset()) && (!iopt->is_closed()))
     {
         dp->on_closed(iopt);
         iopt->evlp().fd_remove_and_deactivate_all(iop);
