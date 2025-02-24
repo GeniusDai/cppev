@@ -31,7 +31,10 @@ cppev::reactor::tcp_event_handler on_accept = [](const std::shared_ptr<cppev::ns
 
 cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
-    iopt->wbuffer().put_string(iopt->rbuffer().get_string());
+    std::string message = iopt->rbuffer().get_string();
+    LOG_INFO_FMT("Received message : %s", message.c_str());
+
+    iopt->wbuffer().put_string(message);
     cppev::reactor::async_write(iopt);
     LOG_DEBUG_FMT("Fd %d on read finish", iopt->fd());
 };
@@ -54,7 +57,7 @@ cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::ns
  */
 int main()
 {
-    cppev::logger::get_instance().set_log_level(cppev::log_level::debug);
+    cppev::logger::get_instance().set_log_level(cppev::log_level::info);
 
     cppev::thread_block_signal(SIGINT);
 
