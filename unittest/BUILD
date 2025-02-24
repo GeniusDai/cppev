@@ -1,3 +1,14 @@
+cc_binary(
+    name = "test_logger",
+    srcs = [
+        "test_logger.cc",
+    ],
+    deps = [
+        "//src:cppev",
+        "@googletest//:gtest",
+    ],
+)
+
 cc_test(
     name = "test_buffer",
     srcs = [

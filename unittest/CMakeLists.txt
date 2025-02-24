@@ -23,6 +23,7 @@ target_link_libraries(DynamicLoaderTestImplFunctions DynamicLoaderTestImpl cppev
 
 file(COPY hello.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+compile_and_enable_test(test_logger)
 compile_and_enable_test(test_thread_pool)
 compile_and_enable_test(test_runnable)
 compile_and_enable_test(test_buffer)
