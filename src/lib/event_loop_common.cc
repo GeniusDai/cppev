@@ -99,7 +99,7 @@ void event_loop::loop_once(int timeout)
     auto fd_events = fd_io_multiplexing_wait_ts(timeout);
     for (const auto &fd_ev_tp : fd_events)
     {
-        LOG_DEBUG_FMT("Triggered fd %d %s event", std::get<0>(fd_ev_tp), fd_event_debug[std::get<1>(fd_ev_tp)]);
+        LOG_DEBUG_FMT("About to trigger fd %d %s event", std::get<0>(fd_ev_tp), fd_event_debug[std::get<1>(fd_ev_tp)]);
     }
     std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>>> fd_callbacks;
     {

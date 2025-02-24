@@ -15,9 +15,11 @@
 namespace cppev
 {
 
-static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
+using ev_type_of_epoll = decltype(epoll_event::events);
+
+static ev_type_of_epoll fd_event_map_wrapper_to_sys(fd_event ev)
 {
-    int flags = 0;
+    ev_type_of_epoll flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
     {
         flags |= EPOLLIN;
@@ -29,7 +31,7 @@ static uint32_t fd_event_map_wrapper_to_sys(fd_event ev)
     return flags;
 }
 
-static fd_event fd_event_map_sys_to_wrapper(uint32_t ev)
+static fd_event fd_event_map_sys_to_wrapper(ev_type_of_epoll ev)
 {
     fd_event flags = static_cast<fd_event>(0);
     if (ev & EPOLLIN)
@@ -55,7 +57,7 @@ event_loop::event_loop(void *data, void *owner)
 
 void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Activate fd %d %s", iop->fd(), fd_event_debug[ev_type]);
+    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
     auto ep_ctl = EPOLL_CTL_ADD;
     if (fd_event_masks_.count(iop->fd()))
     {
@@ -82,7 +84,7 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_
 
 void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Deactivate fd %d %s", iop->fd(), fd_event_debug[ev_type]);
+    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(), fd_event_debug[ev_type]);
     if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
     {
         throw_logic_error(std::string("delete nonexistent event for fd ").append(std::to_string(iop->fd())));
