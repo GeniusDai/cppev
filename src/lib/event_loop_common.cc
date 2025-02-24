@@ -185,7 +185,7 @@ void event_loop::stop_loop_once()
         iop->evlp().cond_.notify_all();
     };
     this->fd_register_and_activate(std::dynamic_pointer_cast<nio>(iopps[1]), fd_event::fd_writable,
-        handler, priority::p6);
+        handler, priority::lowest);
 
     std::unique_lock<std::mutex> lock(lock_);
     cond_.wait(lock, [this] { return this->stop_; });

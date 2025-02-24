@@ -16,6 +16,7 @@ namespace cppev
 
 enum class priority
 {
+    highest = 100,  // Internally reserved，please DONOT use!
     p0 = 20,
     p1 = 19,
     p2 = 18,
@@ -23,6 +24,7 @@ enum class priority
     p4 = 16,
     p5 = 15,
     p6 = 14,
+    lowest = 1,     // Internally reserved，please DONOT use!
 };
 
 struct enum_hash
