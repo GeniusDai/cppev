@@ -1,9 +1,43 @@
 #include <unistd.h>
 #include <gtest/gtest.h>
 #include "cppev/utils.h"
+#include "cppev/logger.h"
 
 namespace cppev
 {
+
+TEST(TestThrowErrors, test_throw_error)
+{
+    std::string what_str = "Hello 666 test";
+
+    try {
+        throw_runtime_error("Hello ", 666, std::string(" test"));
+    } catch (std::exception const& e) {
+        ASSERT_EQ(what_str, e.what());
+        LOG_INFO << e.what();
+    }
+
+    try {
+        throw_logic_error("Hello ", 666, std::string(" test"));
+    } catch (std::exception const& e) {
+        ASSERT_EQ(what_str, e.what());
+        LOG_INFO << e.what();
+    }
+
+    try {
+        throw_system_error("Hello ", 666, std::string(" test"));
+    } catch (std::exception const& e) {
+        ASSERT_EQ(what_str, std::string(e.what()).substr(0, what_str.size()));
+        LOG_INFO << e.what();
+    }
+
+    try {
+        throw_system_error_with_specific_errno("Hello ", 666, std::string(" test"), 9);
+    } catch (std::exception const& e) {
+        ASSERT_EQ(what_str, std::string(e.what()).substr(0, what_str.size()));
+        LOG_INFO << e.what();
+    };
+}
 
 TEST(TestCommonUtils, test_greatest_common_divisor)
 {
