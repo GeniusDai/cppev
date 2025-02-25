@@ -1,6 +1,8 @@
 #ifndef _cppev_utils_h_6C0224787A17_
 #define _cppev_utils_h_6C0224787A17_
 
+#include <type_traits>
+#include <sstream>
 #include <cstdint>
 #include <functional>
 #include <chrono>
@@ -89,11 +91,68 @@ int64_t greatest_common_divisor(const std::vector<int64_t> &nums);
 /*
  * Exception handling
  */
-void throw_logic_error(const std::string &str);
+using errno_type = std::remove_reference<decltype(errno)>::type;
 
-void throw_system_error(const std::string &str, int err=0);
+// Template function with only one param shall be placed former!!!
 
-void throw_runtime_error(const std::string &str);
+template <typename T>
+std::ostringstream  oss_writer(T err_code)
+{
+    std::ostringstream oss;
+    oss << " : errno " << err_code << " ";
+    return oss;
+}
+
+template <typename Prev, typename... Args>
+std::ostringstream oss_writer(Prev prev, Args... args)
+{
+    std::ostringstream oss;
+    oss << prev;
+    oss << oss_writer(args...).str();
+    return oss;
+}
+
+template <typename T>
+errno_type errno_getter(T err_code)
+{
+    return err_code;
+}
+
+template <typename Prev, typename... Args>
+errno_type errno_getter(Prev prev, Args... args)
+{
+    return errno_getter(args...);
+}
+
+template <typename... Args>
+void throw_system_error_with_specific_errno(Args... args)
+{
+    std::ostringstream oss = oss_writer(args...);
+    errno_type err_code = errno_getter(args...);
+    throw std::system_error(std::error_code(err_code, std::system_category()), oss.str());
+}
+
+template <typename... Args>
+void throw_system_error(Args... args)
+{
+    throw_system_error_with_specific_errno(args..., errno);
+}
+
+template <typename... Args>
+void throw_logic_error(Args... args)
+{
+    std::ostringstream oss;
+    (oss << ... << args);
+    throw std::logic_error(oss.str());
+}
+
+template <typename... Args>
+void throw_runtime_error(Args... args)
+{
+    std::ostringstream oss;
+    (oss << ... << args);
+    throw std::runtime_error(oss.str());
+}
 
 /*
  * Process level signal handling

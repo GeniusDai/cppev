@@ -166,7 +166,7 @@ public:
         {
             if (ret == EINVAL)
             {
-                throw_system_error("pthread_cond_wait error", ret);
+                throw_system_error_with_specific_errno("pthread_cond_wait error", ret);
             }
             else if (ret == ETIMEDOUT)
             {

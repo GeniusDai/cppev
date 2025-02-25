@@ -86,26 +86,6 @@ int64_t greatest_common_divisor(const std::vector<int64_t> &nums)
     return prev;
 }
 
-void throw_system_error(const std::string &str, int err)
-{
-    if (err == 0)
-    {
-        err = errno;
-    }
-    throw std::system_error(std::error_code(err, std::system_category()),
-        std::string(str).append(" : errno ").append(std::to_string(err)).append(" "));
-}
-
-void throw_logic_error(const std::string &str)
-{
-    throw std::logic_error(str);
-}
-
-void throw_runtime_error(const std::string &str)
-{
-    throw std::runtime_error(str);
-}
-
 void ignore_signal(int sig)
 {
     handle_signal(sig, SIG_IGN);

@@ -261,32 +261,32 @@ pshared_lock::pshared_lock()
     ret = pthread_mutexattr_init(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutexattr_init error", ret);
+        throw_system_error_with_specific_errno("pthread_mutexattr_init error", ret);
     }
     ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutexattr_settype error", ret);
+        throw_system_error_with_specific_errno("pthread_mutexattr_settype error", ret);
     }
     ret = pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_NONE);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutexattr_setprotocol error", ret);
+        throw_system_error_with_specific_errno("pthread_mutexattr_setprotocol error", ret);
     }
     ret = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutexattr_setpshared error", ret);
+        throw_system_error_with_specific_errno("pthread_mutexattr_setpshared error", ret);
     }
     ret = pthread_mutex_init(&lock_, &attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutex_init error", ret);
+        throw_system_error_with_specific_errno("pthread_mutex_init error", ret);
     }
     ret = pthread_mutexattr_destroy(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutexattr_destroy error", ret);
+        throw_system_error_with_specific_errno("pthread_mutexattr_destroy error", ret);
     }
 }
 
@@ -300,7 +300,7 @@ void pshared_lock::lock()
     int ret = pthread_mutex_lock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutex_lock error", ret);
+        throw_system_error_with_specific_errno("pthread_mutex_lock error", ret);
     }
 }
 
@@ -313,7 +313,7 @@ bool pshared_lock::try_lock()
         {
             return false;
         }
-        throw_system_error("pthread_mutex_trylock error", ret);
+        throw_system_error_with_specific_errno("pthread_mutex_trylock error", ret);
     }
     return true;
 }
@@ -323,7 +323,7 @@ void pshared_lock::unlock()
     int ret = pthread_mutex_unlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_mutex_unlock error", ret);
+        throw_system_error_with_specific_errno("pthread_mutex_unlock error", ret);
     }
 }
 
@@ -335,22 +335,22 @@ pshared_cond::pshared_cond()
     ret = pthread_condattr_init(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_condattr_init error", ret);
+        throw_system_error_with_specific_errno("pthread_condattr_init error", ret);
     }
     ret = pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
     if (ret != 0)
     {
-        throw_system_error("pthread_condattr_setpshared error", ret);
+        throw_system_error_with_specific_errno("pthread_condattr_setpshared error", ret);
     }
     ret = pthread_cond_init(&cond_, &attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_cond_init error", ret);
+        throw_system_error_with_specific_errno("pthread_cond_init error", ret);
     }
     ret = pthread_condattr_destroy(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_condattr_destroy error", ret);
+        throw_system_error_with_specific_errno("pthread_condattr_destroy error", ret);
     }
 }
 
@@ -364,7 +364,7 @@ void pshared_cond::wait(std::unique_lock<pshared_lock> &lock)
     int ret = pthread_cond_wait(&cond_, &lock.mutex()->lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_cond_wait error", ret);
+        throw_system_error_with_specific_errno("pthread_cond_wait error", ret);
     }
 }
 
@@ -381,7 +381,7 @@ void pshared_cond::notify_one()
     int ret = pthread_cond_signal(&cond_);
     if (ret != 0)
     {
-        throw_system_error("pthread_cond_signal error", ret);
+        throw_system_error_with_specific_errno("pthread_cond_signal error", ret);
     }
 }
 
@@ -390,7 +390,7 @@ void pshared_cond::notify_all()
     int ret = pthread_cond_broadcast(&cond_);
     if (ret != 0)
     {
-        throw_system_error("pthread_cond_broadcast error", ret);
+        throw_system_error_with_specific_errno("pthread_cond_broadcast error", ret);
     }
 }
 
@@ -459,22 +459,22 @@ pshared_rwlock::pshared_rwlock()
     ret = pthread_rwlockattr_init(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlockattr_init error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlockattr_init error", ret);
     }
     ret = pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlockattr_setpshared error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlockattr_setpshared error", ret);
     }
     ret = pthread_rwlock_init(&lock_, &attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlock_init error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlock_init error", ret);
     }
     ret = pthread_rwlockattr_destroy(&attr);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlockattr_destroy error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlockattr_destroy error", ret);
     }
 }
 
@@ -488,7 +488,7 @@ void pshared_rwlock::unlock()
     int ret = pthread_rwlock_unlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlock_unlock error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlock_unlock error", ret);
     }
 }
 
@@ -497,7 +497,7 @@ void pshared_rwlock::rdlock()
     int ret = pthread_rwlock_rdlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlock_rdlock error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlock_rdlock error", ret);
     }
 }
 
@@ -506,7 +506,7 @@ void pshared_rwlock::wrlock()
     int ret = pthread_rwlock_wrlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_rwlock_wrlock error", ret);
+        throw_system_error_with_specific_errno("pthread_rwlock_wrlock error", ret);
     }
 }
 
@@ -521,7 +521,7 @@ bool pshared_rwlock::try_rdlock()
     {
         return false;
     }
-    throw_system_error("pthread_rwlock_tryrdlock error", ret);
+    throw_system_error_with_specific_errno("pthread_rwlock_tryrdlock error", ret);
     return ret;
 }
 
@@ -536,7 +536,7 @@ bool pshared_rwlock::try_wrlock()
     {
         return false;
     }
-    throw_system_error("pthread_rwlock_trywrlock error", ret);
+    throw_system_error_with_specific_errno("pthread_rwlock_trywrlock error", ret);
     return ret;
 }
 

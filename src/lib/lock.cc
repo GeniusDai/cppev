@@ -9,7 +9,7 @@ spinlock::spinlock()
     int ret = pthread_spin_init(&lock_, PTHREAD_PROCESS_PRIVATE);
     if (ret != 0)
     {
-        throw_system_error("pthread_spin_init error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_init error", ret);
     }
 #else
     lock_.clear(std::memory_order_release);
@@ -29,7 +29,7 @@ void spinlock::lock()
     int ret = pthread_spin_lock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_spin_lock error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_lock error", ret);
     }
 #else
     while (lock_.test_and_set(std::memory_order_acq_rel)) ;
@@ -42,7 +42,7 @@ void spinlock::unlock()
     int ret = pthread_spin_unlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error("pthread_spin_unlock error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_unlock error", ret);
     }
 #else
     lock_.clear(std::memory_order_release);
@@ -63,7 +63,7 @@ bool spinlock::trylock()
     }
     else
     {
-        throw_system_error("pthread_spin_trylock error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_trylock error", ret);
     }
     return true;
 #else
