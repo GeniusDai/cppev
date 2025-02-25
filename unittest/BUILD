@@ -3,6 +3,12 @@ cc_binary(
     srcs = [
         "test_logger.cc",
     ],
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-lstdc++fs",
+        ],
+        "@platforms//os:osx": [],
+    }),
     deps = [
         "//src:cppev",
         "@googletest//:gtest",
