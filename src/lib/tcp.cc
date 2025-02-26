@@ -183,7 +183,7 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
     if (!iopt->check_connect())
     {
         std::tuple<std::string, int, family> h = iopt->connpeer();
-        LOG_ERROR_FMT("connect %s %d failed when checking writable", std::get<0>(h).c_str(), std::get<1>(h));
+        LOG_ERROR_FMT("Connect %s %d failed when checking writable", std::get<0>(h).c_str(), std::get<1>(h));
         pseudo_this->failures_[h] += 1;
         iopt->evlp().fd_clean(iop);
         iopt->close();
@@ -336,19 +336,20 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
             {
                 dp->minloads_get_evlp()->fd_register_and_activate(std::static_pointer_cast<nio>(sock),
                     fd_event::fd_writable, iohandler::on_cont_writable);
-                LOG_INFO_FMT("Connect socket %d succeed",iop->fd());
             }
             else
             {
+                std::error_code err_code(errno, std::system_category());
                 if (std::get<2>(iter->first) == family::local)
                 {
-                    LOG_ERROR_FMT("syscall connect %s failed with errno %d",
-                        std::get<0>(iter->first).c_str(), errno);
+                    LOG_ERROR_FMT("Connect %s failed with syscall errno %d : %s",
+                        std::get<0>(iter->first).c_str(), err_code.value(), err_code.message().c_str());
                 }
                 else
                 {
-                    LOG_ERROR_FMT("syscall connect %s %d failed with errno %d",
-                        std::get<0>(iter->first).c_str(), std::get<1>(iter->first), errno);
+                    LOG_ERROR_FMT("Connect %s %d failed with syscall errno %d : %s",
+                        std::get<0>(iter->first).c_str(), std::get<1>(iter->first),
+                        err_code.value(), err_code.message().c_str());
                 }
                 pseudo_this->failures_[iter->first] += 1;
             }
