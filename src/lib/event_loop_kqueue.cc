@@ -21,27 +21,28 @@ using ev_mode_of_kqueue = decltype(kevent::flags);
 
 static ev_type_of_kqueue fd_event_map_wrapper_to_sys(fd_event ev)
 {
+    // EVFILT_READ and EVFILT_WRITE are exclusive!!!
     ev_type_of_kqueue flags = 0;
     if (static_cast<bool>(ev & fd_event::fd_readable))
     {
-        flags |= EVFILT_READ;
+        flags = EVFILT_READ;
     }
-    if (static_cast<bool>(ev & fd_event::fd_writable))
+    else if (static_cast<bool>(ev & fd_event::fd_writable))
     {
-        flags |= EVFILT_WRITE;
+        flags = EVFILT_WRITE;
     }
     return flags;
 }
 
 static fd_event fd_event_map_sys_to_wrapper(ev_type_of_kqueue ev)
 {
+    // EVFILT_READ and EVFILT_WRITE are exclusive!!!
     fd_event flags = static_cast<fd_event>(0);
-    // EVFILT_READ and EVFILT_WRITE are mutually exclusive!!!
     if (ev == EVFILT_READ)
     {
         flags = fd_event::fd_readable;
     }
-    if (ev == EVFILT_WRITE)
+    else if (ev == EVFILT_WRITE)
     {
         flags = fd_event::fd_writable;
     }
@@ -80,7 +81,6 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_
         throw_logic_error("add existent event for fd ", iop->fd());
     }
     fd_event_masks_[iop->fd()] |= ev_type;
-    // Register event to kqueue
     struct kevent ev;
     ev_mode_of_kqueue ev_add_mode = EV_ADD | fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
     //     &kev, ident,     filter,                               flags,       fflags, data, udata);
@@ -103,7 +103,6 @@ void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_
     {
         fd_event_masks_.erase(iop->fd());
     }
-    // Remove event from kqueue
     struct kevent ev;
     //     &kev, ident,     filter,                               flags,     fflags, data, udata
     EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_DELETE, 0,      0,    nullptr);

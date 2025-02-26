@@ -150,7 +150,8 @@ void event_loop::loop_once(int timeout)
     auto fd_events = fd_io_multiplexing_wait_ts(timeout);
     for (const auto &fd_ev_tp : fd_events)
     {
-        LOG_DEBUG_FMT("About to trigger fd %d %s event", std::get<0>(fd_ev_tp), fd_event_to_string.at(std::get<1>(fd_ev_tp)));
+        LOG_DEBUG_FMT("About to trigger fd %d %s event",
+            std::get<0>(fd_ev_tp), fd_event_to_string.at(std::get<1>(fd_ev_tp)));
     }
     std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>>> fd_callbacks;
     {
@@ -168,12 +169,14 @@ void event_loop::loop_once(int timeout)
                 }
                 else
                 {
-                    LOG_WARNING_FMT("Trying to proceed fd %d %s event but it's not activate", fd, fd_event_to_string.at(ev));
+                    LOG_WARNING_FMT("Trying to proceed fd %d %s event but it's not activate",
+                        fd, fd_event_to_string.at(ev));
                 }
             }
             else
             {
-                LOG_WARNING_FMT("Trying to proceed fd %d %s event but callback data not found", fd, fd_event_to_string.at(ev));
+                LOG_WARNING_FMT("Trying to proceed fd %d %s event but callback data not found",
+                    fd, fd_event_to_string.at(ev));
             }
         }
     }
@@ -223,7 +226,6 @@ void event_loop::stop_loop_forever()
 {
     stop_loop_once();
 }
-
 
 
 void event_loop::fd_register_nts(const std::shared_ptr<nio> &iop, fd_event ev_type,
