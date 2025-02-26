@@ -8,7 +8,7 @@
 namespace cppev
 {
 
-TEST(TestEvlp, test_enum_class_operator_or)
+TEST(TestEvlpEnumClass, test_enum_class_operator_or)
 {
     fd_event fd1 = fd_event::fd_readable;
     fd_event fd2 = fd_event::fd_writable;
@@ -18,7 +18,7 @@ TEST(TestEvlp, test_enum_class_operator_or)
     ASSERT_NE(fd3, fd1);
 }
 
-TEST(TestEvlp, test_enum_class_operator_and)
+TEST(TestEvlpEnumClass, test_enum_class_operator_and)
 {
     fd_event fd1 = fd_event::fd_readable;
     fd_event fd2 = fd_event::fd_writable;
@@ -27,7 +27,7 @@ TEST(TestEvlp, test_enum_class_operator_and)
     ASSERT_EQ(fd3, fd2);
 }
 
-TEST(TestEvlp, test_enum_class_operator_xor)
+TEST(TestEvlpEnumClass, test_enum_class_operator_xor)
 {
     fd_event fd1 = fd_event::fd_readable;
     fd_event fd2 = fd_event::fd_writable;
@@ -44,9 +44,15 @@ TEST(TestEvlp, test_enum_class_operator_xor)
 
 const char *str = "Cppev is a C++ event driven library";
 
-TEST(TestEvlp, test_tcp_connect_with_evlp_1)
+class TestEventLoop
+: public testing::TestWithParam<fd_event_mode>
 {
-    LOG_INFO << "test_tcp_connect_with_evlp_1";
+};
+
+TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
+{
+    cppev::logger::get_instance().set_log_level(cppev::log_level::info);
+
     std::vector<std::tuple<family, int, std::string>> vec =
     {
         { family::ipv4, 8884, "127.0.0.1" },
@@ -59,13 +65,16 @@ TEST(TestEvlp, test_tcp_connect_with_evlp_1)
     int cont_count = 0;
     event_loop cont_evlp(&cont_count);
 
-    fd_event_handler acpt_writable_callback = [](const std::shared_ptr<nio> &iop)
+    auto p = GetParam();
+
+    fd_event_handler acpt_writable_callback = [p](const std::shared_ptr<nio> &iop)
     {
         auto dp = reinterpret_cast<int *>(iop->evlp().data());
         dp ? ++(*dp) : 0;
         auto conns = std::dynamic_pointer_cast<nsocktcp>(iop)->accept();
         for (auto conn : conns)
         {
+            iop->evlp().fd_set_mode(conn, p);
             iop->evlp().fd_register_and_activate(
                 std::static_pointer_cast<nio>(conn),
                 fd_event::fd_writable,
@@ -74,7 +83,7 @@ TEST(TestEvlp, test_tcp_connect_with_evlp_1)
                     auto iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
                     iopt->wbuffer().put_string(str);
                     iopt->write_all();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 }
             );
         }
@@ -88,7 +97,7 @@ TEST(TestEvlp, test_tcp_connect_with_evlp_1)
         listensock->listen();
         auto acpt_niop = std::dynamic_pointer_cast<nio>(listensock);
         acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_writable_callback);
-        acpt_evlp.fd_remove_and_deactivate_all(acpt_niop);
+        acpt_evlp.fd_clean(acpt_niop);
         acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable, acpt_writable_callback);
     }
 
@@ -145,26 +154,33 @@ TEST(TestEvlp, test_tcp_connect_with_evlp_1)
     LOG_INFO << "loop forever stopped";
 }
 
-TEST(TestEvlp, test_tcp_connect_with_evlp_2)
+TEST_P(TestEventLoop, test_tcp_connect_with_evlp_second)
 {
-
-    LOG_INFO << "test_tcp_connect_with_evlp_2";
+    cppev::logger::get_instance().set_log_level(cppev::log_level::info);
 
     const std::string path = "/tmp/unittest_cppev_tcp_unix_6C0224787A17.sock";
     const int port = 8889;
 
     event_loop client_evlp;
 
-    fd_event_handler conn_callback = [](const std::shared_ptr<nio> &iop)
+    auto p = GetParam();
+
+    fd_event_handler conn_callback = [p](const std::shared_ptr<nio> &iop)
     {
         LOG_INFO << "Executing fd "<< iop->fd() << " fd_writable callback";
+        iop->evlp().fd_set_mode(iop, p);
         iop->evlp().fd_deactivate(iop, fd_event::fd_writable);
         iop->evlp().fd_register_and_activate(
             std::dynamic_pointer_cast<nio>(iop),
             fd_event::fd_readable,
             [](const std::shared_ptr<nio> &iop) {
                 LOG_INFO << "Executing fd "<< iop->fd() << " fd_readable callback";
-                std::dynamic_pointer_cast<nsocktcp>(iop)->read_all();
+                auto iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+                iopt->read_chunk(8);
+                if (iop->rbuffer().size() != strlen(str))
+                {
+                    return;
+                }
                 LOG_INFO << "Executing fd "<< iop->fd() << " received message : " << iop->rbuffer().get_string();
             }
         );
@@ -210,20 +226,22 @@ TEST(TestEvlp, test_tcp_connect_with_evlp_2)
         connsock1->write_all();
         connsock2->wbuffer().put_string(str);
         connsock2->write_all();
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
     LOG_INFO << "To leave";
 
     client_evlp.stop_loop_forever();
     sub_thr.join();
 }
 
+INSTANTIATE_TEST_SUITE_P(CppevTest, TestEventLoop, testing::Values(
+    fd_event_mode::level_trigger, fd_event_mode::edge_trigger, fd_event_mode::oneshot)
+);
+
 }   // namespace cppev
 
 int main(int argc, char **argv)
 {
-    cppev::logger::get_instance().set_log_level(cppev::log_level::debug);
     testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }

@@ -69,7 +69,7 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
             {
                 dp->on_closed(iopt);
                 std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
-                iopt->evlp().fd_remove_and_deactivate_all(iop);
+                iopt->evlp().fd_clean(iop);
                 iopt->close();
             }
         }
@@ -85,7 +85,7 @@ void safely_close(const std::shared_ptr<nsocktcp> &iopt)
 {
     std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
     // epoll/kqueue will remove fd when it's closed
-    iopt->evlp().fd_remove_and_deactivate_all(iop);
+    iopt->evlp().fd_clean(iop);
     iopt->close();
 }
 
@@ -126,7 +126,7 @@ void iohandler::on_readable(const std::shared_ptr<nio> &iop)
     if ((iopt->eof() || iopt->is_reset()) && (!iopt->is_closed()))
     {
         dp->on_closed(iopt);
-        iopt->evlp().fd_remove_and_deactivate_all(iop);
+        iopt->evlp().fd_clean(iop);
         iopt->close();
     }
 }
@@ -148,7 +148,7 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
     if ((iopt->eop() || iopt->is_reset()) && (!iopt->is_closed()))
     {
         dp->on_closed(iopt);
-        iopt->evlp().fd_remove_and_deactivate_all(iop);
+        iopt->evlp().fd_clean(iop);
         iopt->close();
     }
 }
@@ -161,7 +161,7 @@ void iohandler::on_acpt_writable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
-    iopt->evlp().fd_remove_and_deactivate_all(iop);
+    iopt->evlp().fd_remove_and_deactivate(iop, fd_event::fd_writable);
     // The sequence CANNOT be changed, since on_accept may call async_write
     iopt->evlp().fd_register(iop, fd_event::fd_writable, iohandler::on_writable);
     dp->on_accept(iopt);
@@ -178,13 +178,15 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
     }
 
     iohandler *pseudo_this = reinterpret_cast<iohandler *>(iopt->evlp().owner());
-    iopt->evlp().fd_remove_and_deactivate_all(iop);
+    iopt->evlp().fd_remove_and_deactivate(iop, fd_event::fd_writable);
 
     if (!iopt->check_connect())
     {
         std::tuple<std::string, int, family> h = iopt->connpeer();
         LOG_ERROR_FMT("connect %s %d failed when checking writable", std::get<0>(h).c_str(), std::get<1>(h));
         pseudo_this->failures_[h] += 1;
+        iopt->evlp().fd_clean(iop);
+        iopt->close();
         return;
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());

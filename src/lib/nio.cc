@@ -90,9 +90,9 @@ event_loop &nio::evlp() noexcept
     return *evlp_;
 }
 
-void nio::set_evlp(event_loop &evlp) noexcept
+void nio::set_evlp(event_loop *evlp) noexcept
 {
-    evlp_ = &evlp;
+    evlp_ = evlp;
 }
 
 bool nio::is_closed() const noexcept

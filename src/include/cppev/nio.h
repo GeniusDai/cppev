@@ -28,7 +28,7 @@ enum class family
 {
     ipv4,
     ipv6,
-    local
+    local,
 };
 
 namespace nio_factory
@@ -79,7 +79,7 @@ public:
     event_loop &evlp() noexcept;
 
     // Set event loop this nio belongs to
-    void set_evlp(event_loop &evlp) noexcept;
+    void set_evlp(event_loop *evlp) noexcept;
 
     // Is nio closed
     bool is_closed() const noexcept;
