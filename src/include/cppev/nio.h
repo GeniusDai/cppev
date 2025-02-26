@@ -123,7 +123,7 @@ public:
 
     nstream &operator=(nstream &&other) noexcept;
 
-    virtual ~nstream() = default;
+    virtual ~nstream();
 
     // Is connection reset, ECONNRESET
     bool is_reset() const noexcept;
@@ -180,7 +180,7 @@ public:
 
     nsock &operator=(nsock &&other) noexcept;
 
-    virtual ~nsock() = default;
+    virtual ~nsock();
 
     // socket family
     family sockfamily() const noexcept;
@@ -276,7 +276,7 @@ public:
 
     nsocktcp &operator=(nsocktcp &&other) noexcept;
 
-    ~nsocktcp() = default;
+    ~nsocktcp();
 
     // listen: IPv4 / IPv6 / Unix-domain
     void listen(int backlog = SOMAXCONN);
@@ -351,7 +351,7 @@ public:
 
     nsockudp &operator=(nsockudp &&other) noexcept;
 
-    ~nsockudp() = default;
+    ~nsockudp();
 
     // recvfrom: IPv4 / IPv6 / Unix-domain
     std::tuple<std::string, int, family> recv();

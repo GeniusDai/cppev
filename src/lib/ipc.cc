@@ -400,6 +400,8 @@ pshared_one_time_fence::pshared_one_time_fence()
 {
 }
 
+pshared_one_time_fence::~pshared_one_time_fence() = default;
+
 void pshared_one_time_fence::wait()
 {
     if (!ok_)
@@ -432,6 +434,8 @@ pshared_barrier::pshared_barrier(int count)
 : count_(count)
 {
 }
+
+pshared_barrier::~pshared_barrier() = default;
 
 void pshared_barrier::wait()
 {

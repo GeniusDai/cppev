@@ -154,6 +154,8 @@ nstream::nstream(int fd)
 {
 }
 
+nstream::~nstream() = default;
+
 nstream::nstream(nstream &&other) noexcept
 : nio(std::forward<nstream>(other))
 {
@@ -431,6 +433,8 @@ nsock::nsock(int fd, family f)
 {
 }
 
+nsock::~nsock() = default;
+
 nsock::nsock(nsock &&other) noexcept
 : nio(std::forward<nsock>(other))
 {
@@ -632,6 +636,8 @@ nsocktcp::nsocktcp(int sockfd, family f)
 : nio(sockfd), nsock(-1, f), nstream(-1)
 {
 }
+
+nsocktcp::~nsocktcp() = default;
 
 nsocktcp::nsocktcp(nsocktcp &&other) noexcept
 : nio(std::forward<nsocktcp>(other)),
@@ -913,6 +919,8 @@ nsockudp::nsockudp(int sockfd, family f)
 : nio(sockfd), nsock(-1, f)
 {
 }
+
+nsockudp::~nsockudp() = default;
 
 nsockudp::nsockudp(nsockudp &&other) noexcept
 : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))

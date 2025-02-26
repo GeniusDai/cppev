@@ -97,7 +97,7 @@ class task_queue
 public:
     task_queue() noexcept;
 
-    virtual ~task_queue() = default;
+    virtual ~task_queue();
 
     void add_task(const thread_pool_task_handler &h) noexcept;
 
@@ -138,7 +138,7 @@ public:
     thread_pool_task_queue(thread_pool_task_queue &&) = delete;
     thread_pool_task_queue &operator=(thread_pool_task_queue &&) = delete;
 
-    ~thread_pool_task_queue() = default;
+    ~thread_pool_task_queue();
 
     void stop() noexcept;
 };

@@ -77,7 +77,7 @@ public:
     tp_shared_data(tp_shared_data &&) = delete;
     tp_shared_data &operator=(tp_shared_data &&) = delete;
 
-    ~tp_shared_data() = default;
+    ~tp_shared_data();
 
     // When tcp server accepts new connection
     tcp_event_handler on_accept;
@@ -127,7 +127,7 @@ public:
     iohandler(iohandler &&) =delete;
     iohandler &operator=(iohandler &&) = delete;
 
-    ~iohandler() = default;
+    ~iohandler();
 
     // Connected socket that has been registered to thread pool is readable
     static void on_readable(const std::shared_ptr<nio> &iop);
@@ -169,7 +169,7 @@ public:
     acceptor(acceptor &&) = delete;
     acceptor &operator=(acceptor &&) = delete;
 
-    ~acceptor() = default;
+    ~acceptor();
 
     // Listening socket is readable, indicating new client arrives, this callback will be executed
     // by accept thread to accept connection and assign connection to thread pool
@@ -207,7 +207,7 @@ public:
     connector(connector &&) = delete;
     connector &operator=(connector &&) = delete;
 
-    ~connector() = default;
+    ~connector();
 
     // Pipe fd is readable, indicating new task added, this callback will be executed by
     // connect thread to execute the connection task and assign connection to thread pool
@@ -256,7 +256,7 @@ public:
     tcp_server(tcp_server &&) = delete;
     tcp_server &operator=(tcp_server &&) = delete;
 
-    ~tcp_server() = default;
+    ~tcp_server();
 
     void set_on_accept(const tcp_event_handler &handler);
 
@@ -296,7 +296,7 @@ public:
     tcp_client(tcp_client &&) = delete;
     tcp_client &operator=(tcp_client &&) = delete;
 
-    ~tcp_client() = default;
+    ~tcp_client();
 
     void set_on_connect(const tcp_event_handler &handler);
 

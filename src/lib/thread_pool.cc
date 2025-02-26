@@ -11,6 +11,8 @@ task_queue::task_queue() noexcept
 {
 }
 
+task_queue::~task_queue() = default;
+
 void task_queue::add_task(const thread_pool_task_handler &h) noexcept
 {
     std::unique_lock<std::mutex> lock(lock_);
@@ -76,6 +78,8 @@ thread_pool_task_queue::thread_pool_task_queue(int thr_num)
 : task_queue(), thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
 {
 }
+
+thread_pool_task_queue::~thread_pool_task_queue() = default;
 
 void thread_pool_task_queue::stop() noexcept
 {

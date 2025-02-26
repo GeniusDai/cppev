@@ -221,7 +221,7 @@ public:
     pshared_one_time_fence(pshared_one_time_fence &&) = delete;
     pshared_one_time_fence &operator=(pshared_one_time_fence &&) = delete;
 
-    ~pshared_one_time_fence() = default;
+    ~pshared_one_time_fence();
 
     void wait();
 
@@ -247,7 +247,7 @@ public:
     pshared_barrier(pshared_barrier &&) = delete;
     pshared_barrier &operator=(pshared_barrier &&) = delete;
 
-    ~pshared_barrier() = default;
+    ~pshared_barrier();
 
     void wait();
 

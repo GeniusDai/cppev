@@ -18,6 +18,8 @@ tp_shared_data::tp_shared_data(void *external_data_ptr)
 {
 }
 
+tp_shared_data::~tp_shared_data() = default;
+
 event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;
@@ -111,6 +113,8 @@ iohandler::iohandler(tp_shared_data *data)
 : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
 }
+
+iohandler::~iohandler() = default;
 
 void iohandler::on_readable(const std::shared_ptr<nio> &iop)
 {
@@ -215,6 +219,8 @@ acceptor::acceptor(tp_shared_data *data)
 {
 }
 
+acceptor::~acceptor() = default;
+
 void acceptor::listen(int port, family f, const char *ip)
 {
     sock_ = nio_factory::get_nsocktcp(f);
@@ -271,6 +277,8 @@ connector::connector(tp_shared_data *data)
     rdp_ = pipes[0];
     wrp_ = pipes[1];
 }
+
+connector::~connector() = default;
 
 void connector::add(const std::string &ip, int port, family f, int t)
 {
@@ -382,6 +390,8 @@ tcp_server::tcp_server(int thr_num, void *external_data)
     }
 }
 
+tcp_server::~tcp_server() = default;
+
 void tcp_server::set_on_accept(const tcp_event_handler &handler)
 {
     data_.on_accept = handler;
@@ -458,6 +468,8 @@ tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
         conts_.push_back(std::make_unique<connector>(&data_));
     }
 }
+
+tcp_client::~tcp_client() = default;
 
 void tcp_client::set_on_connect(const tcp_event_handler &handler)
 {

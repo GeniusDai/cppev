@@ -8,6 +8,8 @@ runnable::runnable()
 {
 }
 
+runnable::~runnable() = default;
+
 bool runnable::cancel() noexcept
 {
     return 0 == pthread_cancel(thr_);

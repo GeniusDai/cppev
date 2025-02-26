@@ -35,7 +35,7 @@ public:
     runnable(runnable &&) = delete;
     runnable &operator=(runnable &&) = delete;
 
-    virtual ~runnable() = default;
+    virtual ~runnable();
 
     // Derived class should override
     virtual void run_impl() = 0;

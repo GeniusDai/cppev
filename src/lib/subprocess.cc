@@ -93,6 +93,12 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
     pid_ = pid;
 }
 
+subp_open::subp_open(subp_open &&other) = default;
+
+subp_open &subp_open::operator=(subp_open &&other) = default;
+
+subp_open::~subp_open() = default;
+
 bool subp_open::poll()
 {
     int ret = waitpid(pid_, &returncode_, WNOHANG);

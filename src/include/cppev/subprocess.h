@@ -26,10 +26,10 @@ public:
     subp_open(const subp_open &) = delete;
     subp_open &operator=(const subp_open &) = delete;
 
-    subp_open(subp_open &&other) = default;
-    subp_open &operator=(subp_open &&other) = default;
+    subp_open(subp_open &&other);
+    subp_open &operator=(subp_open &&other);
 
-    ~subp_open() = default;
+    ~subp_open();
 
     bool poll();
 
