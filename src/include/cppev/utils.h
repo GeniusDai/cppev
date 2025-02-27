@@ -119,7 +119,7 @@ errno_type errno_getter(T err_code)
 }
 
 template <typename Prev, typename... Args>
-errno_type errno_getter(Prev prev, Args... args)
+errno_type errno_getter(Prev, Args... args)
 {
     return errno_getter(args...);
 }
