@@ -88,8 +88,8 @@ public:
     int ev_loads() const noexcept;
 
     // Set fd event mode, shall be called before activate, or default mode will be used.
-    // Caution: DONOT trying to set different modes for the same fd's events.
-    //          It's different for epoll / kqueue.
+    // Caution: DONOT try to set different modes for the same fd's events. It's
+    //          different for epoll / kqueue.
     // Note:    If user wants to atomicly set mode and activate, shall implement it
     //          themselves by mutex.
     // @param iop       nio smart pointer.
@@ -163,20 +163,24 @@ private:
     // @param iop           nio smart pointer.
     void fd_remove_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function to create io multiplexing fd which is implementation specific.
+    // Helper function to create io multiplexing fd.
+    // Implementation specific.
     void fd_io_multiplexing_create_nts();
 
-    // Helper function to add fd event listening which is implementation specific.
+    // Helper function to add fd event listening.
+    // Implementation specific.
     // @param iop       nio smart pointer.
     // @param ev_type   event type.
     void fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function to delete fd event listening which is implementation specific.
+    // Helper function to delete fd event listening.
+    // Implementation specific.
     // @param iop       nio smart pointer.
     // @param ev_type   event type.
     void fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
 
-    // Helper function to wait for event(s) trigger which is implementation specific.
+    // Helper function to wait for event(s) trigger.
+    // Implementation specific.
     // @param timeout   timeout in millisecond, -1 means infinite.
     // @return          list of fd with an event, events of one fd are seperated.
     std::vector<std::tuple<int, fd_event>> fd_io_multiplexing_wait_ts(int timeout);
