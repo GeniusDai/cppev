@@ -62,7 +62,7 @@ int main()
     cppev::thread_block_signal(SIGINT);
 
     filecache cache;
-    cppev::reactor::tcp_server server(3, &cache);
+    cppev::reactor::tcp_server server(3, false, &cache);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
     server.listen(PORT, cppev::family::ipv4);

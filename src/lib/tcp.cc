@@ -223,18 +223,20 @@ acceptor::~acceptor() = default;
 
 void acceptor::listen(int port, family f, const char *ip)
 {
-    sock_ = nio_factory::get_nsocktcp(f);
-    sock_->bind(ip, port);
-    sock_->listen();
-    LOG_INFO_FMT("Listening socket %d working in port %d", sock_->fd(), port);
+    std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(f);
+    sock->bind(ip, port);
+    sock->listen();
+    socks_.push_back(sock);
+    LOG_INFO_FMT("Listening socket %d working in port %d", sock->fd(), port);
 }
 
 void acceptor::listen_unix(const std::string &path, bool remove)
 {
-    sock_ = nio_factory::get_nsocktcp(family::local);
-    sock_->bind_unix(path, remove);
-    sock_->listen();
-    LOG_INFO_FMT("Listening socket %d working in path %s", sock_->fd(), path.c_str());
+    std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(family::local);
+    sock->bind_unix(path, remove);
+    sock->listen();
+    socks_.push_back(sock);
+    LOG_INFO_FMT("Listening socket %d working in path %s", sock->fd(), path.c_str());
 }
 
 void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
@@ -258,8 +260,11 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
 void acceptor::run_impl()
 {
     LOG_INFO << "Thread acceptor starting";
-    evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(sock_),
-        fd_event::fd_readable, acceptor::on_acpt_readable);
+    for (auto &sock : socks_)
+    {
+        evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(sock),
+            fd_event::fd_readable, acceptor::on_acpt_readable);
+    }
     evlp_.loop_forever();
     LOG_INFO << "Thread acceptor ending";
 }
@@ -381,8 +386,8 @@ void connector::shutdown()
 }
 
 
-tcp_server::tcp_server(int thr_num, void *external_data)
-: data_(external_data), tp_(thr_num, &data_)
+tcp_server::tcp_server(int thr_num, bool single_acceptor, void *external_data)
+: data_(external_data), single_acceptor_(single_acceptor), tp_(thr_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
@@ -414,13 +419,19 @@ void tcp_server::set_on_closed(const tcp_event_handler &handler)
 
 void tcp_server::listen(int port, family f, const char *ip)
 {
-    acpts_.push_back(std::make_unique<acceptor>(&data_));
+    if ((!single_acceptor_) || acpts_.empty())
+    {
+        acpts_.push_back(std::make_unique<acceptor>(&data_));
+    }
     acpts_.back()->listen(port, f, ip);
 }
 
 void tcp_server::listen_unix(const std::string &path, bool remove)
 {
-    acpts_.push_back(std::make_unique<acceptor>(&data_));
+    if ((!single_acceptor_) || acpts_.empty())
+    {
+        acpts_.push_back(std::make_unique<acceptor>(&data_));
+    }
     acpts_.back()->listen_unix(path, remove);
 }
 

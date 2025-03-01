@@ -61,7 +61,7 @@ int main()
 
     cppev::thread_block_signal(SIGINT);
 
-    cppev::reactor::tcp_server server(SERVER_WORKER_NUM);
+    cppev::reactor::tcp_server server(SERVER_WORKER_NUM, SINGLE_ACPT);
     server.set_on_accept(on_accept);
     server.set_on_read_complete(on_read_complete);
     server.set_on_write_complete(on_write_complete);
