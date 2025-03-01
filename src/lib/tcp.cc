@@ -386,8 +386,8 @@ void connector::shutdown()
 }
 
 
-tcp_server::tcp_server(int thr_num, bool single_acceptor, void *external_data)
-: data_(external_data), single_acceptor_(single_acceptor), tp_(thr_num, &data_)
+tcp_server::tcp_server(int iohandler_num, bool single_acceptor, void *external_data)
+: data_(external_data), single_acceptor_(single_acceptor), tp_(iohandler_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
@@ -467,14 +467,14 @@ void tcp_server::shutdown()
 }
 
 
-tcp_client::tcp_client(int thr_num, int cont_num, void *external_data)
-: data_(external_data), tp_(thr_num, &data_)
+tcp_client::tcp_client(int iohandler_num, int connector_num, void *external_data)
+: data_(external_data), tp_(iohandler_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
         data_.evls.push_back(&(tp_[i].evlp_));
     }
-    for (int i = 0; i < cont_num; ++i)
+    for (int i = 0; i < connector_num; ++i)
     {
         conts_.push_back(std::make_unique<connector>(&data_));
     }

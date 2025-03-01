@@ -252,10 +252,10 @@ class tcp_server final
 {
 public:
     // Construct tcp server
-    // @param thr_num           IO thread pool size.
-    // @param single_aceptor    Whether using one acceptor for all listening socket.
-    // @param external_data     External data pointer.
-    explicit tcp_server(int thr_num, bool single_acceptor=true, void *external_data=nullptr);
+    // @param iohandler_num      IO thread pool size.
+    // @param single_acceptor    Whether using one acceptor for all listening socket.
+    // @param external_data      External data pointer.
+    explicit tcp_server(int iohandler_num, bool single_acceptor=true, void *external_data=nullptr);
 
     tcp_server(const tcp_server &) = delete;
     tcp_server &operator=(const tcp_server &) = delete;
@@ -316,10 +316,10 @@ class tcp_client final
 {
 public:
     // Construct tcp client
-    // @param thr_num           IO thread pool size.
-    // @param cont_num          Number of connector.
+    // @param iohandler_num     IO thread pool size.
+    // @param connector_num     Number of connector.
     // @param external_data     External data pointer.
-    explicit tcp_client(int thr_num, int cont_num=1, void *external_data=nullptr);
+    explicit tcp_client(int iohandler_num, int connector_num=1, void *external_data=nullptr);
 
     tcp_client(const tcp_client &) = delete;
     tcp_client &operator=(const tcp_client &) = delete;
