@@ -33,6 +33,10 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
     int fds[2];
     int zero, one, two;
 
+    // Cannot use nio_factory::get_pipes since child process will destruct
+    // the smart pointer which causes all the fds got closed in its side
+    // and cannot communicate with parent process.
+
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
@@ -71,6 +75,7 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
         std::string cmd_with_path = cmd_with_args[0];
         cmd_with_args[0] = split(cmd_with_args[0], "/").back();
 
+        // The argv requires nullptr ending.
         char *argv[cmd_with_args.size()+1];
         memset(argv, 0, sizeof(argv));
         for (size_t i = 0; i < cmd_with_args.size(); ++i)
@@ -78,6 +83,7 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
             argv[i] = const_cast<char *>(cmd_with_args[i].c_str());
         }
 
+        // The envp requires nullptr ending.
         char *envp[env_.size()+1];
         memset(envp, 0, sizeof(envp));
         for (size_t i = 0; i < env_.size(); ++i)
@@ -104,7 +110,7 @@ bool subp_open::poll()
     int ret = waitpid(pid_, &returncode_, WNOHANG);
     if (ret == -1)
     {
-        _exit(-1);
+        throw_system_error("waitpid error");
     }
     return ret != 0;
 }
