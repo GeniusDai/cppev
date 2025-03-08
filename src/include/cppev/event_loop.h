@@ -51,7 +51,7 @@ CPPEV_PRIVATE void operator|=(fd_event &lhs, fd_event rhs);
 
 CPPEV_PRIVATE void operator^=(fd_event &lhs, fd_event rhs);
 
-extern CPPEV_PRIVATE const std::unordered_map<fd_event, const char *> fd_event_to_string;
+CPPEV_PRIVATE extern const std::unordered_map<fd_event, const char *> fd_event_to_string;
 
 using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
 

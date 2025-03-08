@@ -19,7 +19,7 @@ endfunction(compile_and_enable_test)
 
 add_library(DynamicLoaderTestImpl SHARED DynamicLoaderTestImpl.cc)
 add_library(DynamicLoaderTestImplFunctions SHARED DynamicLoaderTestImplFunctions.cc)
-target_link_libraries(DynamicLoaderTestImplFunctions DynamicLoaderTestImpl cppev)
+target_link_libraries(DynamicLoaderTestImplFunctions DynamicLoaderTestImpl)
 
 file(COPY hello.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

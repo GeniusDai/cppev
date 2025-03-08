@@ -6,6 +6,9 @@ cc_library(
     hdrs = glob([
         "include/cppev/*.h",
     ]),
+    copts = [
+        "-fvisibility=hidden",
+    ],
     includes = [
         "include/",
     ],

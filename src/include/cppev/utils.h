@@ -30,7 +30,7 @@ enum class CPPEV_PUBLIC priority
     lowest = 1,     // Internally reserved, please DONOT use!
 };
 
-struct CPPEV_INTERNAL enum_hash
+struct CPPEV_PRIVATE enum_hash
 {
     template <typename T>
     std::size_t operator()(const T &t) const noexcept
@@ -40,7 +40,7 @@ struct CPPEV_INTERNAL enum_hash
 };
 
 template <typename T, size_t I>
-struct CPPEV_INTERNAL tuple_less
+struct CPPEV_PRIVATE tuple_less
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
@@ -49,7 +49,7 @@ struct CPPEV_INTERNAL tuple_less
 };
 
 template <typename T, size_t I>
-struct CPPEV_INTERNAL tuple_greater
+struct CPPEV_PRIVATE tuple_greater
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
@@ -60,16 +60,16 @@ struct CPPEV_INTERNAL tuple_greater
 /*
  * Chrono
  */
-CPPEV_INTERNAL std::string timestamp(time_t t = -1, const char *format = nullptr);
+CPPEV_PRIVATE std::string timestamp(time_t t = -1, const char *format = nullptr);
 
 template <typename Clock = std::chrono::system_clock>
-CPPEV_INTERNAL void sleep_until(const std::chrono::nanoseconds &stamp)
+CPPEV_PRIVATE void sleep_until(const std::chrono::nanoseconds &stamp)
 {
     std::this_thread::sleep_until(std::chrono::duration_cast<Clock::duration>(stamp));
 }
 
 template <typename Clock = std::chrono::system_clock>
-CPPEV_INTERNAL typename Clock::time_point ceil_time_point(const typename Clock::time_point &point)
+CPPEV_PRIVATE typename Clock::time_point ceil_time_point(const typename Clock::time_point &point)
 {
     auto stamp = std::chrono::nanoseconds(point.time_since_epoch()).count();
     int64_t ceil_stamp_nsec = (stamp / 1'000'000'000 + 1) * 1'000'000'000;
@@ -94,10 +94,10 @@ CPPEV_PUBLIC int64_t greatest_common_divisor(const std::vector<int64_t> &nums);
  */
 using errno_type = std::remove_reference<decltype(errno)>::type;
 
-// Template function with only one param shall be placed former!!!
+// Template function with only one parameter shall be placed former!!!
 
 template <typename T>
-CPPEV_PRIVATE std::ostringstream  oss_writer(T err_code)
+CPPEV_PRIVATE std::ostringstream oss_writer(T err_code)
 {
     std::ostringstream oss;
     oss << " : errno " << err_code << " ";

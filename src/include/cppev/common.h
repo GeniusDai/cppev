@@ -12,13 +12,13 @@ namespace sysconfig
 {
 
 // Buffer size for udp socket
-extern int udp_buffer_size;
+CPPEV_PUBLIC extern int udp_buffer_size;
 
 // File descriptor numbers for each epoll / kevent
-extern int event_number;
+CPPEV_PUBLIC extern int event_number;
 
 // Default batch size for stream's read and write
-extern int buffer_io_step;
+CPPEV_PUBLIC extern int buffer_io_step;
 
 }   // namespace sysconfig
 

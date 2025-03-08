@@ -21,6 +21,7 @@ add_library(cppev STATIC ${LIB})
 
 target_include_directories(cppev PUBLIC include)
 target_compile_options(cppev PUBLIC -O3 -Wall -Wextra)
+target_compile_options(cppev PRIVATE -fvisibility=hidden)
 target_link_libraries(cppev dl pthread)
 if (CPPEV_DEBUG)
     target_compile_definitions(cppev PRIVATE -DCPPEV_DEBUG)
