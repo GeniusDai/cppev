@@ -39,17 +39,17 @@ enum class CPPEV_PUBLIC fd_event_mode
     oneshot       = 1 << 2,
 };
 
-CPPEV_INTERNAL fd_event operator&(fd_event lhs, fd_event rhs);
+CPPEV_PRIVATE fd_event operator&(fd_event lhs, fd_event rhs);
 
-CPPEV_INTERNAL fd_event operator|(fd_event lhs, fd_event rhs);
+CPPEV_PRIVATE fd_event operator|(fd_event lhs, fd_event rhs);
 
-CPPEV_INTERNAL fd_event operator^(fd_event lhs, fd_event rhs);
+CPPEV_PRIVATE fd_event operator^(fd_event lhs, fd_event rhs);
 
-CPPEV_INTERNAL void operator&=(fd_event &lhs, fd_event rhs);
+CPPEV_PRIVATE void operator&=(fd_event &lhs, fd_event rhs);
 
-CPPEV_INTERNAL void operator|=(fd_event &lhs, fd_event rhs);
+CPPEV_PRIVATE void operator|=(fd_event &lhs, fd_event rhs);
 
-CPPEV_INTERNAL void operator^=(fd_event &lhs, fd_event rhs);
+CPPEV_PRIVATE void operator^=(fd_event &lhs, fd_event rhs);
 
 extern CPPEV_PRIVATE const std::unordered_map<fd_event, const char *> fd_event_to_string;
 

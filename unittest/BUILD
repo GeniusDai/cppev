@@ -72,10 +72,11 @@ cc_test(
 )
 
 cc_test(
-    name = "test_evlp",
+    name = "test_event_loop",
     srcs = [
-        "test_evlp.cc",
+        "test_event_loop.cc",
     ],
+    linkstatic = True,
     deps = [
         "//src:cppev",
         "@googletest//:gtest",

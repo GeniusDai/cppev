@@ -17,7 +17,7 @@ set (LIB
 
 option(CPPEV_DEBUG "print debug log" OFF)
 
-add_library(cppev SHARED ${LIB})
+add_library(cppev STATIC ${LIB})
 
 target_include_directories(cppev PUBLIC include)
 target_compile_options(cppev PUBLIC -O3 -Wall -Wextra)
