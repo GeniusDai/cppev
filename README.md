@@ -12,7 +12,7 @@ Support io event listening by io-multiplexing, event-type readable / writable, e
 
 ### Multithreading
 
-Support subthread / threadpool / signal-handing / reactor.
+Support subthread / threadpool / spinlock / signal-handing / reactor.
 
 ### Interprocess Communication
 

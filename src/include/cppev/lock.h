@@ -11,12 +11,16 @@ namespace cppev
 {
 
 #ifdef __linux__
-// pthread implementation is about two times faster than atomic implementation
 #define CPPEV_SPINLOCK_USE_PTHREAD
 #endif
 
-// Usage of spinlock is usually not recommended. Only used when task that shall be protected by lock is
-// really important and performance sensitive and very simple.
+/*
+    Usage of spinlock is usually not recommended.
+    Only used when tasks with lock are really important and simple, and make sure you won't be scheduled
+    out by os when holding the lock.
+    Currently spinlock shared among process is not supported.
+    By benchmark pthread implementation is about two times faster than atomic implementation.
+ */
 class spinlock final
 {
 public:
