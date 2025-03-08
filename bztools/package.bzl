@@ -116,7 +116,7 @@ def _package_files_impl(ctx):
     tarball = ctx.actions.declare_file("{}.tar.gz".format(ctx.label.name))
     args = ctx.actions.args()
     args.add("-h")
-    args.add("-czvf")
+    args.add("-czf")
     args.add(tarball.path)
     args.add("--files-from")
     args.add(manifest_of_files.path)
