@@ -1,5 +1,3 @@
-#include "cppev/event_loop.h"
-
 #ifdef __linux__
 
 #include <exception>
@@ -8,9 +6,10 @@
 #include <tuple>
 #include <iostream>
 #include <thread>
+#include <sys/epoll.h>
+#include "cppev/event_loop.h"
 #include "cppev/utils.h"
 #include "cppev/common.h"
-#include <sys/epoll.h>
 
 namespace cppev
 {

@@ -1,5 +1,3 @@
-#include "cppev/event_loop.h"
-
 #ifdef __APPLE__
 
 #include <exception>
@@ -9,9 +7,10 @@
 #include <iostream>
 #include <thread>
 #include <ctime>
+#include <sys/event.h>
+#include "cppev/event_loop.h"
 #include "cppev/utils.h"
 #include "cppev/common.h"
-#include <sys/event.h>
 
 namespace cppev
 {
