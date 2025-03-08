@@ -7,7 +7,7 @@
 namespace cppev
 {
 
-const int delay = 100;
+const int delay = 200;
 
 class runnable_tester
 : public runnable
