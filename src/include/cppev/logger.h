@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <thread>
 #include <cstdarg>
+#include "cppev/common.h"
 
 namespace cppev
 {
@@ -23,7 +24,7 @@ namespace cppev
 #define ERROR_COLOR   "\033[31m"  // Red for ERROR messages
 
 // Log severity levels
-enum class log_level
+enum class CPPEV_PUBLIC log_level
 {
     debug,
     info,
@@ -32,7 +33,7 @@ enum class log_level
 };
 
 // Thread-safe logger implementation with multiple output support
-class logger
+class CPPEV_PUBLIC logger
 {
 public:
     // Singleton access point
@@ -76,7 +77,7 @@ private:
 };
 
 // Helper class for constructing log messages
-class log_message
+class CPPEV_INTERNAL log_message
 {
 public:
     // Constructor for stream-style logging

@@ -1,4 +1,4 @@
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 
 namespace cppev
 {

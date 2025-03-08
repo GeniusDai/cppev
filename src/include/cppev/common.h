@@ -1,5 +1,9 @@
-#ifndef _cppev_sysconfig_h_6C0224787A17_
-#define _cppev_sysconfig_h_6C0224787A17_
+#ifndef _cppev_common_h_6C0224787A17_
+#define _cppev_common_h_6C0224787A17_
+
+#define CPPEV_PUBLIC    __attribute__((visibility("default")))
+#define CPPEV_INTERNAL  __attribute__((visibility("default")))
+#define CPPEV_PRIVATE   __attribute__((visibility("hidden")))
 
 namespace cppev
 {
@@ -20,4 +24,4 @@ extern int buffer_io_step;
 
 }   // namespace cppev
 
-#endif  // sysconfig.h
+#endif  // common.h

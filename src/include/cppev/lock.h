@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <atomic>
 #include "cppev/utils.h"
+#include "cppev/common.h"
 
 namespace cppev
 {
@@ -21,7 +22,7 @@ namespace cppev
     Currently spinlock shared among process is not supported.
     By benchmark pthread implementation is about two times faster than atomic implementation.
  */
-class spinlock final
+class CPPEV_PUBLIC spinlock final
 {
 public:
     spinlock();

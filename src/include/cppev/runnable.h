@@ -25,7 +25,7 @@
 namespace cppev
 {
 
-class runnable
+class CPPEV_PUBLIC runnable
 {
 public:
     runnable();

@@ -1,18 +1,19 @@
 #ifndef _cppev_ipc_h_6C0224787A17_
 #define _cppev_ipc_h_6C0224787A17_
 
-#include "cppev/utils.h"
 #include <mutex>
 #include <condition_variable>
 #include <string>
 #include <sys/time.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include "cppev/utils.h"
+#include "cppev/common.h"
 
 namespace cppev
 {
 
-class shared_memory final
+class CPPEV_PUBLIC shared_memory final
 {
 public:
     shared_memory(const std::string &name, int size, mode_t mode = 0600);
@@ -55,7 +56,7 @@ private:
     bool creator_;
 };
 
-class semaphore final
+class CPPEV_PUBLIC semaphore final
 {
 public:
     explicit semaphore(const std::string &name, mode_t mode = 0600);
@@ -87,7 +88,7 @@ private:
     bool creator_;
 };
 
-class pshared_lock final
+class CPPEV_PUBLIC pshared_lock final
 {
     friend class pshared_cond;
 public:
@@ -110,7 +111,7 @@ private:
     pthread_mutex_t lock_;
 };
 
-class pshared_cond final
+class CPPEV_PUBLIC pshared_cond final
 {
 public:
     using predicate = std::function<bool()>;
@@ -211,7 +212,7 @@ private:
     pthread_cond_t cond_;
 };
 
-class pshared_one_time_fence final
+class CPPEV_PUBLIC pshared_one_time_fence final
 {
 public:
     pshared_one_time_fence();
@@ -237,7 +238,7 @@ private:
     pshared_cond cond_;
 };
 
-class pshared_barrier final
+class CPPEV_PUBLIC pshared_barrier final
 {
 public:
     pshared_barrier(int count);
@@ -259,7 +260,7 @@ private:
     pshared_cond cond_;
 };
 
-class pshared_rwlock final
+class CPPEV_PUBLIC pshared_rwlock final
 {
 public:
     pshared_rwlock();
@@ -285,7 +286,7 @@ private:
     pthread_rwlock_t lock_;
 };
 
-class rdlockguard final
+class CPPEV_PUBLIC rdlockguard final
 {
 public:
     explicit rdlockguard(pshared_rwlock &lock);
@@ -305,7 +306,7 @@ private:
     pshared_rwlock *rwlock_;
 };
 
-class wrlockguard final
+class CPPEV_PUBLIC wrlockguard final
 {
 public:
     explicit wrlockguard(pshared_rwlock &lock);

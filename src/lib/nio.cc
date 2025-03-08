@@ -1,5 +1,5 @@
 #include "cppev/nio.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 #include "cppev/utils.h"
 #include <cassert>
 #include <sys/socket.h>

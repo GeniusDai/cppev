@@ -14,11 +14,12 @@ namespace cppev
 namespace subprocess
 {
 
-std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, const std::vector<std::string> &env = {});
+CPPEV_PUBLIC std::tuple<int, std::string, std::string>
+exec_cmd(const std::string &cmd, const std::vector<std::string> &env = {});
 
 }   // namespace subprocess
 
-class subp_open final
+class CPPEV_PUBLIC subp_open final
 {
 public:
     explicit subp_open(const std::string &cmd, const std::vector<std::string> &env);

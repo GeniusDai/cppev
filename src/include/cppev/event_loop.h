@@ -10,14 +10,14 @@
 #include <condition_variable>
 #include <functional>
 #include "cppev/nio.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 #include "cppev/utils.h"
 #include "cppev/logger.h"
 
 namespace cppev
 {
 
-enum class fd_event
+enum class CPPEV_PUBLIC fd_event
 {
     fd_readable = 1 << 0,
     fd_writable = 1 << 1,
@@ -32,35 +32,35 @@ enum class fd_event
 
     Suggest using nio::read_all / nio::write_all.
  */
-enum class fd_event_mode
+enum class CPPEV_PUBLIC fd_event_mode
 {
     level_trigger = 1 << 0,
     edge_trigger  = 1 << 1,
     oneshot       = 1 << 2,
 };
 
-fd_event operator&(fd_event lhs, fd_event rhs);
+CPPEV_INTERNAL fd_event operator&(fd_event lhs, fd_event rhs);
 
-fd_event operator|(fd_event lhs, fd_event rhs);
+CPPEV_INTERNAL fd_event operator|(fd_event lhs, fd_event rhs);
 
-fd_event operator^(fd_event lhs, fd_event rhs);
+CPPEV_INTERNAL fd_event operator^(fd_event lhs, fd_event rhs);
 
-void operator&=(fd_event &lhs, fd_event rhs);
+CPPEV_INTERNAL void operator&=(fd_event &lhs, fd_event rhs);
 
-void operator|=(fd_event &lhs, fd_event rhs);
+CPPEV_INTERNAL void operator|=(fd_event &lhs, fd_event rhs);
 
-void operator^=(fd_event &lhs, fd_event rhs);
+CPPEV_INTERNAL void operator^=(fd_event &lhs, fd_event rhs);
 
 extern const std::unordered_map<fd_event, const char *> fd_event_to_string;
 
 using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
 
-struct fd_event_hash
+struct CPPEV_PRIVATE fd_event_hash
 {
     std::size_t operator()(const std::tuple<int, fd_event> &ev) const noexcept;
 };
 
-class event_loop
+class CPPEV_PUBLIC event_loop
 {
 public:
     explicit event_loop(void *data = nullptr, void *owner = nullptr);

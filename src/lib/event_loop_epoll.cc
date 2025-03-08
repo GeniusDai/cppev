@@ -9,7 +9,7 @@
 #include <iostream>
 #include <thread>
 #include "cppev/utils.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 #include <sys/epoll.h>
 
 namespace cppev

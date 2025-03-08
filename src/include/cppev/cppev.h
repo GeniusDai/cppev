@@ -4,7 +4,7 @@
 #include "cppev/logger.h"
 #include "cppev/buffer.h"
 #include "cppev/utils.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 #include "cppev/event_loop.h"
 #include "cppev/ipc.h"
 #include "cppev/lock.h"

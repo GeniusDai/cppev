@@ -12,7 +12,7 @@
 #include <iostream>
 #include "cppev/utils.h"
 #include "cppev/buffer.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 
 namespace cppev
 {
@@ -24,7 +24,7 @@ class nsockudp;
 class nsocktcp;
 class event_loop;
 
-enum class family
+enum class CPPEV_PUBLIC family
 {
     ipv4,
     ipv6,
@@ -34,17 +34,17 @@ enum class family
 namespace nio_factory
 {
 
-std::shared_ptr<nsocktcp> get_nsocktcp(family f);
+CPPEV_PUBLIC std::shared_ptr<nsocktcp> get_nsocktcp(family f);
 
-std::shared_ptr<nsockudp> get_nsockudp(family f);
+CPPEV_PUBLIC std::shared_ptr<nsockudp> get_nsockudp(family f);
 
-std::vector<std::shared_ptr<nstream>> get_pipes();
+CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_pipes();
 
-std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &str);
+CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &str);
 
 };
 
-class nio
+class CPPEV_PUBLIC nio
 {
 public:
     explicit nio(int fd);
@@ -113,7 +113,7 @@ protected:
     void move(nio &&other) noexcept;
 };
 
-class nstream
+class CPPEV_PUBLIC nstream
 : public virtual nio
 {
 public:
@@ -168,7 +168,7 @@ protected:
     void move(nstream &&other, bool move_base) noexcept;
 };
 
-class nsock
+class CPPEV_PUBLIC nsock
 : public virtual nio
 {
     friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
@@ -259,14 +259,14 @@ protected:
     static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
-enum class shutdown_mode
+enum class CPPEV_PUBLIC shutdown_mode
 {
     shutdown_rd,
     shutdown_wr,
     shutdown_rdwr,
 };
 
-class nsocktcp final
+class CPPEV_PUBLIC nsocktcp final
 : public nsock, public nstream
 {
 public:
@@ -341,7 +341,7 @@ private:
 };
 
 
-class nsockudp final
+class CPPEV_PUBLIC nsockudp final
 : public nsock
 {
 public:

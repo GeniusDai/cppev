@@ -4,17 +4,18 @@
 #include <string>
 #include <dlfcn.h>
 #include "cppev/utils.h"
+#include "cppev/common.h"
 
 namespace cppev
 {
 
-enum class dyld_mode
+enum class CPPEV_PUBLIC dyld_mode
 {
     lazy,
     now,
 };
 
-class dynamic_loader
+class CPPEV_PUBLIC dynamic_loader
 {
 public:
 

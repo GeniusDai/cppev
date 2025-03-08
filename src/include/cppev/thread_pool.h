@@ -16,7 +16,7 @@ namespace cppev
 {
 
 template<typename Runnable, typename... Args>
-class thread_pool
+class CPPEV_PUBLIC thread_pool
 {
     static_assert(std::is_base_of<runnable, Runnable>::value, "Not runnable");
     static_assert(std::is_constructible<Runnable, Args&&...>::value, "Not constructible");
@@ -91,7 +91,7 @@ namespace task_queue
 
 using thread_pool_task_handler = std::function<void(void)>;
 
-class task_queue
+class CPPEV_INTERNAL task_queue
 {
     friend class thread_pool_task_queue_runnable;
 public:
@@ -115,7 +115,7 @@ protected:
     bool stop_;
 };
 
-class thread_pool_task_queue_runnable final
+class CPPEV_PRIVATE thread_pool_task_queue_runnable final
 : public runnable
 {
 public:
@@ -127,7 +127,7 @@ private:
     task_queue *task_queue_;
 };
 
-class thread_pool_task_queue final
+class CPPEV_PUBLIC thread_pool_task_queue final
 : public task_queue, public thread_pool<thread_pool_task_queue_runnable, task_queue *>
 {
 public:

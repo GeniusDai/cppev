@@ -13,6 +13,7 @@
 #include "cppev/event_loop.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
+#include "cppev/common.h"
 
 /*
     Q1: The architecture(Reactor-Impl)?
@@ -41,13 +42,13 @@ namespace reactor
 using tcp_event_handler = std::function<void(const std::shared_ptr<nsocktcp> &)>;
 
 // Async write data in write buffer.
-void async_write(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void async_write(const std::shared_ptr<nsocktcp> &iopt);
 
 // Safely close tcp socket.
-void safely_close(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void safely_close(const std::shared_ptr<nsocktcp> &iopt);
 
 // Get external data of reactor server and client.
-void *external_data(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void *external_data(const std::shared_ptr<nsocktcp> &iopt);
 
 class acceptor;
 class connector;
@@ -55,13 +56,13 @@ class iohandler;
 class tcp_server;
 class tcp_client;
 
-struct host_hash
+struct CPPEV_PRIVATE host_hash
 {
     size_t operator()(const std::tuple<std::string, int, family> &h) const;
 };
 
 // Data used for event loop initialization.
-struct tp_shared_data final
+struct CPPEV_PRIVATE tp_shared_data final
 {
 private:
     friend class tcp_server;
@@ -116,7 +117,7 @@ private:
 };
 
 
-class iohandler final
+class CPPEV_PRIVATE iohandler final
 : public runnable
 {
     friend class tcp_server;
@@ -160,7 +161,7 @@ private:
 };
 
 
-class acceptor final
+class CPPEV_PRIVATE acceptor final
 : public runnable
 {
 public:
@@ -198,7 +199,7 @@ private:
 };
 
 
-class connector final
+class CPPEV_PRIVATE connector final
 : public runnable
 {
 public:
@@ -248,7 +249,7 @@ private:
 };
 
 
-class tcp_server final
+class CPPEV_PUBLIC tcp_server final
 {
 public:
     // Construct tcp server
@@ -311,8 +312,7 @@ private:
     std::vector<std::unique_ptr<acceptor>> acpts_;
 };
 
-
-class tcp_client final
+class CPPEV_PUBLIC tcp_client final
 {
 public:
     // Construct tcp client

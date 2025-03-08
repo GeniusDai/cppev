@@ -10,7 +10,7 @@
 #include <thread>
 #include <ctime>
 #include "cppev/utils.h"
-#include "cppev/sysconfig.h"
+#include "cppev/common.h"
 #include <sys/event.h>
 
 namespace cppev

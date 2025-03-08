@@ -6,12 +6,13 @@
 #include <cstring>
 #include <cstdlib>
 #include "cppev/utils.h"
+#include "cppev/common.h"
 
 namespace cppev
 {
 
 template <typename Char>
-class basic_buffer final
+class CPPEV_PUBLIC basic_buffer final
 {
     // Q: Why the two classes should be friend?
     // A: To save a memory copy.

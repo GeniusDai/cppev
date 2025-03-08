@@ -12,11 +12,12 @@
 #include <ctime>
 #include <csignal>
 #include <cassert>
+#include "cppev/common.h"
 
 namespace cppev
 {
 
-enum class priority
+enum class CPPEV_PUBLIC priority
 {
     highest = 100,  // Internally reserved, please DONOT use!
     p0 = 20,
@@ -29,7 +30,7 @@ enum class priority
     lowest = 1,     // Internally reserved, please DONOT use!
 };
 
-struct enum_hash
+struct CPPEV_INTERNAL enum_hash
 {
     template <typename T>
     std::size_t operator()(const T &t) const noexcept
@@ -39,7 +40,7 @@ struct enum_hash
 };
 
 template <typename T, size_t I>
-struct tuple_less
+struct CPPEV_INTERNAL tuple_less
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
@@ -48,7 +49,7 @@ struct tuple_less
 };
 
 template <typename T, size_t I>
-struct tuple_greater
+struct CPPEV_INTERNAL tuple_greater
 {
     bool operator()(const T& lhs, const T &rhs) const noexcept
     {
@@ -59,16 +60,16 @@ struct tuple_greater
 /*
  * Chrono
  */
-std::string timestamp(time_t t = -1, const char *format = nullptr);
+CPPEV_INTERNAL std::string timestamp(time_t t = -1, const char *format = nullptr);
 
 template <typename Clock = std::chrono::system_clock>
-void sleep_until(const std::chrono::nanoseconds &stamp)
+CPPEV_INTERNAL void sleep_until(const std::chrono::nanoseconds &stamp)
 {
     std::this_thread::sleep_until(std::chrono::duration_cast<Clock::duration>(stamp));
 }
 
 template <typename Clock = std::chrono::system_clock>
-typename Clock::time_point ceil_time_point(const typename Clock::time_point &point)
+CPPEV_INTERNAL typename Clock::time_point ceil_time_point(const typename Clock::time_point &point)
 {
     auto stamp = std::chrono::nanoseconds(point.time_since_epoch()).count();
     int64_t ceil_stamp_nsec = (stamp / 1'000'000'000 + 1) * 1'000'000'000;
@@ -80,13 +81,13 @@ typename Clock::time_point ceil_time_point(const typename Clock::time_point &poi
 /*
  * Algorithm
  */
-int64_t least_common_multiple(int64_t p, int64_t r);
+CPPEV_PUBLIC int64_t least_common_multiple(int64_t p, int64_t r);
 
-int64_t least_common_multiple(const std::vector<int64_t> &nums);
+CPPEV_PUBLIC int64_t least_common_multiple(const std::vector<int64_t> &nums);
 
-int64_t greatest_common_divisor(int64_t p, int64_t r);
+CPPEV_PUBLIC int64_t greatest_common_divisor(int64_t p, int64_t r);
 
-int64_t greatest_common_divisor(const std::vector<int64_t> &nums);
+CPPEV_PUBLIC int64_t greatest_common_divisor(const std::vector<int64_t> &nums);
 
 /*
  * Exception handling
@@ -96,7 +97,7 @@ using errno_type = std::remove_reference<decltype(errno)>::type;
 // Template function with only one param shall be placed former!!!
 
 template <typename T>
-std::ostringstream  oss_writer(T err_code)
+CPPEV_PRIVATE std::ostringstream  oss_writer(T err_code)
 {
     std::ostringstream oss;
     oss << " : errno " << err_code << " ";
@@ -104,7 +105,7 @@ std::ostringstream  oss_writer(T err_code)
 }
 
 template <typename Prev, typename... Args>
-std::ostringstream oss_writer(Prev prev, Args... args)
+CPPEV_PRIVATE std::ostringstream oss_writer(Prev prev, Args... args)
 {
     std::ostringstream oss;
     oss << prev;
@@ -113,19 +114,19 @@ std::ostringstream oss_writer(Prev prev, Args... args)
 }
 
 template <typename T>
-errno_type errno_getter(T err_code)
+CPPEV_PRIVATE errno_type errno_getter(T err_code)
 {
     return err_code;
 }
 
 template <typename Prev, typename... Args>
-errno_type errno_getter(Prev, Args... args)
+CPPEV_PRIVATE errno_type errno_getter(Prev, Args... args)
 {
     return errno_getter(args...);
 }
 
 template <typename... Args>
-void throw_system_error_with_specific_errno(Args... args)
+CPPEV_PUBLIC void throw_system_error_with_specific_errno(Args... args)
 {
     std::ostringstream oss = oss_writer(args...);
     errno_type err_code = errno_getter(args...);
@@ -133,13 +134,13 @@ void throw_system_error_with_specific_errno(Args... args)
 }
 
 template <typename... Args>
-void throw_system_error(Args... args)
+CPPEV_PUBLIC void throw_system_error(Args... args)
 {
     throw_system_error_with_specific_errno(args..., errno);
 }
 
 template <typename... Args>
-void throw_logic_error(Args... args)
+CPPEV_PUBLIC void throw_logic_error(Args... args)
 {
     std::ostringstream oss;
     (oss << ... << args);
@@ -147,7 +148,7 @@ void throw_logic_error(Args... args)
 }
 
 template <typename... Args>
-void throw_runtime_error(Args... args)
+CPPEV_PUBLIC void throw_runtime_error(Args... args)
 {
     std::ostringstream oss;
     (oss << ... << args);
@@ -157,42 +158,42 @@ void throw_runtime_error(Args... args)
 /*
  * Process level signal handling
  */
-void ignore_signal(int sig);
+CPPEV_PUBLIC void ignore_signal(int sig);
 
-void reset_signal(int sig);
+CPPEV_PUBLIC void reset_signal(int sig);
 
-void handle_signal(int sig, sig_t handler=[](int){});
+CPPEV_PUBLIC void handle_signal(int sig, sig_t handler=[](int){});
 
-void send_signal(pid_t pid, int sig);
+CPPEV_PUBLIC void send_signal(pid_t pid, int sig);
 
-bool check_process(pid_t pid);
+CPPEV_PUBLIC bool check_process(pid_t pid);
 
-bool check_process_group(pid_t pgid);
+CPPEV_PUBLIC bool check_process_group(pid_t pgid);
 
 /*
  * Thread level signal handling
  */
-void thread_raise_signal(int sig);
+CPPEV_PUBLIC void thread_raise_signal(int sig);
 
-void thread_block_signal(int sig);
+CPPEV_PUBLIC void thread_block_signal(int sig);
 
-void thread_block_signal(const std::vector<int> &sigs);
+CPPEV_PUBLIC void thread_block_signal(const std::vector<int> &sigs);
 
-void thread_unblock_signal(int sig);
+CPPEV_PUBLIC void thread_unblock_signal(int sig);
 
-void thread_unblock_signal(const std::vector<int> &sigs);
+CPPEV_PUBLIC void thread_unblock_signal(const std::vector<int> &sigs);
 
-void thread_suspend_for_signal(int sig);
+CPPEV_PUBLIC void thread_suspend_for_signal(int sig);
 
-void thread_suspend_for_signal(const std::vector<int> &sigs);
+CPPEV_PUBLIC void thread_suspend_for_signal(const std::vector<int> &sigs);
 
-void thread_wait_for_signal(int sig);
+CPPEV_PUBLIC void thread_wait_for_signal(int sig);
 
-int thread_wait_for_signal(const std::vector<int> &sigs);
+CPPEV_PUBLIC int thread_wait_for_signal(const std::vector<int> &sigs);
 
-bool thread_check_signal_mask(int sig);
+CPPEV_PUBLIC bool thread_check_signal_mask(int sig);
 
-bool thread_check_signal_pending(int sig);
+CPPEV_PUBLIC bool thread_check_signal_pending(int sig);
 
 #ifdef __linux__
 typedef pid_t tid_t;
@@ -202,17 +203,17 @@ typedef uint64_t tid_t;
 #error "platform not supported"
 #endif
 
-tid_t gettid() noexcept;
+CPPEV_PUBLIC tid_t gettid() noexcept;
 
-std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
+CPPEV_PUBLIC std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept;
 
-std::string strip(const std::string &str, const std::string &chars);
+CPPEV_PUBLIC std::string strip(const std::string &str, const std::string &chars);
 
-std::string lstrip(const std::string &str, const std::string &chars);
+CPPEV_PUBLIC std::string lstrip(const std::string &str, const std::string &chars);
 
-std::string rstrip(const std::string &str, const std::string &chars);
+CPPEV_PUBLIC std::string rstrip(const std::string &str, const std::string &chars);
 
-std::vector<std::string> split(const std::string &str, const std::string &sep);
+CPPEV_PUBLIC std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 }   // namespace cppev
 

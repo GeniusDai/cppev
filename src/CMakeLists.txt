@@ -2,7 +2,7 @@ set (LIB
     lib/logger.cc
     lib/nio.cc
     lib/utils.cc
-    lib/sysconfig.cc
+    lib/common.cc
     lib/event_loop_epoll.cc
     lib/event_loop_kqueue.cc
     lib/event_loop_common.cc

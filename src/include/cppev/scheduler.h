@@ -28,7 +28,7 @@ using exit_task_handler = std::function<void(void)>;
 using timed_task_handler = std::function<void(const std::chrono::nanoseconds &curr_timestamp)>;
 
 template<typename Clock = std::chrono::system_clock>
-class timed_scheduler
+class CPPEV_PUBLIC timed_scheduler
 {
 public:
     // Create backend thread to execute tasks
