@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace cppev
 {
@@ -11,7 +11,8 @@ class DynamicLoaderTestInterface
 public:
     virtual ~DynamicLoaderTestInterface() = default;
     virtual std::string add(int, int) const noexcept = 0;
-    virtual std::string add(const std::string &, const std::string &) const noexcept = 0;
+    virtual std::string add(const std::string &,
+                            const std::string &) const noexcept = 0;
 
     virtual std::string type() const noexcept
     {
@@ -37,11 +38,14 @@ private:
     int var;
 };
 
-using DynamicLoaderTestInterfaceConstructorType = DynamicLoaderTestInterface *();
+using DynamicLoaderTestInterfaceConstructorType =
+    DynamicLoaderTestInterface *();
 
-using DynamicLoaderTestInterfaceDestructorType = void (DynamicLoaderTestInterface *);
+using DynamicLoaderTestInterfaceDestructorType =
+    void(DynamicLoaderTestInterface *);
 
 // Not recommended due to warned by clang -Wreturn-type-c-linkage.
-using DynamicLoaderTestInterfaceSharedPtrConstructorType = std::shared_ptr<DynamicLoaderTestInterface> ();
+using DynamicLoaderTestInterfaceSharedPtrConstructorType =
+    std::shared_ptr<DynamicLoaderTestInterface>();
 
-}   // namespace cppev
+}  // namespace cppev

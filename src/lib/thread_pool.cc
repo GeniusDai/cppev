@@ -6,8 +6,7 @@ namespace cppev
 namespace task_queue
 {
 
-task_queue::task_queue() noexcept
-: stop_(false)
+task_queue::task_queue() noexcept : stop_(false)
 {
 }
 
@@ -27,7 +26,8 @@ void task_queue::add_task(thread_pool_task_handler &&h) noexcept
     cond_.notify_one();
 }
 
-void task_queue::add_task(const std::vector<thread_pool_task_handler> &vh) noexcept
+void task_queue::add_task(
+    const std::vector<thread_pool_task_handler> &vh) noexcept
 {
     std::unique_lock<std::mutex> lock(lock_);
     for (const auto &h : vh)
@@ -37,16 +37,16 @@ void task_queue::add_task(const std::vector<thread_pool_task_handler> &vh) noexc
     cond_.notify_all();
 }
 
-
-thread_pool_task_queue_runnable::thread_pool_task_queue_runnable(task_queue *task_queue) noexcept
-: task_queue_(task_queue)
+thread_pool_task_queue_runnable::thread_pool_task_queue_runnable(
+    task_queue *task_queue) noexcept
+    : task_queue_(task_queue)
 {
 }
 
 void thread_pool_task_queue_runnable::run_impl()
 {
     thread_pool_task_handler handler;
-    while(true)
+    while (true)
     {
         {
             std::unique_lock<std::mutex> lock(task_queue_->lock_);
@@ -56,10 +56,12 @@ void thread_pool_task_queue_runnable::run_impl()
                 {
                     break;
                 }
-                task_queue_->cond_.wait(lock, [this]()->bool
-                {
-                    return task_queue_->queue_.size() || task_queue_->stop_;
-                });
+                task_queue_->cond_.wait(lock,
+                                        [this]() -> bool
+                                        {
+                                            return task_queue_->queue_.size() ||
+                                                   task_queue_->stop_;
+                                        });
                 if (task_queue_->queue_.empty() && task_queue_->stop_)
                 {
                     break;
@@ -73,9 +75,9 @@ void thread_pool_task_queue_runnable::run_impl()
     }
 }
 
-
 thread_pool_task_queue::thread_pool_task_queue(int thr_num)
-: task_queue(), thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
+    : task_queue(),
+      thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
 {
 }
 
@@ -91,6 +93,6 @@ void thread_pool_task_queue::stop() noexcept
     join();
 }
 
-}   // namespace task_queue
+}  // namespace task_queue
 
-}   // namespace cppev
+}  // namespace cppev

@@ -38,6 +38,6 @@ void performance_test(Mutex &lock)
     EXPECT_EQ(count, add_num * thr_num);
 }
 
-}   // namespace cpepv
+}  // namespace cppev
 
 #endif  // config.h

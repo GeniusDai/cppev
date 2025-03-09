@@ -1,31 +1,34 @@
 #ifndef _cppev_thread_pool_h_6C0224787A17_
 #define _cppev_thread_pool_h_6C0224787A17_
 
-#include <vector>
-#include <memory>
-#include <queue>
-#include <mutex>
 #include <condition_variable>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
 #include <type_traits>
 #include <vector>
-#include <functional>
-#include "cppev/utils.h"
+
 #include "cppev/runnable.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {
 
-template<typename Runnable, typename... Args>
+template <typename Runnable, typename... Args>
 class CPPEV_PUBLIC thread_pool
 {
     static_assert(std::is_base_of<runnable, Runnable>::value, "Not runnable");
-    static_assert(std::is_constructible<Runnable, Args&&...>::value, "Not constructible");
+    static_assert(std::is_constructible<Runnable, Args &&...>::value,
+                  "Not constructible");
+
 public:
-    explicit thread_pool(int thr_num, Args&&... args)
+    explicit thread_pool(int thr_num, Args &&...args)
     {
         for (int i = 0; i < thr_num; ++i)
         {
-            thrs_.push_back(std::make_unique<Runnable>(std::forward<Args>(args)...));
+            thrs_.push_back(
+                std::make_unique<Runnable>(std::forward<Args>(args)...));
         }
     }
 
@@ -94,6 +97,7 @@ using thread_pool_task_handler = std::function<void(void)>;
 class CPPEV_INTERNAL task_queue
 {
     friend class thread_pool_task_queue_runnable;
+
 public:
     task_queue() noexcept;
 
@@ -115,8 +119,7 @@ protected:
     bool stop_;
 };
 
-class CPPEV_PRIVATE thread_pool_task_queue_runnable final
-: public runnable
+class CPPEV_PRIVATE thread_pool_task_queue_runnable final : public runnable
 {
 public:
     thread_pool_task_queue_runnable(task_queue *task_queue) noexcept;
@@ -128,7 +131,8 @@ private:
 };
 
 class CPPEV_PUBLIC thread_pool_task_queue final
-: public task_queue, public thread_pool<thread_pool_task_queue_runnable, task_queue *>
+    : public task_queue,
+      public thread_pool<thread_pool_task_queue_runnable, task_queue *>
 {
 public:
     thread_pool_task_queue(int thr_num);
@@ -143,12 +147,12 @@ public:
     void stop() noexcept;
 };
 
-}   // namespace task_queue
+}  // namespace task_queue
 
 using thread_pool_task_queue = task_queue::thread_pool_task_queue;
 
 using thread_pool_task_handler = task_queue::thread_pool_task_handler;
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // thread_pool.h

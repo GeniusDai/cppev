@@ -1,16 +1,18 @@
 #ifdef __APPLE__
 
-#include <exception>
-#include <memory>
-#include <cassert>
-#include <tuple>
-#include <iostream>
-#include <thread>
-#include <ctime>
 #include <sys/event.h>
+
+#include <cassert>
+#include <ctime>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <tuple>
+
+#include "cppev/common.h"
 #include "cppev/event_loop.h"
 #include "cppev/utils.h"
-#include "cppev/common.h"
 
 namespace cppev
 {
@@ -52,14 +54,14 @@ static ev_mode_of_kqueue fd_mode_map_wrapper_to_sys(fd_event_mode mode)
 {
     switch (static_cast<int>(mode))
     {
-        case static_cast<int>(fd_event_mode::level_trigger):
-            return 0;
-        case static_cast<int>(fd_event_mode::edge_trigger):
-            return EV_CLEAR;
-        case static_cast<int>(fd_event_mode::oneshot):
-            return EV_ONESHOT;
-        default:
-            throw_logic_error("Unknown mode");
+    case static_cast<int>(fd_event_mode::level_trigger):
+        return 0;
+    case static_cast<int>(fd_event_mode::edge_trigger):
+        return EV_CLEAR;
+    case static_cast<int>(fd_event_mode::oneshot):
+        return EV_ONESHOT;
+    default:
+        throw_logic_error("Unknown mode");
     }
 }
 
@@ -72,28 +74,37 @@ void event_loop::fd_io_multiplexing_create_nts()
     }
 }
 
-void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
+                                            fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(), fd_event_to_string.at(ev_type));
-    if (fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type))
+    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(),
+                  fd_event_to_string.at(ev_type));
+    if (fd_event_masks_.count(iop->fd()) &&
+        static_cast<bool>(fd_event_masks_[iop->fd()] & ev_type))
     {
         throw_logic_error("add existent event for fd ", iop->fd());
     }
     fd_event_masks_[iop->fd()] |= ev_type;
     struct kevent ev;
-    ev_mode_of_kqueue ev_add_mode = EV_ADD | fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
-    //     &kev, ident,     filter,                               flags,       fflags, data, udata);
-    EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type), ev_add_mode, 0,      0,    nullptr);
+    ev_mode_of_kqueue ev_add_mode =
+        EV_ADD | fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
+    //     &kev, ident,     filter,                               flags, fflags,
+    //     data, udata);
+    EV_SET(&ev, iop->fd(), fd_event_map_wrapper_to_sys(ev_type), ev_add_mode, 0,
+           0, nullptr);
     if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
     {
         throw_system_error("kevent add error for fd ", iop->fd());
     }
 }
 
-void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop,
+                                            fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(), fd_event_to_string.at(ev_type));
-    if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
+    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(),
+                  fd_event_to_string.at(ev_type));
+    if (!(fd_event_masks_.count(iop->fd()) &&
+          static_cast<bool>(fd_event_masks_[iop->fd()] & ev_type)))
     {
         throw_logic_error("delete nonexistent event for fd ", iop->fd());
     }
@@ -103,21 +114,25 @@ void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_
         fd_event_masks_.erase(iop->fd());
     }
     struct kevent ev;
-    //     &kev, ident,     filter,                               flags,     fflags, data, udata
-    EV_SET(&ev,  iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_DELETE, 0,      0,    nullptr);
+    //     &kev, ident,     filter,                               flags, fflags,
+    //     data, udata
+    EV_SET(&ev, iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_DELETE, 0,
+           0, nullptr);
     if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
     {
         throw_system_error("kevent del error for fd ", iop->fd());
     }
 }
 
-std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(int timeout)
+std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(
+    int timeout)
 {
     int nums;
     struct kevent evs[sysconfig::event_number];
     if (timeout < 0)
     {
-        nums = kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, nullptr);
+        nums =
+            kevent(ev_fd_, nullptr, 0, evs, sysconfig::event_number, nullptr);
     }
     else
     {
@@ -132,7 +147,7 @@ std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(in
         int fd = evs[i].ident;
         bool succeed = false;
         fd_event ev = fd_event_map_sys_to_wrapper(evs[i].filter);
-        for (auto event : { fd_event::fd_readable, fd_event::fd_writable })
+        for (auto event : {fd_event::fd_readable, fd_event::fd_writable})
         {
             if (static_cast<bool>(ev & event))
             {
@@ -148,6 +163,6 @@ std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(in
     return fd_events;
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // event loop for macOS

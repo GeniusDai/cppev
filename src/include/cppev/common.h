@@ -1,9 +1,9 @@
 #ifndef _cppev_common_h_6C0224787A17_
 #define _cppev_common_h_6C0224787A17_
 
-#define CPPEV_PUBLIC    __attribute__((visibility("default")))
-#define CPPEV_INTERNAL  __attribute__((visibility("default")))
-#define CPPEV_PRIVATE   __attribute__((visibility("hidden")))
+#define CPPEV_PUBLIC __attribute__((visibility("default")))
+#define CPPEV_INTERNAL __attribute__((visibility("default")))
+#define CPPEV_PRIVATE __attribute__((visibility("hidden")))
 
 namespace cppev
 {
@@ -20,8 +20,8 @@ CPPEV_PUBLIC extern int event_number;
 // Default batch size for stream's read and write
 CPPEV_PUBLIC extern int buffer_io_step;
 
-}   // namespace sysconfig
+}  // namespace sysconfig
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // common.h

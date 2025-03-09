@@ -15,6 +15,6 @@ int event_number = 2048;
 // Default batch size for stream's read and write
 int buffer_io_step = 1024;
 
-}   // namespace sysconfig
+}  // namespace sysconfig
 
-}   // namespace cppev
+}  // namespace cppev

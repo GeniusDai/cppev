@@ -1,11 +1,12 @@
 #ifndef _cppev_subprocess_h_6C0224787A17_
 #define _cppev_subprocess_h_6C0224787A17_
 
-#include <vector>
+#include <chrono>
+#include <memory>
 #include <string>
 #include <tuple>
-#include <memory>
-#include <chrono>
+#include <vector>
+
 #include "cppev/nio.h"
 
 namespace cppev
@@ -14,15 +15,16 @@ namespace cppev
 namespace subprocess
 {
 
-CPPEV_PUBLIC std::tuple<int, std::string, std::string>
-exec_cmd(const std::string &cmd, const std::vector<std::string> &env = {});
+CPPEV_PUBLIC std::tuple<int, std::string, std::string> exec_cmd(
+    const std::string &cmd, const std::vector<std::string> &env = {});
 
-}   // namespace subprocess
+}  // namespace subprocess
 
 class CPPEV_PUBLIC subp_open final
 {
 public:
-    explicit subp_open(const std::string &cmd, const std::vector<std::string> &env);
+    explicit subp_open(const std::string &cmd,
+                       const std::vector<std::string> &env);
 
     subp_open(const subp_open &) = delete;
     subp_open &operator=(const subp_open &) = delete;
@@ -39,9 +41,10 @@ public:
     {
         /*
          * Q : Why polling is essential?
-         * A : Buffer size of pipe is limited, so if you just wait for the subprocess terminates,
-         *     subprocess may block at writing to stdout or stderr. That means you need to
-         *     simultaneously deal with the io and query the subprocess termination.
+         * A : Buffer size of pipe is limited, so if you just wait for the
+         * subprocess terminates, subprocess may block at writing to stdout or
+         * stderr. That means you need to simultaneously deal with the io and
+         * query the subprocess termination.
          */
         while (!poll())
         {
@@ -89,6 +92,6 @@ private:
     int returncode_;
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // subprocess.h

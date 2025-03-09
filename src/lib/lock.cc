@@ -32,7 +32,7 @@ void spinlock::lock()
         throw_system_error_with_specific_errno("pthread_spin_lock error", ret);
     }
 #else
-    while (lock_.test_and_set(std::memory_order_acq_rel)) ;
+    while (lock_.test_and_set(std::memory_order_acq_rel));
 #endif
 }
 
@@ -42,7 +42,8 @@ void spinlock::unlock()
     int ret = pthread_spin_unlock(&lock_);
     if (ret != 0)
     {
-        throw_system_error_with_specific_errno("pthread_spin_unlock error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_unlock error",
+                                               ret);
     }
 #else
     lock_.clear(std::memory_order_release);
@@ -63,7 +64,8 @@ bool spinlock::trylock()
     }
     else
     {
-        throw_system_error_with_specific_errno("pthread_spin_trylock error", ret);
+        throw_system_error_with_specific_errno("pthread_spin_trylock error",
+                                               ret);
     }
     return true;
 #else
@@ -71,4 +73,4 @@ bool spinlock::trylock()
 #endif
 }
 
-}   // namespace cppev
+}  // namespace cppev

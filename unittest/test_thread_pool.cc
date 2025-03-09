@@ -1,15 +1,16 @@
 #include <gtest/gtest.h>
+
+#include <chrono>
+
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
-#include <chrono>
 
 namespace cppev
 {
 
 const int delay = 10;
 
-class runnable_tester
-: public runnable
+class runnable_tester : public runnable
 {
 public:
     void run_impl() override
@@ -18,18 +19,11 @@ public:
     }
 };
 
-class runnable_tester_with_param
-: public runnable
+class runnable_tester_with_param : public runnable
 {
 public:
-    runnable_tester_with_param(
-        const std::string &,
-        std::string,
-        std::string &&,
-        const char *,
-        int64_t,
-        void *,
-        void const *)
+    runnable_tester_with_param(const std::string &, std::string, std::string &&,
+                               const char *, int64_t, void *, void const *)
     {
     }
 
@@ -45,8 +39,8 @@ TEST(TestThreadPool, test_thread_pool_by_join)
     auto start = std::chrono::high_resolution_clock::now();
     tp.join();
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> d = std::chrono::duration_cast
-        <std::chrono::duration<double>>(end - start);
+    std::chrono::duration<double> d =
+        std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
     ASSERT_GT(d.count(), (delay * 0.99) / 1000.0);
 }
 
@@ -61,14 +55,10 @@ TEST(TestThreadPool, test_thread_pool_by_cancel)
 TEST(TestThreadPool, test_thread_pool_compile_with_param)
 {
     std::string str;
-    using tp_tester = thread_pool<runnable_tester_with_param,
-        const std::string &,
-        std::string,
-        std::string &&,
-        const char *,
-        int64_t,
-        void *,
-        void const *>;
+    using tp_tester =
+        thread_pool<runnable_tester_with_param, const std::string &,
+                    std::string, std::string &&, const char *, int64_t, void *,
+                    void const *>;
     std::vector<tp_tester> tp_vec;
     tp_vec.emplace_back(10, "", "", std::move(str), "", 0, nullptr, nullptr);
     thread_pool tp1 = std::move(tp_vec[0]);
@@ -99,7 +89,7 @@ TEST(TestThreadPool, test_thread_pool_task_queue)
     ASSERT_EQ(sum, count);
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

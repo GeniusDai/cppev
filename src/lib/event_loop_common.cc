@@ -34,19 +34,22 @@ void operator^=(fd_event &lhs, fd_event rhs)
 }
 
 const std::unordered_map<fd_event, const char *> fd_event_to_string = {
-    { fd_event::fd_readable, "fd_readable" },
-    { fd_event::fd_writable, "fd_writable" },
+    {fd_event::fd_readable, "fd_readable"},
+    {fd_event::fd_writable, "fd_writable"},
 };
 
-std::size_t fd_event_hash::operator()(const std::tuple<int, fd_event> &ev) const noexcept
+std::size_t fd_event_hash::operator()(
+    const std::tuple<int, fd_event> &ev) const noexcept
 {
-    return std::hash<std::size_t>()((std::get<0>(ev)<<2) + static_cast<int>(std::get<1>(ev)));
+    return std::hash<std::size_t>()((std::get<0>(ev) << 2) +
+                                    static_cast<int>(std::get<1>(ev)));
 }
 
-const fd_event_mode event_loop::fd_event_mode_default_ = fd_event_mode::level_trigger;
+const fd_event_mode event_loop::fd_event_mode_default_ =
+    fd_event_mode::level_trigger;
 
 event_loop::event_loop(void *data, void *owner)
-: data_(data), owner_(owner), stop_(false)
+    : data_(data), owner_(owner), stop_(false)
 {
     fd_io_multiplexing_create_nts();
 }
@@ -81,14 +84,15 @@ int event_loop::ev_loads() const noexcept
     return fd_event_datas_.size();
 }
 
-void event_loop::fd_set_mode(const std::shared_ptr<nio> &iop, fd_event_mode ev_mode)
+void event_loop::fd_set_mode(const std::shared_ptr<nio> &iop,
+                             fd_event_mode ev_mode)
 {
     std::unique_lock<std::mutex> lock(lock_);
     fd_event_modes_[iop->fd()] = ev_mode;
 }
 
 void event_loop::fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &handler, priority prio)
+                             const fd_event_handler &handler, priority prio)
 {
     std::unique_lock<std::mutex> lock(lock_);
     fd_register_nts(iop, ev_type, handler, prio);
@@ -100,8 +104,10 @@ void event_loop::fd_activate(const std::shared_ptr<nio> &iop, fd_event ev_type)
     fd_io_multiplexing_add_nts(iop, ev_type);
 }
 
-void event_loop::fd_register_and_activate(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &handler, priority prio)
+void event_loop::fd_register_and_activate(const std::shared_ptr<nio> &iop,
+                                          fd_event ev_type,
+                                          const fd_event_handler &handler,
+                                          priority prio)
 {
     std::unique_lock<std::mutex> lock(lock_);
     fd_register_nts(iop, ev_type, handler, prio);
@@ -114,13 +120,15 @@ void event_loop::fd_remove(const std::shared_ptr<nio> &iop, fd_event ev_type)
     fd_remove_nts(iop, ev_type);
 }
 
-void event_loop::fd_deactivate(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_deactivate(const std::shared_ptr<nio> &iop,
+                               fd_event ev_type)
 {
     std::unique_lock<std::mutex> lock(lock_);
     fd_io_multiplexing_del_nts(iop, ev_type);
 }
 
-void event_loop::fd_remove_and_deactivate(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_remove_and_deactivate(const std::shared_ptr<nio> &iop,
+                                          fd_event ev_type)
 {
     std::unique_lock<std::mutex> lock(lock_);
     fd_io_multiplexing_del_nts(iop, ev_type);
@@ -130,9 +138,10 @@ void event_loop::fd_remove_and_deactivate(const std::shared_ptr<nio> &iop, fd_ev
 void event_loop::fd_clean(const std::shared_ptr<nio> &iop)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    for (auto ev : { fd_event::fd_readable, fd_event::fd_writable })
+    for (auto ev : {fd_event::fd_readable, fd_event::fd_writable})
     {
-        if (fd_event_masks_.count(iop->fd()) && static_cast<bool>(ev & fd_event_masks_[iop->fd()]))
+        if (fd_event_masks_.count(iop->fd()) &&
+            static_cast<bool>(ev & fd_event_masks_[iop->fd()]))
         {
             fd_io_multiplexing_del_nts(iop, ev);
         }
@@ -150,10 +159,12 @@ void event_loop::loop_once(int timeout)
     auto fd_events = fd_io_multiplexing_wait_ts(timeout);
     for (const auto &fd_ev_tp : fd_events)
     {
-        LOG_DEBUG_FMT("About to trigger fd %d %s event",
-            std::get<0>(fd_ev_tp), fd_event_to_string.at(std::get<1>(fd_ev_tp)));
+        LOG_DEBUG_FMT("About to trigger fd %d %s event", std::get<0>(fd_ev_tp),
+                      fd_event_to_string.at(std::get<1>(fd_ev_tp)));
     }
-    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>, std::shared_ptr<fd_event_handler>>> fd_callbacks;
+    std::priority_queue<std::tuple<priority, std::shared_ptr<nio>,
+                                   std::shared_ptr<fd_event_handler>>>
+        fd_callbacks;
     {
         std::unique_lock<std::mutex> lock(lock_);
         for (const auto &fd_ev_tp : fd_events)
@@ -162,20 +173,26 @@ void event_loop::loop_once(int timeout)
             fd_event ev = std::get<1>(fd_ev_tp);
             if (fd_event_datas_.count(fd_ev_tp))
             {
-                if (fd_event_masks_.count(fd) && static_cast<bool>(fd_event_masks_[fd]&ev))
+                if (fd_event_masks_.count(fd) &&
+                    static_cast<bool>(fd_event_masks_[fd] & ev))
                 {
                     const auto &value = fd_event_datas_[fd_ev_tp];
-                    fd_callbacks.emplace(std::get<0>(value), std::get<1>(value), std::get<2>(value));
+                    fd_callbacks.emplace(std::get<0>(value), std::get<1>(value),
+                                         std::get<2>(value));
                 }
                 else
                 {
-                    LOG_WARNING_FMT("Trying to proceed fd %d %s event but it's not activate",
+                    LOG_WARNING_FMT(
+                        "Trying to proceed fd %d %s event but it's not "
+                        "activate",
                         fd, fd_event_to_string.at(ev));
                 }
             }
             else
             {
-                LOG_WARNING_FMT("Trying to proceed fd %d %s event but callback data not found",
+                LOG_WARNING_FMT(
+                    "Trying to proceed fd %d %s event but callback data not "
+                    "found",
                     fd, fd_event_to_string.at(ev));
             }
         }
@@ -193,20 +210,23 @@ void event_loop::stop_loop_once()
 {
     auto iopps = nio_factory::get_pipes();
     iopps[1]->set_evlp(this);
-    LOG_DEBUG_FMT("Use fd %d fd_writable event for event loop stop", iopps[1]->fd());
+    LOG_DEBUG_FMT("Use fd %d fd_writable event for event loop stop",
+                  iopps[1]->fd());
     fd_event_handler handler = [](const std::shared_ptr<nio> &iop)
     {
         event_loop &evlp = iop->evlp();
         evlp.fd_remove_and_deactivate(iop, fd_event::fd_writable);
-        LOG_DEBUG_FMT("Remove fd %d fd_writable event for event loop stop", iop->fd());
+        LOG_DEBUG_FMT("Remove fd %d fd_writable event for event loop stop",
+                      iop->fd());
         {
             std::unique_lock<std::mutex> lock(evlp.lock_);
             evlp.stop_ = true;
             evlp.cond_.notify_all();
         }
     };
-    this->fd_register_and_activate(std::dynamic_pointer_cast<nio>(iopps[1]), fd_event::fd_writable,
-        handler, priority::lowest);
+    this->fd_register_and_activate(std::dynamic_pointer_cast<nio>(iopps[1]),
+                                   fd_event::fd_writable, handler,
+                                   priority::lowest);
     {
         std::unique_lock<std::mutex> lock(lock_);
         cond_.wait(lock, [this] { return this->stop_; });
@@ -216,7 +236,7 @@ void event_loop::stop_loop_once()
 void event_loop::loop_forever(int timeout)
 {
     stop_ = false;
-    while(!stop_)
+    while (!stop_)
     {
         loop_once(timeout);
     }
@@ -227,23 +247,26 @@ void event_loop::stop_loop_forever()
     stop_loop_once();
 }
 
-
-void event_loop::fd_register_nts(const std::shared_ptr<nio> &iop, fd_event ev_type,
-    const fd_event_handler &handler, priority prio)
+void event_loop::fd_register_nts(const std::shared_ptr<nio> &iop,
+                                 fd_event ev_type,
+                                 const fd_event_handler &handler, priority prio)
 {
     iop->set_evlp(this);
     auto fd_ev_tp = std::make_tuple(iop->fd(), ev_type);
-    fd_event_datas_.emplace(fd_ev_tp, std::make_tuple(prio, iop, std::make_shared<fd_event_handler>(handler)));
+    fd_event_datas_.emplace(
+        fd_ev_tp, std::make_tuple(prio, iop,
+                                  std::make_shared<fd_event_handler>(handler)));
     if (!fd_event_modes_.count(iop->fd()))
     {
         fd_event_modes_[iop->fd()] = fd_event_mode_default_;
     }
 }
 
-void event_loop::fd_remove_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_remove_nts(const std::shared_ptr<nio> &iop,
+                               fd_event ev_type)
 {
     auto fd_ev_tp = std::make_tuple(iop->fd(), ev_type);
     fd_event_datas_.erase(fd_ev_tp);
 }
 
-}   // namespace cppev
+}  // namespace cppev

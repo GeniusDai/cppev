@@ -1,12 +1,14 @@
-#include <vector>
 #include <gtest/gtest.h>
+
+#include <vector>
+
 #include "cppev/buffer.h"
 
 namespace cppev
 {
 
-class TestBuffer
-: public testing::Test {
+class TestBuffer : public testing::Test
+{
 protected:
     void SetUp() override
     {
@@ -59,7 +61,7 @@ TEST_F(TestBuffer, test_copy_move)
     std::string str = "cppev";
 
     std::vector<buffer> vec;
-    vec.emplace_back(1);    // move constructor
+    vec.emplace_back(1);  // move constructor
     vec.back().put_string(str);
     vec.push_back(vec[0]);  // copy constructor
 
@@ -76,7 +78,7 @@ TEST_F(TestBuffer, test_copy_move)
 
     buffer b;
     b.put_string(str);
-    buffer a = std::move(b);    // move assignment
+    buffer a = std::move(b);  // move assignment
     EXPECT_EQ(a.get_string(-1, false), str);
     EXPECT_EQ(b.rawbuf(), nullptr);
 }
@@ -86,7 +88,7 @@ TEST_F(TestBuffer, test_compilation)
     basic_buffer<int> a;
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

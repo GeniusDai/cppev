@@ -1,17 +1,18 @@
 #ifndef _cppev_scheduler_h_6C0224787A17_
 #define _cppev_scheduler_h_6C0224787A17_
 
+#include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <functional>
+#include <map>
+#include <memory>
+#include <queue>
+#include <string>
+#include <thread>
 #include <tuple>
 #include <vector>
-#include <queue>
-#include <chrono>
-#include <memory>
-#include <string>
-#include <map>
-#include <thread>
-#include <algorithm>
+
 #include "cppev/utils.h"
 
 namespace cppev
@@ -25,31 +26,37 @@ using exit_task_handler = std::function<void(void)>;
 
 // Triggered periodically by timed_scheduler
 // @param curr_timestamp : current trigger timestamp
-using timed_task_handler = std::function<void(const std::chrono::nanoseconds &curr_timestamp)>;
+using timed_task_handler =
+    std::function<void(const std::chrono::nanoseconds &curr_timestamp)>;
 
-template<typename Clock = std::chrono::system_clock>
+template <typename Clock = std::chrono::system_clock>
 class CPPEV_PUBLIC timed_scheduler
 {
 public:
     // Create backend thread to execute tasks
-    // @param timer_tasks : tasks that will be triggered regularly according to frequency.
+    // @param timer_tasks : tasks that will be triggered regularly according to
+    // frequency.
     //                      tuple : <frequency, priority, task>
-    // @param init_tasks : tasks that will be executed once only when thread starts
-    // @param exit_tasks : tasks that will be executed once only when thread exits
+    // @param init_tasks : tasks that will be executed once only when thread
+    // starts
+    // @param exit_tasks : tasks that will be executed once only when thread
+    // exits
     // @param align : whether start time align to 1s.
     timed_scheduler(
-        const std::vector<std::tuple<double, priority, timed_task_handler>> &timer_tasks,
+        const std::vector<std::tuple<double, priority, timed_task_handler>>
+            &timer_tasks,
         const std::vector<init_task_handler> &init_tasks = {},
         const std::vector<exit_task_handler> &exit_tasks = {},
-        const bool align = true
-    )
-    : stop_(false)
+        const bool align = true)
+        : stop_(false)
     {
-        std::priority_queue<std::tuple<priority, size_t>, std::vector<std::tuple<priority, size_t>>,
-            tuple_less<std::tuple<priority, size_t>, 0>> timer_tasks_heap;
+        std::priority_queue<std::tuple<priority, size_t>,
+                            std::vector<std::tuple<priority, size_t>>,
+                            tuple_less<std::tuple<priority, size_t>, 0>>
+            timer_tasks_heap;
         for (size_t i = 0; i < timer_tasks.size(); ++i)
         {
-            timer_tasks_heap.push({ std::get<1>(timer_tasks[i]) , i });
+            timer_tasks_heap.push({std::get<1>(timer_tasks[i]), i});
         }
 
         std::vector<int64_t> intervals;
@@ -93,9 +100,10 @@ public:
                     tp_curr = ceil_time_point<Clock>(tp_curr);
                     std::this_thread::sleep_until(tp_curr);
                 }
-                while(!stop_)
+                while (!stop_)
                 {
-                    for (auto iter = tasks_.cbegin(); !stop_ && (iter != tasks_.cend()); )
+                    for (auto iter = tasks_.cbegin();
+                         !stop_ && (iter != tasks_.cend());)
                     {
                         auto curr = iter;
                         auto next = ++iter;
@@ -127,16 +135,12 @@ public:
                 {
                     task();
                 }
-            }
-        );
+            });
     }
 
-    timed_scheduler(
-        const double freq,
-        const timed_task_handler &handler,
-        const bool align = true
-    )
-    : timed_scheduler({{ freq, priority::p0, handler }}, {}, {}, align)
+    timed_scheduler(const double freq, const timed_task_handler &handler,
+                    const bool align = true)
+        : timed_scheduler({{freq, priority::p0, handler}}, {}, {}, align)
     {
     }
 
@@ -168,6 +172,6 @@ private:
     std::thread thr_;
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // scheduler.h

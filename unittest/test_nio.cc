@@ -1,8 +1,10 @@
-#include <unordered_set>
 #include <fcntl.h>
 #include <gtest/gtest.h>
-#include "cppev/nio.h"
+
+#include <unordered_set>
+
 #include "cppev/event_loop.h"
+#include "cppev/nio.h"
 
 namespace cppev
 {
@@ -56,9 +58,8 @@ TEST(TestNio, test_fifo)
     unlink(fifo);
 }
 
-
 class TestNioSocket
-: public testing::TestWithParam<std::tuple<family, bool, int, int>>
+    : public testing::TestWithParam<std::tuple<family, bool, int, int>>
 {
 };
 
@@ -77,7 +78,10 @@ TEST_P(TestNioSocket, test_tcp_socket)
     EXPECT_EQ(sock->get_tcp_nodelay(), std::get<1>(p));
     auto lg = sock->get_so_linger();
     EXPECT_EQ(lg.first, std::get<1>(p));
-    if (lg.first) { EXPECT_EQ(lg.second, std::get<3>(p)); }
+    if (lg.first)
+    {
+        EXPECT_EQ(lg.second, std::get<3>(p));
+    }
 
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
@@ -116,22 +120,22 @@ TEST_P(TestNioSocket, test_udp_socket)
     sock->set_so_rcvbuf(std::get<2>(p));
     sock->set_so_sndbuf(std::get<2>(p));
     sock->set_so_rcvlowat(std::get<2>(p));
-    std::unordered_set<int> buf_size{std::get<2>(p), std::get<2>(p)*2};
+    std::unordered_set<int> buf_size{std::get<2>(p), std::get<2>(p) * 2};
     EXPECT_TRUE(buf_size.count(sock->get_so_rcvbuf()));
     EXPECT_TRUE(buf_size.count(sock->get_so_sndbuf()));
     EXPECT_EQ(sock->get_so_rcvlowat(), std::get<2>(p));
 }
 
-INSTANTIATE_TEST_SUITE_P(CppevTest, TestNioSocket,
+INSTANTIATE_TEST_SUITE_P(
+    CppevTest, TestNioSocket,
     testing::Combine(
-        testing::Values(family::ipv4, family::ipv6),    // protocol family
-        testing::Bool(),                                // enable option
-        testing::Values(8192, 16384, 32768),            // buffer or low water mark
-        testing::Values(16, 32, 64, 128)                // linger-time
-    )
-);
+        testing::Values(family::ipv4, family::ipv6),  // protocol family
+        testing::Bool(),                              // enable option
+        testing::Values(8192, 16384, 32768),  // buffer or low water mark
+        testing::Values(16, 32, 64, 128)      // linger-time
+        ));
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

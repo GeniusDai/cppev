@@ -1,15 +1,16 @@
+#include <gtest/gtest.h>
+
+#include <chrono>
 #include <cstddef>
 #include <ratio>
 #include <unordered_map>
-#include <chrono>
-#include <gtest/gtest.h>
+
 #include "cppev/scheduler.h"
 
 namespace cppev
 {
 
-class TestTimedScheduler
-: public testing::Test
+class TestTimedScheduler : public testing::Test
 {
 protected:
     void SetUp() override
@@ -20,8 +21,10 @@ protected:
 };
 
 #define CHECK_UNALIGNED_TRIGGER_COUNT(count, freq, total_time_ms, err_percent) \
-    EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) * (1 + err_percent))); \
-    EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0* freq) * (1 - err_percent)))
+    EXPECT_LE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) *   \
+                                      (1 + err_percent)));                     \
+    EXPECT_GE(count, static_cast<int>((1 + total_time_ms / 1'000.0 * freq) *   \
+                                      (1 - err_percent)))
 
 bool is_sub_sequence(const std::vector<int> &s, const std::vector<int> &t)
 {
@@ -81,12 +84,14 @@ TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
     };
 
     {
-        timed_scheduler executor({
-            { freq1, priority::p6, task1 },
-            { freq2, priority::p0, task2 },
-            { freq3, priority::p4, task3 },
-            { freq4, priority::p3, task4 },
-        }, {}, {}, false);
+        timed_scheduler executor(
+            {
+                {freq1, priority::p6, task1},
+                {freq2, priority::p0, task2},
+                {freq3, priority::p4, task3},
+                {freq4, priority::p3, task4},
+            },
+            {}, {}, false);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(total_time_ms));
     }
@@ -99,7 +104,7 @@ TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
 
     CHECK_UNALIGNED_TRIGGER_COUNT(count4, freq4, total_time_ms, err_percent);
 
-    std::vector<int> res{ 2, 4, 3, 1 };
+    std::vector<int> res{2, 4, 3, 1};
 
     for (auto iter = kvmap.cbegin(); iter != kvmap.cend(); ++iter)
     {
@@ -107,7 +112,7 @@ TEST_F(TestTimedScheduler, test_timed_scheduler_several_timed_task)
     }
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

@@ -1,5 +1,5 @@
-#include "cppev/cppev.h"
 #include "config.h"
+#include "cppev/cppev.h"
 
 void send_to_servers()
 {
@@ -13,9 +13,9 @@ void send_to_servers()
     udp_ipv6->wbuffer().produce(MSG, MSG_LEN);
     udp_unix->wbuffer().produce(MSG, MSG_LEN);
 
-    udp_ipv4->send(         "127.0.0.1"  , UDP_IPV4_PORT    );
-    udp_ipv6->send(         "::1"        , UDP_IPV6_PORT    );
-    udp_unix->send_unix(    UDP_UNIX_PATH                   );
+    udp_ipv4->send("127.0.0.1", UDP_IPV4_PORT);
+    udp_ipv6->send("::1", UDP_IPV6_PORT);
+    udp_unix->send_unix(UDP_UNIX_PATH);
 }
 
 int main()

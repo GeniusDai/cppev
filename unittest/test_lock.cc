@@ -1,14 +1,15 @@
-#include <mutex>
-#include <condition_variable>
 #include <gtest/gtest.h>
-#include "cppev/lock.h"
+
+#include <condition_variable>
+#include <mutex>
+
 #include "config.h"
+#include "cppev/lock.h"
 
 namespace cppev
 {
 
-class TestLock
-: public testing::Test
+class TestLock : public testing::Test
 {
 protected:
     void SetUp() override
@@ -44,12 +45,7 @@ TEST_F(TestLock, test_spinlock)
         std::unique_lock<std::mutex> lk(lock_);
         if (!ready_)
         {
-            cond_.wait(lk,
-                [this] () -> bool
-                {
-                    return this->ready_;
-                }
-            );
+            cond_.wait(lk, [this]() -> bool { return this->ready_; });
         }
         ASSERT_FALSE(splck.trylock());
         cond_.notify_one();
@@ -69,7 +65,7 @@ TEST_F(TestLock, test_mutex_performance)
     performance_test<std::mutex>(lock);
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

@@ -1,15 +1,17 @@
 #ifdef __linux__
 
-#include <exception>
-#include <memory>
-#include <cassert>
-#include <tuple>
-#include <iostream>
-#include <thread>
 #include <sys/epoll.h>
+
+#include <cassert>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <tuple>
+
+#include "cppev/common.h"
 #include "cppev/event_loop.h"
 #include "cppev/utils.h"
-#include "cppev/common.h"
 
 namespace cppev
 {
@@ -49,14 +51,14 @@ static ev_mode_of_epoll fd_mode_map_wrapper_to_sys(fd_event_mode mode)
 {
     switch (static_cast<int>(mode))
     {
-        case static_cast<int>(fd_event_mode::level_trigger):
-            return 0;
-        case static_cast<int>(fd_event_mode::edge_trigger):
-            return EPOLLET;
-        case static_cast<int>(fd_event_mode::oneshot):
-            return EPOLLONESHOT;
-        default:
-            throw_logic_error("Unknown mode");
+    case static_cast<int>(fd_event_mode::level_trigger):
+        return 0;
+    case static_cast<int>(fd_event_mode::edge_trigger):
+        return EPOLLET;
+    case static_cast<int>(fd_event_mode::oneshot):
+        return EPOLLONESHOT;
+    default:
+        throw_logic_error("Unknown mode");
     }
 }
 
@@ -69,13 +71,15 @@ void event_loop::fd_io_multiplexing_create_nts()
     }
 }
 
-void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
+                                            fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(), fd_event_to_string.at(ev_type));
+    LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(),
+                  fd_event_to_string.at(ev_type));
     int ep_ctl;
     if (fd_event_masks_.count(iop->fd()))
     {
-        if (static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type))
+        if (static_cast<bool>(fd_event_masks_[iop->fd()] & ev_type))
         {
             throw_logic_error("add existent event for fd ", iop->fd());
         }
@@ -89,21 +93,25 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop, fd_
     struct epoll_event ev;
     ev.data.fd = iop->fd();
     ev.events = fd_event_map_wrapper_to_sys(fd_event_masks_[iop->fd()]) |
-        fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
+                fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
     if (epoll_ctl(ev_fd_, ep_ctl, iop->fd(), &ev) < 0)
     {
         std::unordered_map<int, std::string> ep_ctl_to_string = {
-            { EPOLL_CTL_ADD, "EPOLL_CTL_ADD" },
-            { EPOLL_CTL_MOD, "EPOLL_CTL_MOD" },
+            {EPOLL_CTL_ADD, "EPOLL_CTL_ADD"},
+            {EPOLL_CTL_MOD, "EPOLL_CTL_MOD"},
         };
-        throw_system_error(ep_ctl_to_string[ep_ctl], " error for fd ", iop->fd());
+        throw_system_error(ep_ctl_to_string[ep_ctl], " error for fd ",
+                           iop->fd());
     }
 }
 
-void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_event ev_type)
+void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop,
+                                            fd_event ev_type)
 {
-    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(), fd_event_to_string.at(ev_type));
-    if (!(fd_event_masks_.count(iop->fd()) && static_cast<bool>(fd_event_masks_[iop->fd()]&ev_type)))
+    LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(),
+                  fd_event_to_string.at(ev_type));
+    if (!(fd_event_masks_.count(iop->fd()) &&
+          static_cast<bool>(fd_event_masks_[iop->fd()] & ev_type)))
     {
         throw_logic_error("delete nonexistent event for fd ", iop->fd());
     }
@@ -117,7 +125,7 @@ void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_
         struct epoll_event ev;
         ev.data.fd = iop->fd();
         ev.events = fd_event_map_wrapper_to_sys(fd_event_masks_[iop->fd()]) |
-            fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
+                    fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
         if (epoll_ctl(ev_fd_, EPOLL_CTL_MOD, iop->fd(), &ev) < 0)
         {
             throw_system_error("EPOLL_CTL_MOD error for fd ", iop->fd());
@@ -132,7 +140,8 @@ void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop, fd_
     }
 }
 
-std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(int timeout)
+std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(
+    int timeout)
 {
     epoll_event evs[sysconfig::event_number];
     int nums = epoll_wait(ev_fd_, evs, sysconfig::event_number, timeout);
@@ -146,7 +155,7 @@ std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(in
         int fd = evs[i].data.fd;
         bool succeed = false;
         fd_event ev = fd_event_map_sys_to_wrapper(evs[i].events);
-        for (auto event : { fd_event::fd_readable, fd_event::fd_writable })
+        for (auto event : {fd_event::fd_readable, fd_event::fd_writable})
         {
             if (static_cast<bool>(ev & event))
             {
@@ -162,6 +171,6 @@ std::vector<std::tuple<int, fd_event>> event_loop::fd_io_multiplexing_wait_ts(in
     return fd_events;
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // event loop for linux

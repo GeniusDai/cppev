@@ -1,14 +1,16 @@
 #ifndef _cppev_ipc_h_6C0224787A17_
 #define _cppev_ipc_h_6C0224787A17_
 
-#include <mutex>
-#include <condition_variable>
-#include <string>
-#include <sys/time.h>
-#include <semaphore.h>
 #include <pthread.h>
-#include "cppev/utils.h"
+#include <semaphore.h>
+#include <sys/time.h>
+
+#include <condition_variable>
+#include <mutex>
+#include <string>
+
 #include "cppev/common.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {
@@ -26,9 +28,10 @@ public:
     ~shared_memory() noexcept;
 
     template <typename SharedClass, typename... Args>
-    SharedClass *construct(Args&&... args)
+    SharedClass *construct(Args &&...args)
     {
-        SharedClass *object = new (ptr_) SharedClass(std::forward<Args>(args)...);
+        SharedClass *object =
+            new (ptr_) SharedClass(std::forward<Args>(args)...);
         if (object == nullptr)
         {
             throw_runtime_error("placement new error");
@@ -91,6 +94,7 @@ private:
 class CPPEV_PUBLIC pshared_lock final
 {
     friend class pshared_cond;
+
 public:
     pshared_lock();
 
@@ -130,44 +134,44 @@ public:
     void wait(std::unique_lock<pshared_lock> &lock, const predicate &pred);
 
     template <class Rep, class Period>
-    std::cv_status wait_for(
-        std::unique_lock<pshared_lock> &lock,
-        const std::chrono::duration<Rep, Period> &rel_time
-    )
+    std::cv_status wait_for(std::unique_lock<pshared_lock> &lock,
+                            const std::chrono::duration<Rep, Period> &rel_time)
     {
         return wait_until(lock, std::chrono::steady_clock::now() + rel_time);
     }
 
     template <class Rep, class Period>
-    bool wait_for(
-        std::unique_lock<pshared_lock> &lock,
-        const std::chrono::duration<Rep, Period> &rel_time,
-        const predicate &pred
-    )
+    bool wait_for(std::unique_lock<pshared_lock> &lock,
+                  const std::chrono::duration<Rep, Period> &rel_time,
+                  const predicate &pred)
     {
-        return wait_until(lock, std::chrono::steady_clock::now() + rel_time, pred);
+        return wait_until(lock, std::chrono::steady_clock::now() + rel_time,
+                          pred);
     }
 
     template <class Duration>
     std::cv_status wait_until(
-        std::unique_lock<pshared_lock>& lock,
-        const std::chrono::time_point<std::chrono::system_clock, Duration> &abs_time
-    )
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::time_point<std::chrono::system_clock, Duration>
+            &abs_time)
     {
         auto n_abs_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            abs_time.time_since_epoch()).count();
+                              abs_time.time_since_epoch())
+                              .count();
         timespec ts;
         ts.tv_sec = n_abs_time / 1'000'000'000;
         ts.tv_nsec = n_abs_time % 1'000'000'000;
 
-        // The implementation uses system clock to align with the standard library.
+        // The implementation uses system clock to align with the standard
+        // library.
         int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
         std::cv_status status = std::cv_status::no_timeout;
         if (ret != 0)
         {
             if (ret == EINVAL)
             {
-                throw_system_error_with_specific_errno("pthread_cond_wait error", ret);
+                throw_system_error_with_specific_errno(
+                    "pthread_cond_wait error", ret);
             }
             else if (ret == ETIMEDOUT)
             {
@@ -179,20 +183,18 @@ public:
 
     template <class Clock, class Duration>
     std::cv_status wait_until(
-        std::unique_lock<pshared_lock>& lock,
-        const std::chrono::time_point<Clock, Duration> &abs_time
-    )
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::time_point<Clock, Duration> &abs_time)
     {
-        auto sys_abs_time = std::chrono::system_clock::now() + (abs_time - Clock::now());
+        auto sys_abs_time =
+            std::chrono::system_clock::now() + (abs_time - Clock::now());
         return wait_until(lock, sys_abs_time);
     }
 
     template <class Clock, class Duration>
-    bool wait_until(
-        std::unique_lock<pshared_lock>& lock,
-        const std::chrono::time_point<Clock, Duration> &abs_time,
-        predicate pred
-    )
+    bool wait_until(std::unique_lock<pshared_lock> &lock,
+                    const std::chrono::time_point<Clock, Duration> &abs_time,
+                    predicate pred)
     {
         while (!pred())
         {
@@ -326,6 +328,6 @@ private:
     pshared_rwlock *rwlock_;
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // ipc.h

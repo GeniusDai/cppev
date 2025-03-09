@@ -1,18 +1,21 @@
 #ifndef _cppev_runnable_h_6C0224787A17_
 #define _cppev_runnable_h_6C0224787A17_
 
+#include <pthread.h>
+
+#include <chrono>
+#include <csignal>
+#include <cstring>
 #include <exception>
 #include <future>
-#include <chrono>
-#include <cstring>
-#include <csignal>
-#include <pthread.h>
+
 #include "cppev/utils.h"
 
 /*
     Q1 : Why a new thread library ?
-    A1 : Previously std::thread doesn't support pthread_cancel and pthread_kill, but now
-        std::jthread is recommended. Or if you prefer subthread implemented by subclass.
+    A1 : Previously std::thread doesn't support pthread_cancel and pthread_kill,
+         but now std::jthread is recommended. Or if you prefer subthread
+         implemented by subclass.
 
     Q2 : Is runnable a full encapsulation of pthread ?
     A2 : Remain components of pthread:
@@ -64,10 +67,10 @@ public:
         bool ret = false;
         switch (stat)
         {
-        case std::future_status::ready :
+        case std::future_status::ready:
             ret = true;
             break;
-        case std::future_status::timeout :
+        case std::future_status::timeout:
             ret = false;
             break;
         default:
@@ -85,6 +88,6 @@ private:
     std::future<bool> fut_;
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // runnable.h

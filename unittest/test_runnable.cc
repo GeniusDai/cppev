@@ -1,6 +1,8 @@
-#include <thread>
-#include <chrono>
 #include <gtest/gtest.h>
+
+#include <chrono>
+#include <thread>
+
 #include "cppev/runnable.h"
 #include "cppev/utils.h"
 
@@ -9,8 +11,7 @@ namespace cppev
 
 const int delay = 200;
 
-class runnable_tester
-: public runnable
+class runnable_tester : public runnable
 {
 public:
     void run_impl() override
@@ -21,8 +22,7 @@ public:
 
 const int sig = SIGTERM;
 
-class runnable_tester_wait_for_signal
-: public runnable
+class runnable_tester_wait_for_signal : public runnable
 {
 public:
     void run_impl() override
@@ -74,7 +74,7 @@ TEST(TestRunnable, test_send_signal)
     tester.join();
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

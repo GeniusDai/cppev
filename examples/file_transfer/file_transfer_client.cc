@@ -1,7 +1,9 @@
-#include <thread>
-#include <mutex>
-#include <unordered_map>
 #include <fcntl.h>
+
+#include <mutex>
+#include <thread>
+#include <unordered_map>
+
 #include "config.h"
 #include "cppev/cppev.h"
 
@@ -26,38 +28,43 @@ private:
     std::mutex lock_;
 };
 
-cppev::reactor::tcp_event_handler on_connect = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_connect =
+    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->wbuffer().put_string(FILENAME);
     iopt->wbuffer().put_string("\n");
     iopt->write_all();
 
-    std::string file_copy_name = std::string(FILENAME) + "." + std::to_string(iopt->fd()) + "."
-         + std::to_string(cppev::gettid()) + ".copy";
-    int fd = open(file_copy_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
+    std::string file_copy_name = std::string(FILENAME) + "." +
+                                 std::to_string(iopt->fd()) + "." +
+                                 std::to_string(cppev::gettid()) + ".copy";
+    int fd =
+        open(file_copy_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
     if (fd < 0)
     {
         cppev::throw_system_error("open error");
     }
-    fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
-    cache->setfd(iopt->fd() ,fd);
+    fdcache *cache =
+        reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
+    cache->setfd(iopt->fd(), fd);
     LOG_INFO << "creating file complete";
 };
 
-cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_read_complete =
+    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     iopt->read_all();
-    fdcache *cache = reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
+    fdcache *cache =
+        reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
     auto iops = cache->getfd(iopt->fd());
     iops->wbuffer().put_string(iopt->rbuffer().get_string());
     iops->write_all();
     LOG_INFO << "writing chunk to file complete";
 };
 
-cppev::reactor::tcp_event_handler on_closed = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
-{
-    LOG_INFO << "receiving file complete";
-};
+cppev::reactor::tcp_event_handler on_closed =
+    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+{ LOG_INFO << "receiving file complete"; };
 
 int main(int argc, char **argv)
 {

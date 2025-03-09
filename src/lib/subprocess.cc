@@ -1,12 +1,15 @@
 #include "cppev/subprocess.h"
-#include "cppev/nio.h"
-#include "cppev/utils.h"
-#include <map>
-#include <set>
+
+#include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
+
+#include <map>
+#include <set>
 #include <thread>
+
+#include "cppev/nio.h"
+#include "cppev/utils.h"
 
 #ifdef __APPLE__
 extern char **environ;
@@ -18,17 +21,19 @@ namespace cppev
 namespace subprocess
 {
 
-std::tuple<int, std::string, std::string> exec_cmd(const std::string &cmd, const std::vector<std::string> &env)
+std::tuple<int, std::string, std::string> exec_cmd(
+    const std::string &cmd, const std::vector<std::string> &env)
 {
     subp_open subp(cmd, env);
     subp.wait();
     return std::make_tuple(subp.returncode(), subp.stdout(), subp.stderr());
 }
 
-}   // namespace subprocess
+}  // namespace subprocess
 
-subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env)
-: cmd_(cmd), env_(env)
+subp_open::subp_open(const std::string &cmd,
+                     const std::vector<std::string> &env)
+    : cmd_(cmd), env_(env)
 {
     int fds[2];
     int zero, one, two;
@@ -76,7 +81,7 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
         cmd_with_args[0] = split(cmd_with_args[0], "/").back();
 
         // The argv requires nullptr ending.
-        char *argv[cmd_with_args.size()+1];
+        char *argv[cmd_with_args.size() + 1];
         memset(argv, 0, sizeof(argv));
         for (size_t i = 0; i < cmd_with_args.size(); ++i)
         {
@@ -84,7 +89,7 @@ subp_open::subp_open(const std::string &cmd, const std::vector<std::string> &env
         }
 
         // The envp requires nullptr ending.
-        char *envp[env_.size()+1];
+        char *envp[env_.size() + 1];
         memset(envp, 0, sizeof(envp));
         for (size_t i = 0; i < env_.size(); ++i)
         {
@@ -180,4 +185,4 @@ pid_t subp_open::pid() const noexcept
     return pid_;
 }
 
-}   // namespace cppev
+}  // namespace cppev

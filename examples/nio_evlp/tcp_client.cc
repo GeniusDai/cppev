@@ -1,7 +1,8 @@
-#include "cppev/cppev.h"
 #include "config.h"
+#include "cppev/cppev.h"
 
-cppev::fd_event_handler connecting_socket_callback = [](const std::shared_ptr<cppev::nio> &iop) -> void
+cppev::fd_event_handler connecting_socket_callback =
+    [](const std::shared_ptr<cppev::nio> &iop) -> void
 {
     cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
     if (iopt == nullptr)
@@ -24,15 +25,19 @@ void connect_to_servers()
     auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
     auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
     auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
-    auto tcp_ipv4_to_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
+    auto tcp_ipv4_to_ipv6 =
+        cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
 
-    tcp_ipv4->connect(      "127.0.0.1", TCP_IPV4_PORT  );
-    tcp_ipv6->connect(      "::1"      , TCP_IPV6_PORT  );
-    tcp_unix->connect_unix( TCP_UNIX_PATH               );
+    tcp_ipv4->connect("127.0.0.1", TCP_IPV4_PORT);
+    tcp_ipv6->connect("::1", TCP_IPV6_PORT);
+    tcp_unix->connect_unix(TCP_UNIX_PATH);
 
-    evlp.fd_register_and_activate(tcp_ipv4, cppev::fd_event::fd_writable, connecting_socket_callback);
-    evlp.fd_register_and_activate(tcp_ipv6, cppev::fd_event::fd_writable, connecting_socket_callback);
-    evlp.fd_register_and_activate(tcp_unix, cppev::fd_event::fd_writable, connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv4, cppev::fd_event::fd_writable,
+                                  connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_ipv6, cppev::fd_event::fd_writable,
+                                  connecting_socket_callback);
+    evlp.fd_register_and_activate(tcp_unix, cppev::fd_event::fd_writable,
+                                  connecting_socket_callback);
 
     // Connection is writable when second tcp shake hand is ok
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

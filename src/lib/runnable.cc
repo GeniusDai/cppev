@@ -3,8 +3,7 @@
 namespace cppev
 {
 
-runnable::runnable()
-: fut_(prom_.get_future())
+runnable::runnable() : fut_(prom_.get_future())
 {
 }
 
@@ -62,4 +61,4 @@ void runnable::send_signal(int sig) noexcept
     pthread_kill(thr_, sig);
 }
 
-}   // namespace cppev
+}  // namespace cppev

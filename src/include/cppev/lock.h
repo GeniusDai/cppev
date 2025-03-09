@@ -1,12 +1,14 @@
 #ifndef _cppev_lock_h_6C0224787A17_
 #define _cppev_lock_h_6C0224787A17_
 
-#include <vector>
-#include <mutex>
 #include <pthread.h>
+
 #include <atomic>
-#include "cppev/utils.h"
+#include <mutex>
+#include <vector>
+
 #include "cppev/common.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {
@@ -17,10 +19,10 @@ namespace cppev
 
 /*
     Usage of spinlock is usually not recommended.
-    Only used when tasks with lock are really important and simple, and make sure you won't be scheduled
-    out by os when holding the lock.
-    Currently spinlock shared among process is not supported.
-    By benchmark pthread implementation is about two times faster than atomic implementation.
+    Only used when tasks with lock are really important and simple, and make
+   sure you won't be scheduled out by os when holding the lock. Currently
+   spinlock shared among process is not supported. By benchmark pthread
+   implementation is about two times faster than atomic implementation.
  */
 class CPPEV_PUBLIC spinlock final
 {
@@ -48,6 +50,6 @@ private:
 #endif
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // lock.h

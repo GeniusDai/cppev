@@ -1,19 +1,19 @@
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <gtest/gtest.h>
-#include "cppev/ipc.h"
+
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 #include "config.h"
+#include "cppev/ipc.h"
 
 namespace cppev
 {
 
-class TestIpcByFork
-: public testing::Test
+class TestIpcByFork : public testing::Test
 {
 protected:
-    TestIpcByFork()
-    : name_("/cppev_test_ipc_name"), name_2_(name_ + "_2")
+    TestIpcByFork() : name_("/cppev_test_ipc_name"), name_2_(name_ + "_2")
     {
     }
 
@@ -120,8 +120,7 @@ TEST_F(TestIpcByFork, test_sem_shm_rwlock_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
-        TestStruct(int var1, double var2)
-        : var1(var1), var2(var2)
+        TestStruct(int var1, double var2) : var1(var1), var2(var2)
         {
         }
 
@@ -180,8 +179,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
-        TestStruct()
-        : var(0), ready(false)
+        TestStruct() : var(0), ready(false)
         {
         }
 
@@ -228,7 +226,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         for (int i = 0; i < 50; ++i)
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
-            std::cv_status status = ptr->cond.wait_for(lock, std::chrono::milliseconds(10));
+            std::cv_status status =
+                ptr->cond.wait_for(lock, std::chrono::milliseconds(10));
             ASSERT_EQ(status, std::cv_status::timeout);
         }
 
@@ -241,12 +240,13 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<pshared_lock> lock(ptr->lock);
             ptr->ready = true;
             ptr->cond.notify_one();
-            std::cv_status status = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay*3));
+            std::cv_status status =
+                ptr->cond.wait_for(lock, std::chrono::milliseconds(delay * 3));
             ASSERT_EQ(status, std::cv_status::no_timeout);
         }
 
         // Test-3
-        auto pred = [ptr, &NUMBER](){ return ptr->var == NUMBER; };
+        auto pred = [ptr, &NUMBER]() { return ptr->var == NUMBER; };
 
         ptr->var = NUMBER + 1;
         ptr->ready = false;
@@ -257,7 +257,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<pshared_lock> lock(ptr->lock);
             ptr->ready = true;
             ptr->cond.notify_all();
-            bool success = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay*3), pred);
+            bool success = ptr->cond.wait_for(
+                lock, std::chrono::milliseconds(delay * 3), pred);
             ASSERT_TRUE(success);
         }
 
@@ -273,9 +274,13 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             ptr->ready = true;
             ptr->cond.notify_all();
             auto start = std::chrono::system_clock::now();
-            bool success = ptr->cond.wait_for(lock, std::chrono::milliseconds(delay), pred);
+            bool success = ptr->cond.wait_for(
+                lock, std::chrono::milliseconds(delay), pred);
             auto end = std::chrono::system_clock::now();
-            std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>((end -start)).count() << std::endl;
+            std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(
+                             (end - start))
+                             .count()
+                      << std::endl;
             ASSERT_FALSE(success);
         }
 
@@ -290,7 +295,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2*delay));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2 * delay));
         semaphore sem(name_);
 
         // Test-1
@@ -302,7 +307,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
-            if(!ptr->ready)
+            if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
             }
@@ -316,7 +321,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
-            if(!ptr->ready)
+            if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
             }
@@ -331,7 +336,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
-            if(!ptr->ready)
+            if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
             }
@@ -347,13 +352,13 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 
         {
             std::unique_lock<pshared_lock> lock(ptr->lock);
-            if(!ptr->ready)
+            if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
             }
             ASSERT_TRUE(ptr->ready);
             lock.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(delay*3));
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay * 3));
             lock.lock();
             ptr->var = NUMBER;
             ptr->cond.notify_all();
@@ -372,8 +377,7 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
-        TestStruct()
-        : barrier(2), var(0)
+        TestStruct() : barrier(2), var(0)
         {
         }
 
@@ -437,8 +441,7 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
     }
 }
 
-class TestPSharedLockByThread
-: public testing::Test
+class TestPSharedLockByThread : public testing::Test
 {
 protected:
     void SetUp() override
@@ -452,7 +455,6 @@ protected:
 
     bool ready_;
 };
-
 
 TEST_F(TestPSharedLockByThread, test_rwlock_guard_movable)
 {
@@ -498,12 +500,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
         std::unique_lock<std::mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock,
-                [this] () -> bool
-                {
-                    return this->ready_;
-                }
-            );
+            cond_.wait(lock, [this]() -> bool { return this->ready_; });
         }
 
         ASSERT_TRUE(rwlck.try_rdlock());
@@ -535,12 +532,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
         std::unique_lock<std::mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock,
-                [this] () -> bool
-                {
-                    return this->ready_;
-                }
-            );
+            cond_.wait(lock, [this]() -> bool { return this->ready_; });
         }
         ASSERT_FALSE(rwlck.try_rdlock());
         ASSERT_FALSE(rwlck.try_wrlock());
@@ -636,7 +628,7 @@ TEST_F(TestPSharedLockByThread, test_pshared_lock_shm_performance)
     shm.unlink();
 }
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

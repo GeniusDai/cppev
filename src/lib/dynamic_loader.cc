@@ -4,7 +4,7 @@ namespace cppev
 {
 
 dynamic_loader::dynamic_loader(const std::string &filename, dyld_mode mode)
-: handle_(nullptr)
+    : handle_(nullptr)
 {
     auto all_mode = RTLD_GLOBAL;
     if (mode == dyld_mode::lazy)
@@ -27,4 +27,4 @@ dynamic_loader::~dynamic_loader() noexcept
     dlclose(handle_);
 }
 
-}   // namespace cppev
+}  // namespace cppev

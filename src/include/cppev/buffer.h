@@ -1,12 +1,13 @@
 #ifndef _cppev_buffer_h_6C0224787A17_
 #define _cppev_buffer_h_6C0224787A17_
 
-#include <utility>
-#include <memory>
-#include <cstring>
 #include <cstdlib>
-#include "cppev/utils.h"
+#include <cstring>
+#include <memory>
+#include <utility>
+
 #include "cppev/common.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {
@@ -18,14 +19,13 @@ class CPPEV_PUBLIC basic_buffer final
     // A: To save a memory copy.
     friend class nstream;
     friend class nsockudp;
+
 public:
-    basic_buffer() noexcept
-    : basic_buffer(1)
+    basic_buffer() noexcept : basic_buffer(1)
     {
     }
 
-    explicit basic_buffer(int cap) noexcept
-    : cap_(cap), start_(0), offset_(0)
+    explicit basic_buffer(int cap) noexcept : cap_(cap), start_(0), offset_(0)
     {
         if (cap_ < 1)
         {
@@ -96,7 +96,7 @@ public:
         {
             cap_ = 1;
         }
-        while(cap_ < cap)
+        while (cap_ < cap)
         {
             cap_ *= 2;
         }
@@ -171,7 +171,8 @@ public:
     // Get string from buffer.
     // @param len: Char array length that consumes, -1 means all.
     // @param remove : whether consumes the Char array.
-    std::basic_string<Char> get_string(int len = -1, bool remove = true) noexcept
+    std::basic_string<Char> get_string(int len = -1,
+                                       bool remove = true) noexcept
     {
         if (len == -1)
         {
@@ -214,6 +215,6 @@ private:
 
 using buffer = basic_buffer<char>;
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // buffer.h

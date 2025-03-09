@@ -1,9 +1,11 @@
+#include <fcntl.h>
+
 #include <thread>
 #include <unordered_map>
-#include <fcntl.h>
+
 #include "config.h"
-#include "cppev/tcp.h"
 #include "cppev/logger.h"
+#include "cppev/tcp.h"
 
 class filecache final
 {
@@ -17,7 +19,8 @@ public:
         }
         LOG_INFO << "start loading file";
         int fd = open(filename.c_str(), O_RDONLY);
-        std::shared_ptr<cppev::nstream> iops = std::make_shared<cppev::nstream>(fd);
+        std::shared_ptr<cppev::nstream> iops =
+            std::make_shared<cppev::nstream>(fd);
         iops->read_all(CHUNK_SIZE);
         close(fd);
         hash_[filename] = iops;
@@ -31,26 +34,30 @@ private:
     std::unordered_map<std::string, std::shared_ptr<cppev::nstream>> hash_;
 };
 
-cppev::reactor::tcp_event_handler on_read_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_read_complete =
+    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     LOG_INFO << "start callback : on_read_complete";
     std::string filename = iopt->rbuffer().get_string(-1, false);
-    if (filename[filename.size()-1] != '\n')
+    if (filename[filename.size() - 1] != '\n')
     {
         return;
     }
     iopt->rbuffer().clear();
-    filename = filename.substr(0, filename.size()-1);
+    filename = filename.substr(0, filename.size() - 1);
     LOG_INFO << "client request file : " << filename;
 
-    const cppev::buffer *bf = reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt))->lazyload(filename);
+    const cppev::buffer *bf =
+        reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt))
+            ->lazyload(filename);
 
     iopt->wbuffer().produce(bf->rawbuf(), bf->size());
     cppev::reactor::async_write(iopt);
     LOG_INFO << "end callback : on_read_complete";
 };
 
-cppev::reactor::tcp_event_handler on_write_complete = [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+cppev::reactor::tcp_event_handler on_write_complete =
+    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
 {
     LOG_INFO << "start callback : on_write_complete";
     cppev::reactor::safely_close(iopt);

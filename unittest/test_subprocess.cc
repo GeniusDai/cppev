@@ -1,6 +1,8 @@
-#include <thread>
-#include <filesystem>
 #include <gtest/gtest.h>
+
+#include <filesystem>
+#include <thread>
+
 #include "cppev/subprocess.h"
 
 namespace cppev
@@ -12,7 +14,7 @@ TEST(TestSubprocessExecCmd, test_exec_cmd)
 {
     std::tuple<int, std::string, std::string> rets;
 
-    rets = subprocess::exec_cmd("printenv test", { "test=TEST" });
+    rets = subprocess::exec_cmd("printenv test", {"test=TEST"});
     EXPECT_EQ(std::get<0>(rets), 0);
     EXPECT_STREQ(std::get<1>(rets).c_str(), "TEST\n");
     EXPECT_STREQ(std::get<2>(rets).c_str(), "");
@@ -46,7 +48,7 @@ TEST(TestSubprocessExecCmd, test_exec_cmd_python)
 }
 
 class TestSubprocess
-: public testing::TestWithParam<std::tuple<std::string, int>>
+    : public testing::TestWithParam<std::tuple<std::string, int>>
 {
 protected:
     void SetUp() override
@@ -82,14 +84,13 @@ TEST_P(TestSubprocess, test_subp_popen)
     EXPECT_NE(subp.pid(), gettid());
 }
 
-INSTANTIATE_TEST_SUITE_P(CppevTest, TestSubprocess,
-    testing::Combine(
-        testing::Values("cppev", "event driven"),    // input
-        testing::Values(SIGTERM, SIGKILL, SIGABRT)   // signal
-    )
-);
+INSTANTIATE_TEST_SUITE_P(
+    CppevTest, TestSubprocess,
+    testing::Combine(testing::Values("cppev", "event driven"),   // input
+                     testing::Values(SIGTERM, SIGKILL, SIGABRT)  // signal
+                     ));
 
-}   // namespace cppev
+}  // namespace cppev
 
 int main(int argc, char **argv)
 {

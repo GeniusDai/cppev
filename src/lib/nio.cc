@@ -1,26 +1,28 @@
 #include "cppev/nio.h"
+
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <climits>
+#include <cstdio>
+#include <cstring>
+#include <exception>
+#include <tuple>
+#include <vector>
+
 #include "cppev/common.h"
 #include "cppev/utils.h"
-#include <cassert>
-#include <sys/socket.h>
-#include <exception>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstring>
-#include <arpa/inet.h>
-#include <sys/un.h>
-#include <climits>
-#include <netinet/tcp.h>
-#include <tuple>
-#include <sys/stat.h>
-#include <vector>
-#include <cstdio>
 
 namespace cppev
 {
 
-nio::nio(int fd)
-: fd_(fd), closed_(false)
+nio::nio(int fd) : fd_(fd), closed_(false)
 {
     set_io_nonblock();
 }
@@ -51,7 +53,6 @@ nio::~nio() noexcept
         close();
     }
 }
-
 
 int nio::fd() const noexcept
 {
@@ -148,16 +149,13 @@ void nio::move(nio &&other) noexcept
     other.evlp_ = nullptr;
 }
 
-
-nstream::nstream(int fd)
-: nio(fd), reset_(false), eof_(false), eop_(false)
+nstream::nstream(int fd) : nio(fd), reset_(false), eof_(false), eop_(false)
 {
 }
 
 nstream::~nstream() = default;
 
-nstream::nstream(nstream &&other) noexcept
-: nio(std::forward<nstream>(other))
+nstream::nstream(nstream &&other) noexcept : nio(std::forward<nstream>(other))
 {
     if (&other == this)
     {
@@ -276,7 +274,7 @@ int nstream::write_chunk(int len)
 int nstream::read_all(int step)
 {
     int total = 0;
-    while(true)
+    while (true)
     {
         int curr = read_chunk(step);
         total += curr;
@@ -291,7 +289,7 @@ int nstream::read_all(int step)
 int nstream::write_all(int step)
 {
     int total = 0;
-    while(true)
+    while (true)
     {
         int curr = write_chunk(step);
         total += curr;
@@ -314,73 +312,68 @@ void nstream::move(nstream &&other, bool move_base) noexcept
     this->eop_ = other.eop_;
 }
 
-
-const std::unordered_map<family, int, enum_hash> nsock::fmap_ =
-{
+const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
-    {family::local, AF_LOCAL}
-};
+    {family::local, AF_LOCAL}};
 
-const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ =
-{
+const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ = {
     {family::ipv4, sizeof(sockaddr_in)},
     {family::ipv6, sizeof(sockaddr_in6)},
-    {family::local, sizeof(sockaddr_un)}
-};
+    {family::local, sizeof(sockaddr_un)}};
 
 static void set_ip_port(sockaddr_storage &addr, const char *ip, int port)
 {
     switch (addr.ss_family)
     {
-    case AF_INET :
-    {
-        sockaddr_in *ap = (sockaddr_in *)(&addr);
-        ap->sin_port = htons(port);
-        if (ip)
+    case AF_INET:
         {
-            int rtn = inet_pton(addr.ss_family, ip, &(ap->sin_addr));
-            if (rtn == 0)
+            sockaddr_in *ap = (sockaddr_in *)(&addr);
+            ap->sin_port = htons(port);
+            if (ip)
             {
-                throw_logic_error("inet_pton error");
+                int rtn = inet_pton(addr.ss_family, ip, &(ap->sin_addr));
+                if (rtn == 0)
+                {
+                    throw_logic_error("inet_pton error");
+                }
+                else if (rtn == -1)
+                {
+                    throw_system_error("inet_pton error");
+                }
             }
-            else if (rtn == -1)
+            else
             {
-                throw_system_error("inet_pton error");
+                ap->sin_addr.s_addr = htonl(INADDR_ANY);
             }
+            break;
         }
-        else
+    case AF_INET6:
         {
-            ap->sin_addr.s_addr = htonl(INADDR_ANY);
-        }
-        break;
-    }
-    case AF_INET6 :
-    {
-        sockaddr_in6 *ap6 = (sockaddr_in6 *)(&addr);
-        ap6->sin6_port = htons(port);
-        if (ip)
-        {
-            int rtn = inet_pton(addr.ss_family, ip, &(ap6->sin6_addr));
-            if (rtn == 0)
+            sockaddr_in6 *ap6 = (sockaddr_in6 *)(&addr);
+            ap6->sin6_port = htons(port);
+            if (ip)
             {
-                throw_logic_error("inet_pton error");
+                int rtn = inet_pton(addr.ss_family, ip, &(ap6->sin6_addr));
+                if (rtn == 0)
+                {
+                    throw_logic_error("inet_pton error");
+                }
+                else if (rtn == -1)
+                {
+                    throw_system_error("inet_pton error");
+                }
             }
-            else if (rtn == -1)
+            else
             {
-                throw_system_error("inet_pton error");
+                ap6->sin6_addr = in6addr_any;
             }
+            break;
         }
-        else
-        {
-            ap6->sin6_addr = in6addr_any;
-        }
-        break;
-    }
     default:
-    {
-        throw_logic_error("unknown socket family");
-    }
+        {
+            throw_logic_error("unknown socket family");
+        }
     }
 }
 
@@ -390,53 +383,54 @@ static void set_path(sockaddr_storage &addr, const char *path)
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
-static std::tuple<std::string, int, family> query_ip_port_family(const sockaddr_storage &addr)
+static std::tuple<std::string, int, family> query_ip_port_family(
+    const sockaddr_storage &addr)
 {
     int port;
     char ip[sizeof(sockaddr_storage)];
     memset(ip, 0, sizeof(ip));
     family f;
-    switch(addr.ss_family)
+    switch (addr.ss_family)
     {
-    case AF_INET :
-    {
-        f = family::ipv4;
-        sockaddr_in *ap = (sockaddr_in *)(&addr);
-        port = ntohs(ap->sin_port);
-        if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) == nullptr)
+    case AF_INET:
         {
-            throw_system_error("inet_ntop error");
+            f = family::ipv4;
+            sockaddr_in *ap = (sockaddr_in *)(&addr);
+            port = ntohs(ap->sin_port);
+            if (inet_ntop(ap->sin_family, &(ap->sin_addr), ip, sizeof(ip)) ==
+                nullptr)
+            {
+                throw_system_error("inet_ntop error");
+            }
+            break;
         }
-        break;
-    }
-    case AF_INET6 :
-    {
-        f = family::ipv6;
-        sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);
-        port = ntohs(ap->sin6_port);
-        if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) == nullptr)
+    case AF_INET6:
         {
-            throw_system_error("inet_ntop error");
+            f = family::ipv6;
+            sockaddr_in6 *ap = (sockaddr_in6 *)(&addr);
+            port = ntohs(ap->sin6_port);
+            if (inet_ntop(ap->sin6_family, &(ap->sin6_addr), ip, sizeof(ip)) ==
+                nullptr)
+            {
+                throw_system_error("inet_ntop error");
+            }
+            break;
         }
-        break;
-    }
     default:
-    {
-        throw_logic_error("unknown socket family");
-    }
+        {
+            throw_logic_error("unknown socket family");
+        }
     }
     return std::make_tuple(ip, port, f);
 }
 
-nsock::nsock(int fd, family f)
-: nio(fd), family_(f)
+nsock::nsock(int fd, family f) : nio(fd), family_(f)
 {
 }
 
 nsock::~nsock() = default;
 
-nsock::nsock(nsock &&other) noexcept
-: nio(std::forward<nsock>(other))
+nsock::nsock(nsock &&other) noexcept : nio(std::forward<nsock>(other))
 {
     if (&other == this)
     {
@@ -469,7 +463,8 @@ void nsock::bind(const char *ip, int port)
     set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
-        throw_system_error(std::string("bind error : ").append(std::to_string(port)));
+        throw_system_error(
+            std::string("bind error : ").append(std::to_string(port)));
     }
 }
 
@@ -509,7 +504,7 @@ void nsock::set_so_reuseaddr(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
-    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, len) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &optval, len) == -1)
     {
         throw_system_error("setsockopt error for SO_REUSEADDR");
     }
@@ -519,7 +514,7 @@ bool nsock::get_so_reuseaddr() const
 {
     int optval;
     socklen_t len = sizeof(optval);
-    if (getsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,  &optval, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &optval, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_REUSEADDR");
     }
@@ -530,7 +525,7 @@ void nsock::set_so_reuseport(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
-    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT,  &optval, len) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT, &optval, len) == -1)
     {
         throw_system_error("setsockopt error for SO_REUSEPORT");
     }
@@ -540,7 +535,7 @@ bool nsock::get_so_reuseport() const
 {
     int optval;
     socklen_t len = sizeof(optval);
-    if (getsockopt(fd_, SOL_SOCKET, SO_REUSEPORT,  &optval, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_REUSEPORT, &optval, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_REUSEPORT");
     }
@@ -549,7 +544,7 @@ bool nsock::get_so_reuseport() const
 
 void nsock::set_so_rcvbuf(int size)
 {
-    if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, sizeof(size)) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) == -1)
     {
         throw_system_error("setsockopt error for SO_RCVBUF");
     }
@@ -559,7 +554,7 @@ int nsock::get_so_rcvbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
-    if (getsockopt(fd_, SOL_SOCKET, SO_RCVBUF,  &size, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &size, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_RCVBUF");
     }
@@ -568,7 +563,7 @@ int nsock::get_so_rcvbuf() const
 
 void nsock::set_so_sndbuf(int size)
 {
-    if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, sizeof(size)) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) == -1)
     {
         throw_system_error("setsockopt error for SO_SNDBUF");
     }
@@ -578,7 +573,7 @@ int nsock::get_so_sndbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
-    if (getsockopt(fd_, SOL_SOCKET, SO_SNDBUF,  &size, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &size, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_SNDBUF");
     }
@@ -587,7 +582,7 @@ int nsock::get_so_sndbuf() const
 
 void nsock::set_so_rcvlowat(int size)
 {
-    if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, sizeof(size)) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT, &size, sizeof(size)) == -1)
     {
         throw_system_error("setsockopt error for SO_RCVLOWAT");
     }
@@ -597,14 +592,16 @@ int nsock::get_so_rcvlowat() const
 {
     int size;
     socklen_t len = sizeof(size);
-    if (getsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT,  &size, &len) == -1)
-    { throw_system_error("getsockopt error for SO_RCVLOWAT"); }
+    if (getsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT, &size, &len) == -1)
+    {
+        throw_system_error("getsockopt error for SO_RCVLOWAT");
+    }
     return size;
 }
 
 void nsock::set_so_sndlowat(int size)
 {
-    if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, sizeof(size)) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT, &size, sizeof(size)) == -1)
     {
         throw_system_error("setsockopt error for SO_SNDLOWAT");
     }
@@ -614,7 +611,7 @@ int nsock::get_so_sndlowat() const
 {
     int size;
     socklen_t len = sizeof(size);
-    if (getsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT,  &size, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT, &size, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_SNDLOWAT");
     }
@@ -631,18 +628,17 @@ void nsock::move(nsock &&other, bool move_base) noexcept
     this->peer_ = other.peer_;
 }
 
-
 nsocktcp::nsocktcp(int sockfd, family f)
-: nio(sockfd), nsock(-1, f), nstream(-1)
+    : nio(sockfd), nsock(-1, f), nstream(-1)
 {
 }
 
 nsocktcp::~nsocktcp() = default;
 
 nsocktcp::nsocktcp(nsocktcp &&other) noexcept
-: nio(std::forward<nsocktcp>(other)),
-    nsock(std::forward<nsocktcp>(other)),
-    nstream(std::forward<nsocktcp>(other))
+    : nio(std::forward<nsocktcp>(other)),
+      nsock(std::forward<nsocktcp>(other)),
+      nstream(std::forward<nsocktcp>(other))
 {
     if (&other == this)
     {
@@ -680,7 +676,7 @@ void nsocktcp::set_so_keepalive(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
-    if (setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &optval, len) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &optval, len) == -1)
     {
         throw_system_error("setsockopt error for SO_KEEPALIVE");
     }
@@ -690,7 +686,7 @@ bool nsocktcp::get_so_keepalive() const
 {
     int optval;
     socklen_t len = sizeof(optval);
-    if (getsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE,  &optval, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &optval, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_KEEPALIVE");
     }
@@ -702,7 +698,7 @@ void nsocktcp::set_so_linger(bool l_onoff, int l_linger)
     struct linger lg;
     lg.l_onoff = static_cast<int>(l_onoff);
     lg.l_linger = l_linger;
-    if (setsockopt(fd_, SOL_SOCKET, SO_LINGER,  &lg, sizeof(lg)) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_LINGER, &lg, sizeof(lg)) == -1)
     {
         throw_system_error("setsockopt error for SO_LINGER");
     }
@@ -712,7 +708,7 @@ std::pair<bool, int> nsocktcp::get_so_linger() const
 {
     struct linger lg;
     socklen_t len = sizeof(lg);
-    if (getsockopt(fd_, SOL_SOCKET, SO_LINGER,  &lg, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_LINGER, &lg, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_LINGER");
     }
@@ -723,7 +719,7 @@ void nsockudp::set_so_broadcast(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
-    if (setsockopt(fd_, SOL_SOCKET, SO_BROADCAST,  &optval, len) == -1)
+    if (setsockopt(fd_, SOL_SOCKET, SO_BROADCAST, &optval, len) == -1)
     {
         throw_system_error("setsockopt error for SO_BROADCAST");
     }
@@ -733,7 +729,7 @@ bool nsockudp::get_so_broadcast() const
 {
     int optval;
     socklen_t len = sizeof(optval);
-    if (getsockopt(fd_, SOL_SOCKET, SO_BROADCAST,  &optval, &len) == -1)
+    if (getsockopt(fd_, SOL_SOCKET, SO_BROADCAST, &optval, &len) == -1)
     {
         throw_system_error("getsockopt error for SO_BROADCAST");
     }
@@ -744,7 +740,7 @@ void nsocktcp::set_tcp_nodelay(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
-    if (setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY,  &optval, len) == -1)
+    if (setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, &optval, len) == -1)
     {
         throw_system_error("setsockopt error for TCP_NODELAY");
     }
@@ -776,22 +772,22 @@ void nsocktcp::shutdown(shutdown_mode howto) noexcept
 {
     switch (howto)
     {
-    case shutdown_mode::shutdown_rd :
-    {
-        ::shutdown(fd_, SHUT_RD);
-        break;
-    }
-    case shutdown_mode::shutdown_wr :
-    {
-        ::shutdown(fd_, SHUT_WR);
-        break;
-    }
-    case shutdown_mode::shutdown_rdwr :
-    {
-        ::shutdown(fd_, SHUT_RDWR);
-        break;
-    }
-    default: ;
+    case shutdown_mode::shutdown_rd:
+        {
+            ::shutdown(fd_, SHUT_RD);
+            break;
+        }
+    case shutdown_mode::shutdown_wr:
+        {
+            ::shutdown(fd_, SHUT_WR);
+            break;
+        }
+    case shutdown_mode::shutdown_rdwr:
+        {
+            ::shutdown(fd_, SHUT_RDWR);
+            break;
+        }
+    default:;
     }
 }
 
@@ -799,7 +795,8 @@ std::tuple<std::string, int, family> nsocktcp::sockname() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family::local);
+        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_),
+                               family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -814,7 +811,8 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family::local);
+        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_),
+                               family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -878,12 +876,12 @@ bool nsocktcp::connect_unix(const char *path)
 std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
 {
     std::vector<std::shared_ptr<nsocktcp>> sockfds;
-    for(int i = 0; i < batch; ++i)
+    for (int i = 0; i < batch; ++i)
     {
         int sockfd = ::accept(fd_, nullptr, nullptr);
         if (sockfd == -1)
         {
-            if(errno == EAGAIN || errno == EWOULDBLOCK)
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 break;
             }
@@ -914,16 +912,14 @@ void nsocktcp::move(nsocktcp &&other, bool move_base) noexcept
     }
 }
 
-
-nsockudp::nsockudp(int sockfd, family f)
-: nio(sockfd), nsock(-1, f)
+nsockudp::nsockudp(int sockfd, family f) : nio(sockfd), nsock(-1, f)
 {
 }
 
 nsockudp::~nsockudp() = default;
 
 nsockudp::nsockudp(nsockudp &&other) noexcept
-: nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
+    : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
 {
     if (&other == this)
     {
@@ -957,7 +953,8 @@ std::tuple<std::string, int, family> nsockudp::recv()
     sockaddr_storage addr;
     socklen_t len = faddr_len_.at(family_);
     int ret = recvfrom(fd_, rbuffer().buffer_.get() + rbuffer().offset_,
-        rbuffer().cap_ - rbuffer().offset_, 0, (sockaddr *)&addr, &len);
+                       rbuffer().cap_ - rbuffer().offset_, 0, (sockaddr *)&addr,
+                       &len);
     if (ret == 0)
     {
         throw_system_error("recvfrom error");
@@ -975,8 +972,9 @@ void nsockudp::send(const char *ip, int port)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_ip_port(addr, ip, port);
-    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_, wbuffer().size(),
-        0, (sockaddr *)&addr, faddr_len_.at(family_));
+    int ret =
+        sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
+               wbuffer().size(), 0, (sockaddr *)&addr, faddr_len_.at(family_));
     if (ret == 0)
     {
         throw_system_error("sendto error");
@@ -989,8 +987,9 @@ void nsockudp::send_unix(const char *path)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_path(addr, path);
-    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_, wbuffer().size(),
-        0, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr));
+    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
+                     wbuffer().size(), 0, (sockaddr *)&addr,
+                     SUN_LEN((sockaddr_un *)&addr));
     if (ret == 0)
     {
         throw_system_error("sendto error");
@@ -1005,7 +1004,6 @@ void nsockudp::move(nsockudp &&other, bool move_base) noexcept
         nsock::move(std::forward<nsockudp>(other), true);
     }
 }
-
 
 namespace nio_factory
 {
@@ -1042,8 +1040,7 @@ std::vector<std::shared_ptr<nstream>> get_pipes()
     {
         throw_system_error("pipe error");
     }
-    std::vector<std::shared_ptr<nstream>> pipes =
-    {
+    std::vector<std::shared_ptr<nstream>> pipes = {
         std::make_shared<nstream>(pfds[0]),
         std::make_shared<nstream>(pfds[1]),
     };
@@ -1067,14 +1064,13 @@ std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &path)
     {
         throw_system_error("open error");
     }
-    std::vector<std::shared_ptr<nstream>> fifos =
-    {
+    std::vector<std::shared_ptr<nstream>> fifos = {
         std::make_shared<nstream>(fdr),
         std::make_shared<nstream>(fdw),
     };
     return fifos;
 }
 
-}   // namespace nio_factory
+}  // namespace nio_factory
 
-}   // namespace cppev
+}  // namespace cppev

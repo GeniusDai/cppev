@@ -1,4 +1,5 @@
 #include "cppev/tcp.h"
+
 #include "cppev/logger.h"
 
 namespace cppev
@@ -8,13 +9,12 @@ namespace reactor
 {
 
 tp_shared_data::tp_shared_data(void *external_data_ptr)
-:
-    on_accept(idle_handler),
-    on_connect(idle_handler),
-    on_read_complete(idle_handler),
-    on_write_complete(idle_handler),
-    on_closed(idle_handler),
-    external_data_ptr(external_data_ptr)
+    : on_accept(idle_handler),
+      on_connect(idle_handler),
+      on_read_complete(idle_handler),
+      on_write_complete(idle_handler),
+      on_closed(idle_handler),
+      external_data_ptr(external_data_ptr)
 {
 }
 
@@ -24,7 +24,7 @@ event_loop *tp_shared_data::random_get_evlp()
 {
     std::random_device rd;
     std::default_random_engine rde(rd());
-    std::uniform_int_distribution<int> dist(0, evls.size()-1);
+    std::uniform_int_distribution<int> dist(0, evls.size() - 1);
     return evls[dist(rde)];
 }
 
@@ -54,10 +54,10 @@ const void *tp_shared_data::external_data() const noexcept
     return external_data_ptr;
 }
 
-
 void async_write(const std::shared_ptr<nsocktcp> &iopt)
 {
-    tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
+    tp_shared_data *dp =
+        reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
     iopt->write_all();
     if (0 == iopt->wbuffer().size())
     {
@@ -93,10 +93,12 @@ void safely_close(const std::shared_ptr<nsocktcp> &iopt)
 
 void *external_data(const std::shared_ptr<nsocktcp> &iopt)
 {
-    return (reinterpret_cast<tp_shared_data *>(iopt->evlp().data()))->external_data();
+    return (reinterpret_cast<tp_shared_data *>(iopt->evlp().data()))
+        ->external_data();
 }
 
-size_t host_hash::operator()(const std::tuple<std::string, int, family> &h) const
+size_t host_hash::operator()(
+    const std::tuple<std::string, int, family> &h) const
 {
     size_t ret = 0;
     ret += std::hash<std::string>()(std::get<0>(h));
@@ -105,12 +107,11 @@ size_t host_hash::operator()(const std::tuple<std::string, int, family> &h) cons
     return ret;
 }
 
-
-const tcp_event_handler tp_shared_data::idle_handler = [](const std::shared_ptr<nsocktcp> &) -> void {};
-
+const tcp_event_handler tp_shared_data::idle_handler =
+    [](const std::shared_ptr<nsocktcp> &) -> void {};
 
 iohandler::iohandler(tp_shared_data *data)
-: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
 }
 
@@ -164,12 +165,15 @@ void iohandler::on_acpt_writable(const std::shared_ptr<nio> &iop)
     {
         throw_logic_error("dynamic_pointer_cast error");
     }
-    tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
+    tp_shared_data *dp =
+        reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
     iopt->evlp().fd_remove_and_deactivate(iop, fd_event::fd_writable);
     // The sequence CANNOT be changed, since on_accept may call async_write
-    iopt->evlp().fd_register(iop, fd_event::fd_writable, iohandler::on_writable);
+    iopt->evlp().fd_register(iop, fd_event::fd_writable,
+                             iohandler::on_writable);
     dp->on_accept(iopt);
-    iopt->evlp().fd_register_and_activate(iop, fd_event::fd_readable, iohandler::on_readable);
+    iopt->evlp().fd_register_and_activate(iop, fd_event::fd_readable,
+                                          iohandler::on_readable);
     LOG_INFO_FMT("Connected socket %d initialized", iop->fd());
 }
 
@@ -181,13 +185,15 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
 
-    iohandler *pseudo_this = reinterpret_cast<iohandler *>(iopt->evlp().owner());
+    iohandler *pseudo_this =
+        reinterpret_cast<iohandler *>(iopt->evlp().owner());
     iopt->evlp().fd_remove_and_deactivate(iop, fd_event::fd_writable);
 
     if (!iopt->check_connect())
     {
         std::tuple<std::string, int, family> h = iopt->connpeer();
-        LOG_ERROR_FMT("Connect %s %d failed when checking writable", std::get<0>(h).c_str(), std::get<1>(h));
+        LOG_ERROR_FMT("Connect %s %d failed when checking writable",
+                      std::get<0>(h).c_str(), std::get<1>(h));
         pseudo_this->failures_[h] += 1;
         iopt->evlp().fd_clean(iop);
         iopt->close();
@@ -195,9 +201,11 @@ void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
     }
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
     // The sequence CANNOT be changed since on_connect may call aysnc_write
-    iopt->evlp().fd_register(iop, fd_event::fd_writable, iohandler::on_writable);
+    iopt->evlp().fd_register(iop, fd_event::fd_writable,
+                             iohandler::on_writable);
     dp->on_connect(iopt);
-    iopt->evlp().fd_register_and_activate(iop, fd_event::fd_readable, iohandler::on_readable);
+    iopt->evlp().fd_register_and_activate(iop, fd_event::fd_readable,
+                                          iohandler::on_readable);
     LOG_INFO_FMT("Connected socket %d initialized", iop->fd());
 }
 
@@ -213,9 +221,8 @@ void iohandler::shutdown()
     evlp_.stop_loop_forever();
 }
 
-
 acceptor::acceptor(tp_shared_data *data)
-: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
 }
 
@@ -236,7 +243,8 @@ void acceptor::listen_unix(const std::string &path, bool remove)
     sock->bind_unix(path, remove);
     sock->listen();
     socks_.push_back(sock);
-    LOG_INFO_FMT("Listening socket %d working in path %s", sock->fd(), path.c_str());
+    LOG_INFO_FMT("Listening socket %d working in path %s", sock->fd(),
+                 path.c_str());
 }
 
 void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
@@ -247,13 +255,16 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     std::vector<std::shared_ptr<nsocktcp>> conns = iopt->accept();
-    tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
+    tp_shared_data *dp =
+        reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
 
     for (auto &conn : conns)
     {
-        LOG_INFO_FMT("Listening socket %d accepted new socket %d",iopt->fd(), conn->fd());
-        dp->minloads_get_evlp()->fd_register_and_activate(std::static_pointer_cast<nio>(conn),
-            fd_event::fd_writable, iohandler::on_acpt_writable);
+        LOG_INFO_FMT("Listening socket %d accepted new socket %d", iopt->fd(),
+                     conn->fd());
+        dp->minloads_get_evlp()->fd_register_and_activate(
+            std::static_pointer_cast<nio>(conn), fd_event::fd_writable,
+            iohandler::on_acpt_writable);
     }
 }
 
@@ -263,7 +274,8 @@ void acceptor::run_impl()
     for (auto &sock : socks_)
     {
         evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(sock),
-            fd_event::fd_readable, acceptor::on_acpt_readable);
+                                       fd_event::fd_readable,
+                                       acceptor::on_acpt_readable);
     }
     evlp_.loop_forever();
     LOG_INFO << "Thread acceptor ending";
@@ -274,9 +286,8 @@ void acceptor::shutdown()
     evlp_.stop_loop_forever();
 }
 
-
 connector::connector(tp_shared_data *data)
-: evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
+    : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
     auto pipes = nio_factory::get_pipes();
     rdp_ = pipes[0];
@@ -321,21 +332,25 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
     {
         throw_logic_error("dynamic_cast error");
     }
-    tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iops->evlp().data());
+    tp_shared_data *dp =
+        reinterpret_cast<tp_shared_data *>(iops->evlp().data());
     iops->read_all(1);
 
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash> hosts;
-    connector *pseudo_this = reinterpret_cast<connector *>(iops->evlp().owner());
+    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash>
+        hosts;
+    connector *pseudo_this =
+        reinterpret_cast<connector *>(iops->evlp().owner());
     {
         std::unique_lock<std::mutex> _(pseudo_this->lock_);
         pseudo_this->hosts_.swap(hosts);
     }
 
-    for (auto iter = hosts.begin(); iter != hosts.end(); )
+    for (auto iter = hosts.begin(); iter != hosts.end();)
     {
         for (int i = 0; i < iter->second; ++i)
         {
-            std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(std::get<2>(iter->first));
+            std::shared_ptr<nsocktcp> sock =
+                nio_factory::get_nsocktcp(std::get<2>(iter->first));
             bool succeed;
             if (std::get<2>(iter->first) == family::local)
             {
@@ -343,26 +358,32 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
             }
             else
             {
-                succeed = sock->connect(std::get<0>(iter->first), std::get<1>(iter->first));
+                succeed = sock->connect(std::get<0>(iter->first),
+                                        std::get<1>(iter->first));
             }
             if (succeed)
             {
-                dp->minloads_get_evlp()->fd_register_and_activate(std::static_pointer_cast<nio>(sock),
-                    fd_event::fd_writable, iohandler::on_cont_writable);
+                dp->minloads_get_evlp()->fd_register_and_activate(
+                    std::static_pointer_cast<nio>(sock), fd_event::fd_writable,
+                    iohandler::on_cont_writable);
             }
             else
             {
                 std::error_code err_code(errno, std::system_category());
                 if (std::get<2>(iter->first) == family::local)
                 {
-                    LOG_ERROR_FMT("Connect %s failed with syscall errno %d : %s",
-                        std::get<0>(iter->first).c_str(), err_code.value(), err_code.message().c_str());
+                    LOG_ERROR_FMT(
+                        "Connect %s failed with syscall errno %d : %s",
+                        std::get<0>(iter->first).c_str(), err_code.value(),
+                        err_code.message().c_str());
                 }
                 else
                 {
-                    LOG_ERROR_FMT("Connect %s %d failed with syscall errno %d : %s",
-                        std::get<0>(iter->first).c_str(), std::get<1>(iter->first),
-                        err_code.value(), err_code.message().c_str());
+                    LOG_ERROR_FMT(
+                        "Connect %s %d failed with syscall errno %d : %s",
+                        std::get<0>(iter->first).c_str(),
+                        std::get<1>(iter->first), err_code.value(),
+                        err_code.message().c_str());
                 }
                 pseudo_this->failures_[iter->first] += 1;
             }
@@ -375,7 +396,8 @@ void connector::run_impl()
 {
     LOG_INFO << "Thread connector starting";
     evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(rdp_),
-        fd_event::fd_readable, connector::on_pipe_readable);
+                                   fd_event::fd_readable,
+                                   connector::on_pipe_readable);
     evlp_.loop_forever();
     LOG_INFO << "Thread connector ending";
 }
@@ -385,9 +407,11 @@ void connector::shutdown()
     evlp_.stop_loop_forever();
 }
 
-
-tcp_server::tcp_server(int iohandler_num, bool single_acceptor, void *external_data)
-: data_(external_data), single_acceptor_(single_acceptor), tp_(iohandler_num, &data_)
+tcp_server::tcp_server(int iohandler_num, bool single_acceptor,
+                       void *external_data)
+    : data_(external_data),
+      single_acceptor_(single_acceptor),
+      tp_(iohandler_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
@@ -466,9 +490,9 @@ void tcp_server::shutdown()
     }
 }
 
-
-tcp_client::tcp_client(int iohandler_num, int connector_num, void *external_data)
-: data_(external_data), tp_(iohandler_num, &data_)
+tcp_client::tcp_client(int iohandler_num, int connector_num,
+                       void *external_data)
+    : data_(external_data), tp_(iohandler_num, &data_)
 {
     for (int i = 0; i < tp_.size(); ++i)
     {
@@ -569,6 +593,6 @@ void tcp_client::shutdown()
     }
 }
 
-}   // namespace reactor
+}  // namespace reactor
 
-}   // namespace cppev
+}  // namespace cppev

@@ -1,9 +1,11 @@
 #include "cppev/utils.h"
-#include <string>
+
+#include <sched.h>
+
 #include <cstring>
 #include <exception>
+#include <string>
 #include <system_error>
-#include <sched.h>
 
 #ifdef __linux__
 #include <sys/syscall.h>
@@ -44,7 +46,7 @@ std::string timestamp(time_t t, const char *format)
 int64_t least_common_multiple(int64_t p, int64_t r)
 {
     assert(p != 0 && r != 0);
-    return (p / greatest_common_divisor(p ,r)) * r;
+    return (p / greatest_common_divisor(p, r)) * r;
 }
 
 int64_t least_common_multiple(const std::vector<int64_t> &nums)
@@ -140,8 +142,6 @@ bool check_process_group(pid_t pgid)
 {
     return check_process(-1 * pgid);
 }
-
-
 
 void thread_raise_signal(int sig)
 {
@@ -282,8 +282,6 @@ bool thread_check_signal_pending(int sig)
     return sigismember(&set, sig) == 1;
 }
 
-
-
 tid_t gettid() noexcept
 {
     thread_local tid_t thr_id = 0;
@@ -307,19 +305,19 @@ std::vector<std::string> split(const std::string &str, const std::string &sep)
 
     if (sep.size() > str.size())
     {
-        return { str };
+        return {str};
     }
 
     std::vector<int> sep_index;
 
     sep_index.push_back(0 - sep.size());
 
-    for (size_t i = 0; i <= str.size() - sep.size(); )
+    for (size_t i = 0; i <= str.size() - sep.size();)
     {
         bool is_sep = true;
         for (size_t j = i; j < i + sep.size(); ++j)
         {
-            if (str[j] != sep[j-i])
+            if (str[j] != sep[j - i])
             {
                 is_sep = false;
                 break;
@@ -340,14 +338,14 @@ std::vector<std::string> split(const std::string &str, const std::string &sep)
 
     if (sep_index.size() == 2)
     {
-        return { str };
+        return {str};
     }
 
     std::vector<std::string> substrs;
 
     for (size_t i = 1; i < sep_index.size(); ++i)
     {
-        int begin = sep_index[i-1] + sep.size();
+        int begin = sep_index[i - 1] + sep.size();
         int end = sep_index[i];
 
         substrs.push_back(std::string(str, begin, end - begin));
@@ -355,7 +353,8 @@ std::vector<std::string> split(const std::string &str, const std::string &sep)
     return substrs;
 }
 
-std::string join(const std::vector<std::string> &str_arr, const std::string &sep) noexcept
+std::string join(const std::vector<std::string> &str_arr,
+                 const std::string &sep) noexcept
 {
     std::string ret = "";
     size_t size = 0;
@@ -379,7 +378,8 @@ std::string join(const std::vector<std::string> &str_arr, const std::string &sep
 static constexpr int STRIP_LEFT = 0x01;
 static constexpr int STRIP_RIGHT = 0x10;
 
-static std::string do_strip(const std::string &str, const std::string &chars, const int type)
+static std::string do_strip(const std::string &str, const std::string &chars,
+                            const int type)
 {
     if (chars.empty())
     {
@@ -439,7 +439,7 @@ static std::string do_strip(const std::string &str, const std::string &chars, co
         }
     }
 
-    return str.substr(p ,r - p);
+    return str.substr(p, r - p);
 }
 
 std::string strip(const std::string &str, const std::string &chars)
@@ -457,5 +457,4 @@ std::string rstrip(const std::string &str, const std::string &chars)
     return do_strip(str, chars, STRIP_RIGHT);
 }
 
-
-}   // namespace cppev
+}  // namespace cppev

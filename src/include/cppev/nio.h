@@ -1,18 +1,20 @@
 #ifndef _cppev_nio_h_6C0224787A17_
 #define _cppev_nio_h_6C0224787A17_
 
-#include <string>
 #include <sys/socket.h>
-#include <vector>
-#include <unordered_map>
-#include <memory>
-#include <exception>
 #include <unistd.h>
+
 #include <climits>
+#include <exception>
 #include <iostream>
-#include "cppev/utils.h"
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "cppev/buffer.h"
 #include "cppev/common.h"
+#include "cppev/utils.h"
 
 namespace cppev
 {
@@ -40,9 +42,10 @@ CPPEV_PUBLIC std::shared_ptr<nsockudp> get_nsockudp(family f);
 
 CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_pipes();
 
-CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &str);
+CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_fifos(
+    const std::string &str);
 
-};
+};  // namespace nio_factory
 
 class CPPEV_PUBLIC nio
 {
@@ -113,8 +116,7 @@ protected:
     void move(nio &&other) noexcept;
 };
 
-class CPPEV_PUBLIC nstream
-: public virtual nio
+class CPPEV_PUBLIC nstream : public virtual nio
 {
 public:
     explicit nstream(int fd);
@@ -168,11 +170,11 @@ protected:
     void move(nstream &&other, bool move_base) noexcept;
 };
 
-class CPPEV_PUBLIC nsock
-: public virtual nio
+class CPPEV_PUBLIC nsock : public virtual nio
 {
     friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
     friend std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f);
+
 public:
     nsock(int fd, family f);
 
@@ -198,16 +200,16 @@ public:
     void bind_unix(const char *path, bool remove = false);
 
     // bind to address: Unix-domain
-    void bind_unix(const std::string &path, bool remove =false);
+    void bind_unix(const std::string &path, bool remove = false);
 
     // setsockopt SO_REUSEADDR
-    void set_so_reuseaddr(bool enable=true);
+    void set_so_reuseaddr(bool enable = true);
 
     // getsockopt SO_REUSEADDR
     bool get_so_reuseaddr() const;
 
     // setsockopt SO_REUSEPORT
-    void set_so_reuseport(bool enable=true);
+    void set_so_reuseport(bool enable = true);
 
     // getsockopt SO_REUSEPORT
     bool get_so_reuseport() const;
@@ -230,7 +232,8 @@ public:
     // getsockopt SO_RCVLOWAT
     int get_so_rcvlowat() const;
 
-    // setsockopt SO_SNDLOWAT, DONOT use it in linux since protocol not available
+    // setsockopt SO_SNDLOWAT, DONOT use it in linux since protocol not
+    // available
     void set_so_sndlowat(int size);
 
     // getsockopt SO_SNDLOWAT
@@ -266,8 +269,7 @@ enum class CPPEV_PUBLIC shutdown_mode
     shutdown_rdwr,
 };
 
-class CPPEV_PUBLIC nsocktcp final
-: public nsock, public nstream
+class CPPEV_PUBLIC nsocktcp final : public nsock, public nstream
 {
 public:
     nsocktcp(int sockfd, family f);
@@ -315,19 +317,19 @@ public:
     std::tuple<std::string, int, family> connpeer() const noexcept;
 
     // setsockopt SO_KEEPALIVE
-    void set_so_keepalive(bool enable=true);
+    void set_so_keepalive(bool enable = true);
 
     // getsockopt SO_KEEPALIVE
     bool get_so_keepalive() const;
 
     // setsockopt SO_LINGER
-    void set_so_linger(bool l_onoff, int l_linger=0);
+    void set_so_linger(bool l_onoff, int l_linger = 0);
 
     // getsockopt SO_LINGER
     std::pair<bool, int> get_so_linger() const;
 
     // setsockopt TCP_NODELAY
-    void set_tcp_nodelay(bool enable=true);
+    void set_tcp_nodelay(bool enable = true);
 
     // getsockopt TCP_NODELAY
     bool get_tcp_nodelay() const;
@@ -340,9 +342,7 @@ private:
     void move(nsocktcp &&other, bool move_base) noexcept;
 };
 
-
-class CPPEV_PUBLIC nsockudp final
-: public nsock
+class CPPEV_PUBLIC nsockudp final : public nsock
 {
 public:
     nsockudp(int sockfd, family f);
@@ -369,7 +369,7 @@ public:
     void send_unix(const std::string &path);
 
     // setsockopt SO_BROADCAST
-    void set_so_broadcast(bool enable=true);
+    void set_so_broadcast(bool enable = true);
 
     // getsockopt SO_BROADCAST
     bool get_so_broadcast() const;
@@ -379,6 +379,6 @@ private:
     void move(nsockudp &&other, bool move_base) noexcept;
 };
 
-}   // namespace cppev
+}  // namespace cppev
 
 #endif  // nio.h

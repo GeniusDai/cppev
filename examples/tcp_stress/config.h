@@ -22,8 +22,8 @@ const bool SINGLE_ACPT = true;
 const int CONTOR_NUM = 1;
 #endif
 
-const int   IPV4_PORT = 8884;
-const int   IPV6_PORT = 8886;
-const char* UNIX_PATH = "/tmp/test_cppev_tcp_stress_6C0224787A17.sock";
+const int IPV4_PORT = 8884;
+const int IPV6_PORT = 8886;
+const char *UNIX_PATH = "/tmp/test_cppev_tcp_stress_6C0224787A17.sock";
 
 #endif  // config.h
