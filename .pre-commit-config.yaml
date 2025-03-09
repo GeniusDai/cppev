@@ -18,3 +18,11 @@ repos:
         entry: buildifier -lint=fix -mode=fix
         language: system
         types: [ bazel ]
+-   repo: local
+    hooks:
+    -   id: clang-format
+        name: Format C++ files
+        entry: clang-format -style=file -i
+        language: system
+        files: \.(c|cc|cpp|h|hpp)$
+        types: [ text ]
