@@ -31,27 +31,36 @@ enum class CPPEV_PUBLIC priority
     lowest = 1,  // Internally reserved, please DONOT use!
 };
 
-struct CPPEV_PRIVATE enum_hash{template <typename T> std::size_t operator()(
-    const T &t) const noexcept {return std::hash<int>()(static_cast<int>(t));
-}  // namespace cppev
-}
-;
+// clang-format off
+
+struct CPPEV_PRIVATE enum_hash
+{
+    template <typename T> std::size_t operator()(const T &t)
+        const noexcept
+    {
+        return std::hash<int>()(static_cast<int>(t));
+    }
+};
 
 template <typename T, size_t I>
-struct CPPEV_PRIVATE tuple_less{
-    bool operator()(const T &lhs, const T &rhs)
-        const noexcept {return std::get<I>(lhs) < std::get<I>(rhs);
-}
-}
-;
+struct CPPEV_PRIVATE tuple_less
+{
+    bool operator()(const T &lhs, const T &rhs) const noexcept
+    {
+        return std::get<I>(lhs) < std::get<I>(rhs);
+    }
+};
 
 template <typename T, size_t I>
-struct CPPEV_PRIVATE tuple_greater{
-    bool operator()(const T &lhs, const T &rhs)
-        const noexcept {return std::get<I>(lhs) > std::get<I>(rhs);
-}
-}
-;
+struct CPPEV_PRIVATE tuple_greater
+{
+    bool operator()(const T &lhs, const T &rhs) const noexcept
+    {
+        return std::get<I>(lhs) > std::get<I>(rhs);
+    }
+};
+
+// clang-format on
 
 /*
  * Chrono
