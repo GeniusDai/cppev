@@ -88,8 +88,7 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
     struct kevent ev;
     ev_mode_of_kqueue ev_add_mode =
         EV_ADD | fd_mode_map_wrapper_to_sys(fd_event_modes_[iop->fd()]);
-    //     &kev, ident,     filter,                               flags, fflags,
-    //     data, udata);
+    //     &kev, ident, filter, flags, fflags, data, udata
     EV_SET(&ev, iop->fd(), fd_event_map_wrapper_to_sys(ev_type), ev_add_mode, 0,
            0, nullptr);
     if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
@@ -114,8 +113,7 @@ void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop,
         fd_event_masks_.erase(iop->fd());
     }
     struct kevent ev;
-    //     &kev, ident,     filter,                               flags, fflags,
-    //     data, udata
+    //     &kev, ident, filter, flags, fflags, data, udata
     EV_SET(&ev, iop->fd(), fd_event_map_wrapper_to_sys(ev_type), EV_DELETE, 0,
            0, nullptr);
     if (kevent(ev_fd_, &ev, 1, nullptr, 0, nullptr) < 0)
