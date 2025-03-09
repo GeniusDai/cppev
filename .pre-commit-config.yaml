@@ -11,3 +11,10 @@ repos:
     -   id: check-case-conflict
     -   id: detect-private-key
     -   id: mixed-line-ending
+-   repo: local
+    hooks:
+    -   id: buildifier
+        name: Format Bazel files
+        entry: buildifier -lint=fix -mode=fix
+        language: system
+        types: [ bazel ]
