@@ -148,6 +148,7 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
     if (0 == iopt->wbuffer().size())
     {
         iopt->evlp().fd_deactivate(iop, fd_event::fd_writable);
+        iopt->wbuffer().clear();
         dp->on_write_complete(iopt);
     }
     if ((iopt->eop() || iopt->is_reset()) && (!iopt->is_closed()))
