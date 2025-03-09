@@ -45,7 +45,11 @@ TEST_F(TestLock, test_spinlock)
         std::unique_lock<std::mutex> lk(lock_);
         if (!ready_)
         {
-            cond_.wait(lk, [this]() -> bool { return this->ready_; });
+            cond_.wait(lk,
+                       [this]() -> bool
+                       {
+                           return this->ready_;
+                       });
         }
         ASSERT_FALSE(splck.trylock());
         cond_.notify_one();

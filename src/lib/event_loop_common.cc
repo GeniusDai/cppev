@@ -229,7 +229,11 @@ void event_loop::stop_loop_once()
                                    priority::lowest);
     {
         std::unique_lock<std::mutex> lock(lock_);
-        cond_.wait(lock, [this] { return this->stop_; });
+        cond_.wait(lock,
+                   [this]
+                   {
+                       return this->stop_;
+                   });
     }
 }
 

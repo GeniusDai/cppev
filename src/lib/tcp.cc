@@ -108,7 +108,9 @@ size_t host_hash::operator()(
 }
 
 const tcp_event_handler tp_shared_data::idle_handler =
-    [](const std::shared_ptr<nsocktcp> &) -> void {};
+    [](const std::shared_ptr<nsocktcp> &) -> void
+{
+};
 
 iohandler::iohandler(tp_shared_data *data)
     : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))

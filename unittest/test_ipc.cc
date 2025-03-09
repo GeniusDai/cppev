@@ -246,7 +246,10 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         }
 
         // Test-3
-        auto pred = [ptr, &NUMBER]() { return ptr->var == NUMBER; };
+        auto pred = [ptr, &NUMBER]()
+        {
+            return ptr->var == NUMBER;
+        };
 
         ptr->var = NUMBER + 1;
         ptr->ready = false;
@@ -500,7 +503,11 @@ TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
         std::unique_lock<std::mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock, [this]() -> bool { return this->ready_; });
+            cond_.wait(lock,
+                       [this]() -> bool
+                       {
+                           return this->ready_;
+                       });
         }
 
         ASSERT_TRUE(rwlck.try_rdlock());
@@ -532,7 +539,11 @@ TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
         std::unique_lock<std::mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock, [this]() -> bool { return this->ready_; });
+            cond_.wait(lock,
+                       [this]() -> bool
+                       {
+                           return this->ready_;
+                       });
         }
         ASSERT_FALSE(rwlck.try_rdlock());
         ASSERT_FALSE(rwlck.try_wrlock());

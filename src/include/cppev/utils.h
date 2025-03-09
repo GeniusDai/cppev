@@ -171,7 +171,11 @@ CPPEV_PUBLIC void ignore_signal(int sig);
 
 CPPEV_PUBLIC void reset_signal(int sig);
 
-CPPEV_PUBLIC void handle_signal(int sig, sig_t handler = [](int) {});
+CPPEV_PUBLIC void handle_signal(
+    int sig, sig_t handler =
+                 [](int)
+             {
+             });
 
 CPPEV_PUBLIC void send_signal(pid_t pid, int sig);
 
