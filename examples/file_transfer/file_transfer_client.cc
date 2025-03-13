@@ -35,11 +35,11 @@ cppev::reactor::tcp_event_handler on_connect =
     iopt->wbuffer().put_string("\n");
     iopt->write_all();
 
-    std::string file_copy_name = std::string(FILENAME) + "." +
-                                 std::to_string(iopt->fd()) + "." +
-                                 std::to_string(cppev::gettid()) + ".copy";
-    int fd =
-        open(file_copy_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
+    std::stringstream file_copy_name;
+    file_copy_name << FILENAME << "." << iopt->fd() << "." << std::showbase
+                   << std::hex << std::this_thread::get_id() << ".copy";
+    int fd = open(file_copy_name.str().c_str(), O_WRONLY | O_CREAT | O_APPEND,
+                  S_IRWXU);
     if (fd < 0)
     {
         cppev::throw_system_error("open error");

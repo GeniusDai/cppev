@@ -148,8 +148,7 @@ typedef void (*testing_func_type)(int, bool);
 
 auto signal_handler = [](int sig)
 {
-    std::cout << "thread " << gettid() << " handling signal " << sig
-              << std::endl;
+    LOG_INFO_FMT("handling signal %d", sig);
 };
 
 // Basic Signal API Usage:
@@ -186,8 +185,7 @@ void test_main_thread_signal_wait(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
-        std::cout << "mainthread " << gettid() << " waiting for signal"
-                  << std::endl;
+        LOG_INFO << "mainthread waiting for signal";
         EXPECT_EQ(sig, thread_wait_for_signal({sig, SIGUSR2}));
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
@@ -232,8 +230,7 @@ void test_sub_thread_signal_wait(int sig, bool block)
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
-                std::cout << "subthread " << gettid() << " waiting for signal"
-                          << std::endl;
+                LOG_INFO << "subthread waiting for signal";
                 thread_wait_for_signal(sig);
             });
 
@@ -274,8 +271,7 @@ void test_main_thread_signal_suspend(int sig, bool block)
     if (pid == 0)
     {
         EXPECT_FALSE(thread_check_signal_pending(sig));
-        std::cout << "mainthread " << gettid() << " suspending for signal"
-                  << std::endl;
+        LOG_INFO << "mainthread suspending for signal";
         thread_suspend_for_signal({sig, SIGUSR2});
         EXPECT_FALSE(thread_check_signal_pending(sig));
         _exit(0);
@@ -311,8 +307,7 @@ void test_sub_thread_signal_suspend(int sig, bool block)
                     thread_raise_signal(sig);
                     thread_raise_signal(sig);
                     EXPECT_TRUE(thread_check_signal_pending(sig));
-                    std::cout << "subthread " << gettid()
-                              << " suspending for signal" << std::endl;
+                    LOG_INFO << "subthread suspending for signal";
                     thread_suspend_for_signal(sig);
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
@@ -322,8 +317,7 @@ void test_sub_thread_signal_suspend(int sig, bool block)
                     EXPECT_FALSE(thread_check_signal_mask(sig));
                     EXPECT_FALSE(thread_check_signal_pending(sig));
                 }
-                std::cout << "subthread " << gettid()
-                          << " suspending for signal" << std::endl;
+                LOG_INFO << "subthread suspending for signal";
                 thread_suspend_for_signal(sig);
             });
 

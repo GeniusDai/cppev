@@ -7,13 +7,6 @@
 #include <string>
 #include <system_error>
 
-#ifdef __linux__
-#include <sys/syscall.h>
-#include <unistd.h>
-#elif defined(__APPLE__)
-#include <pthread.h>
-#endif
-
 namespace cppev
 {
 
@@ -280,20 +273,6 @@ bool thread_check_signal_pending(int sig)
         throw_system_error("sigpending error");
     }
     return sigismember(&set, sig) == 1;
-}
-
-tid_t gettid() noexcept
-{
-    thread_local tid_t thr_id = 0;
-    if (thr_id == 0)
-    {
-#ifdef __linux__
-        thr_id = syscall(SYS_gettid);
-#elif defined(__APPLE__)
-        pthread_threadid_np(0, &thr_id);
-#endif  // __linux__
-    }
-    return thr_id;
 }
 
 std::vector<std::string> split(const std::string &str, const std::string &sep)

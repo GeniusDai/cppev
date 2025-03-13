@@ -208,16 +208,9 @@ CPPEV_PUBLIC bool thread_check_signal_mask(int sig);
 
 CPPEV_PUBLIC bool thread_check_signal_pending(int sig);
 
-#ifdef __linux__
-typedef pid_t tid_t;
-#elif defined(__APPLE__)
-typedef uint64_t tid_t;
-#else
-#error "platform not supported"
-#endif
-
-CPPEV_PUBLIC tid_t gettid() noexcept;
-
+/*
+ * String operation
+ */
 CPPEV_PUBLIC std::string join(const std::vector<std::string> &str_arr,
                               const std::string &sep) noexcept;
 
