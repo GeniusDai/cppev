@@ -3,6 +3,10 @@
 namespace cppev
 {
 
+static const std::vector<log_level> all_log_levels = {
+    log_level::debug, log_level::info, log_level::warning, log_level::error,
+    log_level::fatal};
+
 logger &logger::get_instance()
 {
     static logger instance;
@@ -11,14 +15,23 @@ logger &logger::get_instance()
 
 void logger::set_log_level(log_level level)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::unique_lock<std::mutex> lock(mtx_);
     current_level_ = level;
 }
 
 void logger::add_output_stream(std::ostream &output)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    output_streams_.push_back(&output);
+    std::unique_lock<std::mutex> lock(mtx_);
+    for (log_level level : all_log_levels)
+    {
+        output_streams_[level].push_back(&output);
+    }
+}
+
+void logger::add_output_stream(log_level level, std::ostream &output)
+{
+    std::unique_lock<std::mutex> lock(mtx_);
+    output_streams_[level].push_back(&output);
 }
 
 log_level logger::get_log_level() const
@@ -36,14 +49,16 @@ void logger::write_log(log_level level, const std::string &file, int line,
     std::stringstream log_entry;
     add_color(log_entry, level);
     add_timestamp(log_entry);
+    log_entry << " ";
     add_thread_id(log_entry);
-    log_entry << " [" << level_to_string(level) << "] ";
-    log_entry << "[" << file << ":" << line << "] ";
+    log_entry << " " << "[" << level_to_string(level) << "]";
+    log_entry << " " << "[" << file << ":" << line << "]";
+    log_entry << " ";
     log_entry << message << std::endl;
     reset_color(log_entry);
 
-    std::lock_guard<std::mutex> lock(mtx_);
-    for (auto &stream : output_streams_)
+    std::unique_lock<std::mutex> lock(mtx_);
+    for (auto *stream : output_streams_[level])
     {
         if (stream)
         {
@@ -55,7 +70,17 @@ void logger::write_log(log_level level, const std::string &file, int line,
 
 logger::logger() : current_level_(log_level::info)
 {
-    output_streams_.push_back(&std::cout);
+    for (log_level level : all_log_levels)
+    {
+        if (level >= log_level::error)
+        {
+            output_streams_[level].push_back(&std::cerr);
+        }
+        else
+        {
+            output_streams_[level].push_back(&std::cout);
+        }
+    }
 }
 
 std::string logger::level_to_string(log_level level) const
@@ -69,6 +94,8 @@ std::string logger::level_to_string(log_level level) const
     case log_level::warning:
         return "WARNING";
     case log_level::error:
+        return "ERROR";
+    case log_level::fatal:
         return "ERROR";
     default:
         return "UNKNOWN";
@@ -91,6 +118,9 @@ void logger::add_color(std::ostream &os, log_level level)
     case log_level::error:
         os << ERROR_COLOR;
         break;
+    case log_level::fatal:
+        os << FATAL_COLOR;
+        break;
     default:
         break;
     }
@@ -103,18 +133,19 @@ void logger::add_timestamp(std::ostream &os)
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                   now.time_since_epoch()) %
               1000;
-
-    os << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S") << '.'
-       << std::setfill('0') << std::setw(3) << ms.count();
+    tm tm_buf;
+    localtime_r(&time, &tm_buf);
+    int offset_hours = tm_buf.tm_gmtoff / 3600;
+    int offset_mins = (tm_buf.tm_gmtoff % 3600) / 60;
+    os << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S") << '.'
+       << std::setfill('0') << std::setw(3) << ms.count() << " " << "UTC+"
+       << std::setw(2) << offset_hours << ":" << std::setw(2) << offset_mins;
 }
 
 void logger::add_thread_id(std::ostream &os)
 {
-    os << " [Thread:";
-#ifdef __linux__
-    os << "0x";
-#endif
-    os << std::hex << std::this_thread::get_id() << std::dec << "]";
+    os << "[Thread:" << std::showbase << std::hex << std::this_thread::get_id()
+       << std::noshowbase << std::dec << "]";
 }
 
 void logger::reset_color(std::ostream &os)
