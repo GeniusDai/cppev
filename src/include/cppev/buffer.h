@@ -70,6 +70,11 @@ public:
         return offset_ - start_;
     }
 
+    int waste() const noexcept
+    {
+        return start_;
+    }
+
     int capacity() const noexcept
     {
         return cap_;

@@ -129,7 +129,14 @@ void iohandler::on_readable(const std::shared_ptr<nio> &iop)
     tp_shared_data *dp = reinterpret_cast<tp_shared_data *>(iop->evlp().data());
     iopt->read_all();
     dp->on_read_complete(iopt);
-    iopt->rbuffer().clear();
+    if (0 == iopt->rbuffer().size())
+    {
+        iopt->rbuffer().clear();
+    }
+    else if ((iopt->rbuffer().capacity() >> 1) < iopt->rbuffer().waste())
+    {
+        iopt->rbuffer().tiny();
+    }
     if ((iopt->eof() || iopt->is_reset()) && (!iopt->is_closed()))
     {
         dp->on_closed(iopt);
@@ -149,9 +156,13 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
     iopt->write_all();
     if (0 == iopt->wbuffer().size())
     {
-        iopt->evlp().fd_deactivate(iop, fd_event::fd_writable);
         iopt->wbuffer().clear();
+        iopt->evlp().fd_deactivate(iop, fd_event::fd_writable);
         dp->on_write_complete(iopt);
+    }
+    else if ((iopt->wbuffer().capacity() >> 1) < iopt->wbuffer().waste())
+    {
+        iopt->wbuffer().tiny();
     }
     if ((iopt->eop() || iopt->is_reset()) && (!iopt->is_closed()))
     {
