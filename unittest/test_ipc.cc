@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "cppev/ipc.h"
+#include "cppev/lock.h"
 
 namespace cppev
 {

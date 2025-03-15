@@ -13,41 +13,241 @@
 namespace cppev
 {
 
-#ifdef __linux__
-#define CPPEV_SPINLOCK_USE_PTHREAD
-#endif
+class CPPEV_PUBLIC pshared_lock final
+{
+    friend class pshared_cond;
 
-/*
-    Usage of spinlock is usually not recommended.
-    Only used when tasks with lock are really important and simple, and make
-   sure you won't be scheduled out by os when holding the lock. Currently
-   spinlock shared among process is not supported. By benchmark pthread
-   implementation is about two times faster than atomic implementation.
- */
-class CPPEV_PUBLIC spinlock final
+public:
+    pshared_lock();
+
+    pshared_lock(const pshared_lock &) = delete;
+    pshared_lock &operator=(const pshared_lock &) = delete;
+    pshared_lock(pshared_lock &&) = delete;
+    pshared_lock &operator=(pshared_lock &&) = delete;
+
+    ~pshared_lock() noexcept;
+
+    void lock();
+
+    bool try_lock();
+
+    void unlock();
+
+private:
+    pthread_mutex_t lock_;
+};
+
+class CPPEV_PUBLIC pshared_cond final
 {
 public:
-    spinlock();
+    using predicate = std::function<bool()>;
 
-    spinlock(const spinlock &&) = delete;
-    spinlock &operator=(const spinlock &&) = delete;
-    spinlock(spinlock &&) = delete;
-    spinlock &operator=(spinlock &&) = delete;
+    pshared_cond();
 
-    ~spinlock() noexcept;
+    pshared_cond(const pshared_cond &) = delete;
+    pshared_cond &operator=(const pshared_cond &) = delete;
+    pshared_cond(pshared_cond &&) = delete;
+    pshared_cond &operator=(pshared_cond &&) = delete;
+
+    ~pshared_cond() noexcept;
+
+    void wait(std::unique_lock<pshared_lock> &lock);
+
+    void wait(std::unique_lock<pshared_lock> &lock, const predicate &pred);
+
+    template <class Rep, class Period>
+    std::cv_status wait_for(std::unique_lock<pshared_lock> &lock,
+                            const std::chrono::duration<Rep, Period> &rel_time)
+    {
+        return wait_until(lock, std::chrono::steady_clock::now() + rel_time);
+    }
+
+    template <class Rep, class Period>
+    bool wait_for(std::unique_lock<pshared_lock> &lock,
+                  const std::chrono::duration<Rep, Period> &rel_time,
+                  const predicate &pred)
+    {
+        return wait_until(lock, std::chrono::steady_clock::now() + rel_time,
+                          pred);
+    }
+
+    template <class Duration>
+    std::cv_status wait_until(
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::time_point<std::chrono::system_clock, Duration>
+            &abs_time)
+    {
+        auto n_abs_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                              abs_time.time_since_epoch())
+                              .count();
+        timespec ts;
+        ts.tv_sec = n_abs_time / 1'000'000'000;
+        ts.tv_nsec = n_abs_time % 1'000'000'000;
+
+        // The implementation uses system clock to align with the standard
+        // library.
+        int ret = pthread_cond_timedwait(&cond_, &lock.mutex()->lock_, &ts);
+        std::cv_status status = std::cv_status::no_timeout;
+        if (ret != 0)
+        {
+            if (ret == EINVAL)
+            {
+                throw_system_error_with_specific_errno(
+                    "pthread_cond_wait error", ret);
+            }
+            else if (ret == ETIMEDOUT)
+            {
+                status = std::cv_status::timeout;
+            }
+        }
+        return status;
+    }
+
+    template <class Clock, class Duration>
+    std::cv_status wait_until(
+        std::unique_lock<pshared_lock> &lock,
+        const std::chrono::time_point<Clock, Duration> &abs_time)
+    {
+        auto sys_abs_time =
+            std::chrono::system_clock::now() + (abs_time - Clock::now());
+        return wait_until(lock, sys_abs_time);
+    }
+
+    template <class Clock, class Duration>
+    bool wait_until(std::unique_lock<pshared_lock> &lock,
+                    const std::chrono::time_point<Clock, Duration> &abs_time,
+                    predicate pred)
+    {
+        while (!pred())
+        {
+            if (wait_until(lock, abs_time) == std::cv_status::timeout)
+            {
+                return pred();
+            }
+        }
+        return true;
+    }
+
+    void notify_one();
+
+    void notify_all();
+
+private:
+    pthread_cond_t cond_;
+};
+
+class CPPEV_PUBLIC pshared_one_time_fence final
+{
+public:
+    pshared_one_time_fence();
+
+    pshared_one_time_fence(const pshared_one_time_fence &) = delete;
+    pshared_one_time_fence &operator=(const pshared_one_time_fence &) = delete;
+    pshared_one_time_fence(pshared_one_time_fence &&) = delete;
+    pshared_one_time_fence &operator=(pshared_one_time_fence &&) = delete;
+
+    ~pshared_one_time_fence();
+
+    void wait();
+
+    void notify();
+
+    bool ok() const noexcept;
+
+private:
+    bool ok_;
+
+    pshared_lock lock_;
+
+    pshared_cond cond_;
+};
+
+class CPPEV_PUBLIC pshared_barrier final
+{
+public:
+    pshared_barrier(int count);
+
+    pshared_barrier(const pshared_barrier &) = delete;
+    pshared_barrier &operator=(const pshared_barrier &) = delete;
+    pshared_barrier(pshared_barrier &&) = delete;
+    pshared_barrier &operator=(pshared_barrier &&) = delete;
+
+    ~pshared_barrier();
+
+    void wait();
+
+private:
+    int count_;
+
+    pshared_lock lock_;
+
+    pshared_cond cond_;
+};
+
+class CPPEV_PUBLIC pshared_rwlock final
+{
+public:
+    pshared_rwlock();
+
+    pshared_rwlock(const pshared_rwlock &) = delete;
+    pshared_rwlock &operator=(const pshared_rwlock &) = delete;
+    pshared_rwlock(pshared_rwlock &&) = delete;
+    pshared_rwlock &operator=(pshared_rwlock &&) = delete;
+
+    ~pshared_rwlock() noexcept;
+
+    void unlock();
+
+    void rdlock();
+
+    void wrlock();
+
+    bool try_rdlock();
+
+    bool try_wrlock();
+
+private:
+    pthread_rwlock_t lock_;
+};
+
+class CPPEV_PUBLIC rdlockguard final
+{
+public:
+    explicit rdlockguard(pshared_rwlock &lock);
+
+    rdlockguard(const rdlockguard &) = delete;
+    rdlockguard &operator=(const rdlockguard &) = delete;
+    rdlockguard(rdlockguard &&other) noexcept;
+    rdlockguard &operator=(rdlockguard &&other) noexcept;
+
+    ~rdlockguard() noexcept;
 
     void lock();
 
     void unlock();
 
-    bool trylock();
+private:
+    pshared_rwlock *rwlock_;
+};
+
+class CPPEV_PUBLIC wrlockguard final
+{
+public:
+    explicit wrlockguard(pshared_rwlock &lock);
+
+    wrlockguard(const wrlockguard &) = delete;
+    wrlockguard &operator=(const wrlockguard &) = delete;
+    wrlockguard(wrlockguard &&other) noexcept;
+    wrlockguard &operator=(wrlockguard &&other) noexcept;
+
+    ~wrlockguard() noexcept;
+
+    void lock();
+
+    void unlock();
 
 private:
-#ifdef CPPEV_SPINLOCK_USE_PTHREAD
-    pthread_spinlock_t lock_;
-#else
-    std::atomic_flag lock_;
-#endif
+    pshared_rwlock *rwlock_;
 };
 
 }  // namespace cppev
