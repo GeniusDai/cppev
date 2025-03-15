@@ -132,7 +132,7 @@ void subp_open::communicate(const char *input, int len)
 
     if (input != nullptr && len != 0)
     {
-        stdin_->wbuffer().produce(input, len);
+        stdin_->wbuffer().put_string(input, len);
         stdin_->write_all();
     }
 }

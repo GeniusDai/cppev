@@ -51,7 +51,7 @@ cppev::reactor::tcp_event_handler on_read_complete =
         reinterpret_cast<filecache *>(cppev::reactor::external_data(iopt))
             ->lazyload(filename);
 
-    iopt->wbuffer().produce(bf->rawbuf(), bf->size());
+    iopt->wbuffer().put_string(bf->rawbuf(), bf->size());
     cppev::reactor::async_write(iopt);
     LOG_INFO << "end callback : on_read_complete";
 };

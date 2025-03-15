@@ -14,7 +14,7 @@ cppev::fd_event_handler connecting_socket_callback =
         LOG_ERROR << "fd " << iop->fd() << " failed to connect";
         return;
     }
-    iopt->wbuffer().produce(MSG, MSG_LEN);
+    iopt->wbuffer().put_string(MSG, MSG_LEN);
     iopt->write_all();
 };
 

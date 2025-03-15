@@ -143,27 +143,29 @@ public:
     // Block IO:    Read until finishing len bytes or block.
     // Nonblock IO: Read until finishing len bytes or kernel receving buffer
     //              empty.
-    // @param len   Bytes to read in rbuffer, at most len.
+    // @param len   Byte length to read in rbuffer, will expand rbuffer size
+    //              to len.
     // @return      Exact bytes that have been read into rbuffer.
     int read_chunk(int len);
 
     // Block IO:    Write until finishing len bytes or block.
     // Nonblock IO: Write until finishing len bytes or kernel sending buffer
     //              full.
-    // @param len   Bytes to write in wbuffer, at most len.
+    // @param len   Byte length to write in wbuffer, will use the mininum
+    //              of len and wbuffer size.
     // @return      Exact bytes that have been writen from wbuffer.
     int write_chunk(int len);
 
     // Block IO:    Throw std::logic_error.
     // Nonblock IO: Read until kernel receving buffer is empty.
-    // @param step  Bytes to read in each loop.
+    // @param step  Byte length to read in each loop.
     // @return      Exact bytes that have been read into rbuffer.
     int read_all(int step = sysconfig::buffer_io_step);
 
     // Block IO:    Throw std::logic_error.
     // Nonblock IO: Write until kernel sending buffer is full or user
     //              wbuffer is empty.
-    // @param step  Bytes to write in each loop.
+    // @param step  Byte length to write in each loop.
     // @return      Exact bytes that have been writen from wbuffer.
     int write_all(int step = sysconfig::buffer_io_step);
 

@@ -196,17 +196,21 @@ bool stream::eop() const noexcept
 
 int stream::read_chunk(int len)
 {
-    rbuffer().resize(rbuffer().offset_ + len);
-    int origin_offset = rbuffer().offset_;
-    while (len)
+    if (0 == rbuffer().size())
     {
-        int curr = read(fd_, rbuffer().buffer_.get() + rbuffer().offset_, len);
-        if (curr == 0)
+        rbuffer().clear();
+    }
+    rbuffer().resize(rbuffer().get_offset() + len);
+    int ret = 0;
+    void *ptr = &(rbuffer()[rbuffer().size()]);
+    while (true)
+    {
+        ret = read(fd_, ptr, len);
+        if (ret == 0)
         {
             eof_ = true;
-            break;
         }
-        if (curr == -1)
+        if (ret == -1)
         {
             if (errno == EINTR)
             {
@@ -214,33 +218,34 @@ int stream::read_chunk(int len)
             }
             else if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                break;
             }
             else if (errno == ECONNRESET)
             {
                 reset_ = true;
-                break;
             }
             else
             {
                 throw_system_error("read error");
             }
         }
-        rbuffer().offset_ += curr;
-        len -= curr;
+        else
+        {
+            rbuffer().get_offset_ref() += ret;
+        }
+        break;
     }
-    return rbuffer().offset_ - origin_offset;
+    return ret;
 }
 
 int stream::write_chunk(int len)
 {
-    int origin_start = wbuffer().start_;
     len = std::min(len, wbuffer().size());
-    while (len)
+    int ret = 0;
+    void *ptr = &(wbuffer()[0]);
+    while (true)
     {
-        len = std::min(len, wbuffer().size());
-        int curr = write(fd_, wbuffer().buffer_.get() + wbuffer().start_, len);
-        if (curr == -1)
+        ret = write(fd_, ptr, len);
+        if (ret == -1)
         {
             if (errno == EINTR)
             {
@@ -248,32 +253,31 @@ int stream::write_chunk(int len)
             }
             else if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                break;
             }
             else if (errno == EPIPE)
             {
                 eop_ = true;
-                break;
             }
             else if (errno == ECONNRESET)
             {
                 reset_ = true;
-                break;
             }
             else
             {
                 throw_system_error("write error");
             }
         }
-        wbuffer().start_ += curr;
-        len -= curr;
+        else
+        {
+            wbuffer().get_start_ref() += ret;
+        }
+        break;
     }
-    int curr_start = wbuffer().start_;
     if (0 == wbuffer().size())
     {
         wbuffer().clear();
     }
-    return curr_start - origin_start;
+    return ret;
 }
 
 int stream::read_all(int step)
@@ -960,14 +964,14 @@ std::tuple<std::string, int, family> sockudp::recv()
 {
     sockaddr_storage addr;
     socklen_t len = faddr_len_.at(family_);
-    int ret = recvfrom(fd_, rbuffer().buffer_.get() + rbuffer().offset_,
-                       rbuffer().cap_ - rbuffer().offset_, 0, (sockaddr *)&addr,
-                       &len);
+    void *ptr = &(rbuffer()[rbuffer().size()]);
+    int ret = recvfrom(fd_, ptr, rbuffer().capacity() - rbuffer().get_offset(),
+                       0, (sockaddr *)&addr, &len);
     if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("recvfrom error");
     }
-    rbuffer().offset_ += ret;
+    rbuffer().get_offset_ref() += ret;
     if (family_ == family::local)
     {
         return std::make_tuple(unix_path_, -1, family::local);
@@ -980,14 +984,14 @@ void sockudp::send(const char *ip, int port)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_inet_uri(addr, ip, port);
-    int ret =
-        sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
-               wbuffer().size(), 0, (sockaddr *)&addr, faddr_len_.at(family_));
+    void *ptr = &(wbuffer()[0]);
+    int ret = sendto(fd_, ptr, wbuffer().size(), 0, (sockaddr *)&addr,
+                     faddr_len_.at(family_));
     if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("sendto error");
     }
-    wbuffer().consume(ret);
+    wbuffer().get_start_ref() += ret;
 }
 
 void sockudp::send_unix(const char *path)
@@ -995,14 +999,14 @@ void sockudp::send_unix(const char *path)
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
     set_unix_uri(addr, path);
-    int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
-                     wbuffer().size(), 0, (sockaddr *)&addr,
+    void *ptr = &(wbuffer()[0]);
+    int ret = sendto(fd_, ptr, wbuffer().size(), 0, (sockaddr *)&addr,
                      SUN_LEN((sockaddr_un *)&addr));
     if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("sendto error");
     }
-    wbuffer().consume(ret);
+    wbuffer().get_start_ref() += ret;
 }
 
 void sockudp::move(sockudp &&other, bool move_base) noexcept

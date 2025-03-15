@@ -40,13 +40,13 @@ TEST_F(TestBuffer, test_resize_tiny_null)
     const int len = 11;
 
     buffer buf;
-    buf.produce(str, len);
+    buf.put_string(str, len);
     EXPECT_EQ(buf.size(), len);
     EXPECT_EQ(std::string(buf.rawbuf()), "cppev");
     EXPECT_EQ(buf.get_string(5), "cppev");
     EXPECT_EQ(buf.get_string(), std::string("\0cppev", len - 5));
 
-    buf.produce(str, len);
+    buf.put_string(str, len);
     buf.get_string(3);
     buf.tiny();
     EXPECT_EQ(std::string(buf.rawbuf()), "ev");
@@ -86,6 +86,33 @@ TEST_F(TestBuffer, test_copy_move)
 TEST_F(TestBuffer, test_compilation)
 {
     basic_buffer<int> a;
+    basic_buffer<double> b;
+
+    struct ABC
+    {
+        int a;
+        double b;
+        long c;
+    };
+    basic_buffer<ABC> abc;
+}
+
+TEST_F(TestBuffer, test_ref)
+{
+    buffer b;
+
+    EXPECT_EQ(b.get_offset(), 0);
+    b.get_offset_ref() += 666;
+    EXPECT_EQ(b.get_offset(), 666);
+
+    b.get_start_ref() = 777;
+    EXPECT_EQ(b.get_start(), 777);
+
+    b.set_start(888);
+    EXPECT_EQ(b.get_start(), 888);
+
+    b.set_offset(999);
+    EXPECT_EQ(b.get_offset(), 999);
 }
 
 }  // namespace cppev

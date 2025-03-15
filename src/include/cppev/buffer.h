@@ -15,11 +15,6 @@ namespace cppev
 template <typename Char>
 class CPPEV_PUBLIC basic_buffer final
 {
-    // Q: Why the two classes should be friend?
-    // A: To save a memory copy.
-    friend class stream;
-    friend class sockudp;
-
 public:
     basic_buffer() noexcept : basic_buffer(1)
     {
@@ -55,19 +50,14 @@ public:
 
     ~basic_buffer() = default;
 
-    const Char &operator[](int i) const noexcept
-    {
-        return buffer_[start_ + i];
-    }
-
     Char &operator[](int i) noexcept
     {
         return buffer_[start_ + i];
     }
 
-    int size() const noexcept
+    Char at(int i) const noexcept
     {
-        return offset_ - start_;
+        return buffer_[start_ + i];
     }
 
     int waste() const noexcept
@@ -75,9 +65,44 @@ public:
         return start_;
     }
 
+    int size() const noexcept
+    {
+        return offset_ - start_;
+    }
+
     int capacity() const noexcept
     {
         return cap_;
+    }
+
+    int get_start() const noexcept
+    {
+        return start_;
+    }
+
+    void set_start(int start) noexcept
+    {
+        start_ = start;
+    }
+
+    int &get_start_ref() noexcept
+    {
+        return start_;
+    }
+
+    int get_offset() const noexcept
+    {
+        return offset_;
+    }
+
+    void set_offset(int offset) noexcept
+    {
+        offset_ = offset;
+    }
+
+    int &get_offset_ref() noexcept
+    {
+        return offset_;
     }
 
     const Char *rawbuf() const noexcept
@@ -142,7 +167,7 @@ public:
     // Produce Chars to buffer.
     // @param ptr : Pointer to Char array.
     // @param len : Char array length that copies to buffer.
-    void produce(const Char *ptr, int len) noexcept
+    void put_string(const Char *ptr, int len) noexcept
     {
         resize(offset_ + len);
         for (int i = 0; i < len; ++i)
@@ -151,42 +176,27 @@ public:
         }
     }
 
-    // Consume Chars from buffer
-    // @param len : Char array length that consumes, -1 means all.
-    void consume(int len = -1) noexcept
-    {
-        if (len == -1)
-        {
-            len = size();
-        }
-        start_ += len;
-        if (start_ == offset_)
-        {
-            clear();
-        }
-    }
-
-    // Produce string to buffer.
-    // @param str : string to put.
+    // Produce Chars to buffer.
+    // @param str   String to put.
     void put_string(const std::basic_string<Char> &str) noexcept
     {
-        produce(str.c_str(), str.size());
+        put_string(str.c_str(), str.size());
     }
 
-    // Get string from buffer.
-    // @param len: Char array length that consumes, -1 means all.
-    // @param remove : whether consumes the Char array.
+    // Get Chars from buffer.
+    // @param len       Char array length that consumes, -1 means all.
+    // @param consume   Whether consumes the Char array.
     std::basic_string<Char> get_string(int len = -1,
-                                       bool remove = true) noexcept
+                                       bool consume = true) noexcept
     {
         if (len == -1)
         {
             len = size();
         }
         std::basic_string<Char> str(buffer_.get() + start_, len);
-        if (remove)
+        if (consume)
         {
-            consume(len);
+            start_ += len;
         }
         return str;
     }
