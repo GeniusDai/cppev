@@ -7,7 +7,7 @@ namespace sysconfig
 {
 
 // Buffer size for udp socket
-int udp_buffer_size = 2048;
+int udp_buffer_size = 1500;
 
 // File descriptor numbers for each epoll / kevent
 int event_number = 2048;

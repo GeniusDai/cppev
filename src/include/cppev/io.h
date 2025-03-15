@@ -60,62 +60,63 @@ public:
 
     virtual ~io() noexcept;
 
-    // File descriptor
+    // File descriptor.
     int fd() const noexcept;
 
-    // Read buffer
+    // Read buffer.
     const buffer &rbuffer() const noexcept;
 
-    // Read buffer
+    // Read buffer.
     buffer &rbuffer() noexcept;
 
-    // Write buffer
+    // Write buffer.
     const buffer &wbuffer() const noexcept;
 
-    // Write buffer
+    // Write buffer.
     buffer &wbuffer() noexcept;
 
-    // Query event loop this io belongs to
+    // Query event loop this io belongs to.
     const event_loop &evlp() const noexcept;
 
-    // Query event loop this io belongs to
+    // Query event loop this io belongs to.
     event_loop &evlp() noexcept;
 
-    // Set event loop this io belongs to
+    // Set event loop this io belongs to.
+    // @param evlp  Pointer of event loop.
     void set_evlp(event_loop *evlp) noexcept;
 
-    // Is io closed
+    // Is io closed.
     bool is_closed() const noexcept;
 
-    // Close io
+    // Close io.
     void close() noexcept;
 
-    // Set fd to nonblock
+    // Set fd to nonblock.
     void set_io_nonblock();
 
-    // Set fd to block
+    // Set fd to block.
     void set_io_block();
 
 protected:
-    // File descriptor
+    // File descriptor.
     int fd_;
 
-    // Whether block io
+    // Whether block io.
     bool block_;
 
-    // Whether closed
+    // Whether closed.
     bool closed_;
 
-    // Read buffer
+    // Read buffer.
     buffer rbuffer_;
 
-    // Write buffer
+    // Write buffer.
     buffer wbuffer_;
 
-    // One io belongs to one event loop
+    // One io belongs to one event loop.
     event_loop *evlp_;
 
-    // Move constructor implementation
+    // Move constructor implementation.
     void move(io &&other) noexcept;
 };
 
@@ -130,50 +131,53 @@ public:
 
     virtual ~stream();
 
-    // Is connection reset, ECONNRESET
+    // Is connection reset, ECONNRESET.
     bool is_reset() const noexcept;
 
-    // End of file
+    // End of file.
     bool eof() const noexcept;
 
-    // Error of pipe, EPIPE
+    // Error of pipe, EPIPE.
     bool eop() const noexcept;
 
-    // Block IO:    Read until finishing len bytes or block
-    // Nonblock IO: Read until finishing len bytes or io kernel buffer empty
-    // @param len   Bytes to read, at most len
-    // @return      Exact bytes that have been read into rbuffer
+    // Block IO:    Read until finishing len bytes or block.
+    // Nonblock IO: Read until finishing len bytes or kernel receving buffer
+    //              empty.
+    // @param len   Bytes to read in rbuffer, at most len.
+    // @return      Exact bytes that have been read into rbuffer.
     int read_chunk(int len);
 
-    // Block IO:    Write until finishing len bytes or block
-    // Nonblock IO: Write until finishing len bytes or io kernel buffer full
-    // @param len   Bytes to write, at most len
-    // @return      Exact bytes that have been writen from wbuffer
+    // Block IO:    Write until finishing len bytes or block.
+    // Nonblock IO: Write until finishing len bytes or kernel sending buffer
+    //              full.
+    // @param len   Bytes to write in wbuffer, at most len.
+    // @return      Exact bytes that have been writen from wbuffer.
     int write_chunk(int len);
 
-    // Block IO:    Throw std::logic_error
-    // Nonblock IO: Read until io kernel buffer empty
-    // @param step  Bytes to read in each loop
-    // @return      Exact bytes that have been read into rbuffer
+    // Block IO:    Throw std::logic_error.
+    // Nonblock IO: Read until kernel receving buffer is empty.
+    // @param step  Bytes to read in each loop.
+    // @return      Exact bytes that have been read into rbuffer.
     int read_all(int step = sysconfig::buffer_io_step);
 
-    // Block IO:    Throw std::logic_error
-    // Nonblock IO: Write until io kernel buffer full or user buffer empty
-    // @param step  Bytes to write in each loop
-    // @return      Exact bytes that have been writen from wbuffer
+    // Block IO:    Throw std::logic_error.
+    // Nonblock IO: Write until kernel sending buffer is full or user
+    //              wbuffer is empty.
+    // @param step  Bytes to write in each loop.
+    // @return      Exact bytes that have been writen from wbuffer.
     int write_all(int step = sysconfig::buffer_io_step);
 
 protected:
-    // Connect Reset: Used by tcp-socket
+    // Connect Reset: Used by tcp-socket.
     bool reset_;
 
-    // End Of File: Used by tcp-socket, pipe, fifo, disk-file
+    // End Of File: Used by tcp-socket, pipe, fifo, disk-file.
     bool eof_;
 
-    // Error Of Pipe: Used by tcp-socket, pipe, fifo
+    // Error Of Pipe: Used by tcp-socket, pipe, fifo.
     bool eop_;
 
-    // Move constructor implementation
+    // Move constructor implementation.
     void move(stream &&other, bool move_base) noexcept;
 };
 
@@ -191,69 +195,96 @@ public:
 
     virtual ~sock();
 
-    // socket family
+    // Socket family.
     family sockfamily() const noexcept;
 
-    // bind to address: IPv4 / IPv6
+    // Syscall bind to address for ipv4 / ipv6.
+    // @param ip    IP to bind.
+    // @param port  Port to bind.
     void bind(const char *ip, int port);
 
-    // bind to address: IPv4 / IPv6
+    // Syscall bind to address for ipv4 / ipv6.
+    // @param port  Port to bind.
     void bind(int port);
 
-    // bind to address: IPv4 / IPv6
+    // Syscall bind to address for ipv4 / ipv6.
+    // @param ip    IP to bind.
+    // @param port  Port to bind.
     void bind(const std::string &ip, int port);
 
-    // bind to address: Unix-domain
+    // Syscall bind to address for unix-domain.
+    // @param path      Socket file's path to bind.
+    // @param remove    Remove socket file if already exists.
     void bind_unix(const char *path, bool remove = false);
 
-    // bind to address: Unix-domain
+    // Syscall bind to address for unix-domain.
+    // @param path      Socket file's path to bind.
+    // @param remove    Remove socket file if already exists.
     void bind_unix(const std::string &path, bool remove = false);
 
-    // setsockopt SO_REUSEADDR
+    // Syscall setsockopt SO_REUSEADDR.
+    // Set whether reuse address even in TIME_WAIT status.
+    // @param enable    Enable reuse address or not.
     void set_so_reuseaddr(bool enable = true);
 
-    // getsockopt SO_REUSEADDR
+    // Syscall getsockopt SO_REUSEADDR.
+    // Get whether reuse address even in TIME_WAIT status.
     bool get_so_reuseaddr() const;
 
-    // setsockopt SO_REUSEPORT
+    // Syscall setsockopt SO_REUSEPORT.
+    // Set whether allow multiple processes or threads bind to same port.
+    // @param enable    Enable reuse port or not.
     void set_so_reuseport(bool enable = true);
 
-    // getsockopt SO_REUSEPORT
+    // Syscall getsockopt SO_REUSEPORT.
+    // Get whether allow multiple processes or threads bind to same port.
     bool get_so_reuseport() const;
 
-    // setsockopt SO_RCVBUF, actual value = size*2 in linux
+    // Syscall setsockopt SO_RCVBUF.
+    // Set socket's receiving buffer, actually set to size*2 in Linux.
+    // @param size  Buffer size.
     void set_so_rcvbuf(int size);
 
-    // getsockopt SO_RCVBUF
+    // Syscall getsockopt SO_RCVBUF.
+    // Get socket's receiving buffer.
     int get_so_rcvbuf() const;
 
-    // setsockopt SO_SNDBUF, actual value = size*2 in linux
+    // Syscall setsockopt SO_SNDBUF.
+    // Set socket's sending buffer, actually set to size*2 in Linux.
+    // @param size  Buffer size.
     void set_so_sndbuf(int size);
 
-    // getsockopt SO_SNDBUF
+    // Syscall getsockopt SO_SNDBUF.
+    // Get socket's sending buffer.
     int get_so_sndbuf() const;
 
-    // setsockopt SO_RCVLOWAT
+    // Syscall setsockopt SO_RCVLOWAT.
+    // Set low water mark to trigger readable event for io multiplexing.
+    // @param size  Low water mark to set.
     void set_so_rcvlowat(int size);
 
-    // getsockopt SO_RCVLOWAT
+    // Syscall getsockopt SO_RCVLOWAT.
+    // Get low water mark to trigger readable event for io multiplexing.
     int get_so_rcvlowat() const;
 
-    // setsockopt SO_SNDLOWAT, DONOT use it in linux since protocol not
-    // available
+    // Syscall setsockopt SO_SNDLOWAT.
+    // Set low water mark to trigger writable event for io multiplexing.
+    // Protocol not available in Linux.
+    // @param size  Low water mark to set.
     void set_so_sndlowat(int size);
 
-    // getsockopt SO_SNDLOWAT
+    // Syscall getsockopt SO_SNDLOWAT.
+    // Get low water mark to trigger writable event for io multiplexing.
     int get_so_sndlowat() const;
 
 protected:
-    // socket family
+    // socket family.
     family family_;
 
-    // Record path for bind_unix
+    // Record path for bind_unix.
     std::string unix_path_;
 
-    // Move constructor implementation
+    // Move constructor implementation.
     void move(sock &&other, bool move_base) noexcept;
 };
 
@@ -275,72 +306,99 @@ public:
 
     ~socktcp();
 
-    // listen: IPv4 / IPv6 / Unix-domain
+    // Syscall listen for ipv4 / ipv6 / unix-domain.
+    // @param backlog   Maximum backlog size.
     void listen(int backlog = SOMAXCONN);
 
-    // connect: IPv4 / IPv6
+    // Syscall listen for ipv4 / ipv6.
+    // @param ip    Target ip to connect.
+    // @param port  Target port to connect.
     bool connect(const char *ip, int port);
 
-    // connect: IPv4 / IPv6
+    // Syscall listen for ipv4 / ipv6.
+    // @param ip    Target ip to connect.
+    // @param port  Target port to connect.
     bool connect(const std::string &ip, int port);
 
-    // connect: Unix-domain
+    // Syscall listen for unix-domain.
+    // @param path  Socket file's path to connect.
     bool connect_unix(const char *path);
 
-    // connect: Unix-domain
+    // Syscall listen for unix-domain.
+    // @param path  Socket file's path to connect.
     bool connect_unix(const std::string &path);
 
-    // accept: IPv4 / IPv6 / Unix-domain
+    // Syscall accept for ipv4 / ipv6 / unix-domain.
     // Block IO:    Always accept the exactly number of connected sockets, may
     //              get block.
     // Nonblock IO: Try to accept the exactly number of connected sockets until
     //              no connected sockets are in the backlog.
+    // @param batch     Batch size of connected socket to accept.
     std::vector<std::shared_ptr<socktcp>> accept(int batch = INT_MAX);
 
-    // shutdown: IPv4 / IPv6 / Unix-domain
+    // Syscall shutdown for ipv4 / ipv6 / unix-domain.
+    // @param howto     shutdown read or write or both.
     void shutdown(shutdown_mode howto) noexcept;
 
-    // whether connect is established, used by tcp client
+    // Check whether connection is established, used by tcp client.
     bool check_connect() const;
 
-    // Current socket: ip / port / family
-    // For Unix-domain: ip=path, port=-1
+    // Current socket listening uri.
+    // Unix-domain: path, -1, family.
+    // IPv4 / IPv6: ip, port, family.
     std::tuple<std::string, int, family> sockname() const;
 
-    // Connect target established: ip / port / family
-    // For Unix-domain: ip=path, port=-1
+    // Connect target established.
+    // Unix-domain: path, -1, family.
+    // IPv4 / IPv6: ip, port, family.
     std::tuple<std::string, int, family> peername() const;
 
-    // Connect target even not established: ip / port / family
-    // For Unix-domain: ip=path, port=-1
+    // Connect target even not established.
+    // Unix-domain: path, -1, family.
+    // IPv4 / IPv6: ip, port, family.
     std::tuple<std::string, int, family> target_uri() const noexcept;
 
-    // setsockopt SO_KEEPALIVE
+    // Syscall setsockopt SO_KEEPALIVE.
+    // Set whether to periodically send ACK to confirm peer's status.
+    // @param enable    Enable or not.
     void set_so_keepalive(bool enable = true);
 
-    // getsockopt SO_KEEPALIVE
+    // Syscall getsockopt SO_KEEPALIVE.
+    // Get whether to periodically send ACK to confirm peer's status.
     bool get_so_keepalive() const;
 
-    // setsockopt SO_LINGER
+    // Syscall setsockopt SO_LINGER.
+    // Set whether to close immediately when close is called.
+    // @param l_onoff   0 means closing immediately
+    //                  1 means decided by l_linger's value.
+    // @param l_linger  0 means sending RST, no FIN / ACK.
+    //                  >0 means blocking until data sending finish.
     void set_so_linger(bool l_onoff, int l_linger = 0);
 
-    // getsockopt SO_LINGER
+    // Syscall getsockopt SO_LINGER.
+    // Get whether to close immediately when close is called.
     std::pair<bool, int> get_so_linger() const;
 
-    // setsockopt TCP_NODELAY
-    void set_tcp_nodelay(bool enable = true);
+    // Syscall setsockopt TCP_NODELAY.
+    // Set whether Nagle's algorithm should be disabled, the Nagle's algorithm
+    // allows small data sending immediately without being merged.
+    // @param disable   Disable or not.
+    void set_tcp_nodelay(bool disable = true);
 
-    // getsockopt TCP_NODELAY
+    // Syscall getsockopt TCP_NODELAY.
+    // Get whether Nagle's algorithm should be disabled, the Nagle's algorithm
+    // allows small data sending immediately without being merged.
     bool get_tcp_nodelay() const;
 
-    // getsockopt SO_ERROR, option cannot be set
+    // Syscall getsockopt SO_ERROR.
+    // Used for tcp client connection establish checking which cannot be set.
     int get_so_error() const;
 
 private:
-    // Record uri for connect and connect_unix
+    // Record uri for connect and connect_unix.
     std::tuple<std::string, int> conn_uri_;
 
-    // Move constructor implementation
+    // Move constructor implementation.
     void move(socktcp &&other, bool move_base) noexcept;
 };
 
@@ -355,29 +413,57 @@ public:
 
     ~sockudp();
 
-    // recvfrom: IPv4 / IPv6 / Unix-domain
+    // Syscall recvfrom for ipv4 / ipv6 / unix-domain.
+    // Should always check rbuffer for message receving from peer,
+    // message may be incomplete if user rbuffer size is too small.
+    // For block io will block if kernel receiving buffer is empty.
+    // @return  Peer's uri.
     std::tuple<std::string, int, family> recv();
 
-    // sendto: IPv4 / IPv6
+    // Syscall sendto for ipv4 / ipv6.
+    // Should always check wbuffer for message remains unsending,
+    // may send incomplete message if kernel sending buffer's
+    // remaining size is too small. For block io will block if kernel
+    // sending buffer is full.
+    // @param ip    Target ip to send.
+    // @param port  Target port to send.
     void send(const char *ip, int port);
 
-    // sendto: IPv4 / IPv6
+    // Syscall sendto for ipv4 / ipv6.
+    // Should always check wbuffer for message remains unsending,
+    // may send incomplete message if kernel sending buffer's
+    // remaining size is too small. For block io will block if kernel
+    // sending buffer is full.
+    // @param ip    Target ip to send.
+    // @param port  Target port to send.
     void send(const std::string &ip, int port);
 
-    // sendto: Unix-domain
+    // Syscall sendto for unix-domain.
+    // Should always check wbuffer for message remains unsending,
+    // may send incomplete message if kernel sending buffer's
+    // remaining size is too small. For block io will block if kernel
+    // sending buffer is full.
+    // @param path  Target socket file's path.
     void send_unix(const char *path);
 
-    // sendto: Unix-domain
+    // Syscall sendto for unix-domain.
+    // Should always check wbuffer for message remains unsending,
+    // may send incomplete message if kernel sending buffer's
+    // remaining size is too small. For block io will block if kernel
+    // sending buffer is full.
+    // @param path  Target socket file's path.
     void send_unix(const std::string &path);
 
-    // setsockopt SO_BROADCAST
+    // Syscall setsockopt SO_BROADCAST.
+    // Set whether allow udp socket broadcast or not.
+    // @enable  Enable broadcast ot not.
     void set_so_broadcast(bool enable = true);
 
-    // getsockopt SO_BROADCAST
+    // Syscall getsockopt SO_BROADCAST.
     bool get_so_broadcast() const;
 
 private:
-    // Move constructor implementation
+    // Move constructor implementation.
     void move(sockudp &&other, bool move_base) noexcept;
 };
 

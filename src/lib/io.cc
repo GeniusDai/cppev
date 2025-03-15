@@ -744,9 +744,9 @@ bool sockudp::get_so_broadcast() const
     return static_cast<bool>(optval);
 }
 
-void socktcp::set_tcp_nodelay(bool enable)
+void socktcp::set_tcp_nodelay(bool disable)
 {
-    int optval = static_cast<int>(enable);
+    int optval = static_cast<int>(disable);
     socklen_t len = sizeof(optval);
     if (setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, &optval, len) == -1)
     {
@@ -963,7 +963,7 @@ std::tuple<std::string, int, family> sockudp::recv()
     int ret = recvfrom(fd_, rbuffer().buffer_.get() + rbuffer().offset_,
                        rbuffer().cap_ - rbuffer().offset_, 0, (sockaddr *)&addr,
                        &len);
-    if (ret == 0)
+    if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("recvfrom error");
     }
@@ -983,7 +983,7 @@ void sockudp::send(const char *ip, int port)
     int ret =
         sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
                wbuffer().size(), 0, (sockaddr *)&addr, faddr_len_.at(family_));
-    if (ret == 0)
+    if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("sendto error");
     }
@@ -998,7 +998,7 @@ void sockudp::send_unix(const char *path)
     int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
                      wbuffer().size(), 0, (sockaddr *)&addr,
                      SUN_LEN((sockaddr_un *)&addr));
-    if (ret == 0)
+    if ((ret == -1) && (errno != EAGAIN))
     {
         throw_system_error("sendto error");
     }
