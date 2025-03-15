@@ -325,17 +325,17 @@ void stream::move(stream &&other, bool move_base) noexcept
     this->eop_ = other.eop_;
 }
 
-const std::unordered_map<family, int, enum_hash> sock::fmap_ = {
+static const std::unordered_map<family, int, enum_hash> fmap_ = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
     {family::local, AF_LOCAL}};
 
-const std::unordered_map<family, int, enum_hash> sock::faddr_len_ = {
+static const std::unordered_map<family, int, enum_hash> faddr_len_ = {
     {family::ipv4, sizeof(sockaddr_in)},
     {family::ipv6, sizeof(sockaddr_in6)},
     {family::local, sizeof(sockaddr_un)}};
 
-static void set_ip_port(sockaddr_storage &addr, const char *ip, int port)
+static void set_inet_uri(sockaddr_storage &addr, const char *ip, int port)
 {
     switch (addr.ss_family)
     {
@@ -384,19 +384,17 @@ static void set_ip_port(sockaddr_storage &addr, const char *ip, int port)
             break;
         }
     default:
-        {
-            throw_logic_error("unknown socket family");
-        }
+        throw_logic_error("unknown socket family");
     }
 }
 
-static void set_path(sockaddr_storage &addr, const char *path)
+static void set_unix_uri(sockaddr_storage &addr, const char *path)
 {
     sockaddr_un *ap = (sockaddr_un *)(&addr);
     strncpy(ap->sun_path, path, sizeof(ap->sun_path) - 1);
 }
 
-static std::tuple<std::string, int, family> query_ip_port_family(
+static std::tuple<std::string, int, family> get_inet_uri(
     const sockaddr_storage &addr)
 {
     int port;
@@ -430,9 +428,7 @@ static std::tuple<std::string, int, family> query_ip_port_family(
             break;
         }
     default:
-        {
-            throw_logic_error("unknown socket family");
-        }
+        throw_logic_error("unknown socket family");
     }
     return std::make_tuple(ip, port, f);
 }
@@ -472,7 +468,7 @@ void sock::bind(const char *ip, int port)
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
-    set_ip_port(addr, ip, port);
+    set_inet_uri(addr, ip, port);
     set_so_reuseaddr();
     if (::bind(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
@@ -497,11 +493,11 @@ void sock::bind_unix(const char *path, bool remove)
     {
         ::unlink(path);
     }
-    peer_ = std::make_tuple(path, -1);
+    unix_path_ = path;
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
-    set_path(addr, path);
+    set_unix_uri(addr, path);
     if (::bind(fd_, (sockaddr *)&addr, SUN_LEN((sockaddr_un *)&addr)) < 0)
     {
         throw_system_error(std::string("bind error : ").append(path));
@@ -638,7 +634,7 @@ void sock::move(sock &&other, bool move_base) noexcept
         io::move(std::forward<sock>(other));
     }
     this->family_ = other.family_;
-    this->peer_ = other.peer_;
+    this->unix_path_ = other.unix_path_;
 }
 
 socktcp::socktcp(int sockfd, family f) : io(sockfd), sock(-1, f), stream(-1)
@@ -807,8 +803,7 @@ std::tuple<std::string, int, family> socktcp::sockname() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_),
-                               family::local);
+        return std::make_tuple(unix_path_, -1, family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -816,15 +811,14 @@ std::tuple<std::string, int, family> socktcp::sockname() const
     {
         throw_system_error("getsockname error");
     }
-    return query_ip_port_family(addr);
+    return get_inet_uri(addr);
 }
 
 std::tuple<std::string, int, family> socktcp::peername() const
 {
     if (family_ == family::local)
     {
-        return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_),
-                               family::local);
+        return std::make_tuple(unix_path_, -1, family::local);
     }
     sockaddr_storage addr;
     socklen_t len = sizeof(addr);
@@ -832,12 +826,13 @@ std::tuple<std::string, int, family> socktcp::peername() const
     {
         throw_system_error("getsockname error");
     }
-    return query_ip_port_family(addr);
+    return get_inet_uri(addr);
 }
 
 std::tuple<std::string, int, family> socktcp::target_uri() const noexcept
 {
-    return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
+    return std::make_tuple(std::get<0>(conn_uri_), std::get<1>(conn_uri_),
+                           family_);
 }
 
 void socktcp::listen(int backlog)
@@ -850,11 +845,11 @@ void socktcp::listen(int backlog)
 
 bool socktcp::connect(const char *ip, int port)
 {
-    peer_ = std::make_tuple(ip, port);
+    conn_uri_ = std::make_tuple(ip, port);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
-    set_ip_port(addr, ip, port);
+    set_inet_uri(addr, ip, port);
     if (::connect(fd_, (sockaddr *)&addr, faddr_len_.at(family_)) < 0)
     {
         if (errno == EINPROGRESS)
@@ -868,11 +863,11 @@ bool socktcp::connect(const char *ip, int port)
 
 bool socktcp::connect_unix(const char *path)
 {
-    peer_ = std::make_tuple(path, -1);
+    conn_uri_ = std::make_tuple(path, -1);
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
     addr.ss_family = fmap_.at(family_);
-    set_path(addr, path);
+    set_unix_uri(addr, path);
     int addr_len = SUN_LEN((sockaddr_un *)&addr);
     if (::connect(fd_, (sockaddr *)&addr, addr_len) < 0)
     {
@@ -907,7 +902,7 @@ std::vector<std::shared_ptr<socktcp>> socktcp::accept(int batch)
             sockfds.emplace_back(std::make_shared<socktcp>(sockfd, family_));
             if (family_ == family::local)
             {
-                sockfds.back()->peer_ = peer_;
+                sockfds.back()->unix_path_ = unix_path_;
             }
         }
     }
@@ -922,6 +917,7 @@ void socktcp::move(socktcp &&other, bool move_base) noexcept
         sock::move(std::forward<socktcp>(other), false);
         stream::move(std::forward<socktcp>(other), false);
     }
+    this->conn_uri_ = other.conn_uri_;
 }
 
 sockudp::sockudp(int sockfd, family f) : io(sockfd), sock(-1, f)
@@ -974,16 +970,16 @@ std::tuple<std::string, int, family> sockudp::recv()
     rbuffer().offset_ += ret;
     if (family_ == family::local)
     {
-        return std::make_tuple(std::get<0>(peer_), -1, family::local);
+        return std::make_tuple(unix_path_, -1, family::local);
     }
-    return query_ip_port_family(addr);
+    return get_inet_uri(addr);
 }
 
 void sockudp::send(const char *ip, int port)
 {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
-    set_ip_port(addr, ip, port);
+    set_inet_uri(addr, ip, port);
     int ret =
         sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
                wbuffer().size(), 0, (sockaddr *)&addr, faddr_len_.at(family_));
@@ -998,7 +994,7 @@ void sockudp::send_unix(const char *path)
 {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
-    set_path(addr, path);
+    set_unix_uri(addr, path);
     int ret = sendto(fd_, wbuffer().buffer_.get() + wbuffer().start_,
                      wbuffer().size(), 0, (sockaddr *)&addr,
                      SUN_LEN((sockaddr_un *)&addr));
@@ -1022,7 +1018,7 @@ namespace io_factory
 
 std::shared_ptr<socktcp> get_socktcp(family f)
 {
-    int fd = ::socket(sock::fmap_.at(f), SOCK_STREAM, 0);
+    int fd = ::socket(fmap_.at(f), SOCK_STREAM, 0);
     if (fd < 0)
     {
         throw_system_error("socket error");
@@ -1032,7 +1028,7 @@ std::shared_ptr<socktcp> get_socktcp(family f)
 
 std::shared_ptr<sockudp> get_sockudp(family f)
 {
-    int fd = ::socket(sock::fmap_.at(f), SOCK_DGRAM, 0);
+    int fd = ::socket(fmap_.at(f), SOCK_DGRAM, 0);
     if (fd < 0)
     {
         throw_system_error("socket error");

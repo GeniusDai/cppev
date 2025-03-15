@@ -250,25 +250,11 @@ protected:
     // socket family
     family family_;
 
-    // TCP --> IPv4 / IPv6 :
-    //         Record ip/port in connect()
-    //         Return by target_uri()
-    // TCP --> Unix :
-    //         Record sockpath in bind_unix()/connect_unix()
-    //         Return by sockname()/peername()/target_uri()
-    // UDP --> IPv4 / IPv6 :
-    //         Not used
-    // UDP --> Unix :
-    //         Record sockpath in bind_unix()
-    //         Return by recv()
-    std::tuple<std::string, int> peer_;
+    // Record path for bind_unix
+    std::string unix_path_;
 
     // Move constructor implementation
     void move(sock &&other, bool move_base) noexcept;
-
-    static const std::unordered_map<family, int, enum_hash> fmap_;
-
-    static const std::unordered_map<family, int, enum_hash> faddr_len_;
 };
 
 enum class CPPEV_PUBLIC shutdown_mode
@@ -351,6 +337,9 @@ public:
     int get_so_error() const;
 
 private:
+    // Record uri for connect and connect_unix
+    std::tuple<std::string, int> conn_uri_;
+
     // Move constructor implementation
     void move(socktcp &&other, bool move_base) noexcept;
 };
