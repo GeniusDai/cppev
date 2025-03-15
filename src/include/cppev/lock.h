@@ -13,19 +13,19 @@
 namespace cppev
 {
 
-class CPPEV_PUBLIC pshared_lock final
+class CPPEV_PUBLIC mutex final
 {
-    friend class pshared_cond;
+    friend class cond;
 
 public:
-    pshared_lock();
+    mutex();
 
-    pshared_lock(const pshared_lock &) = delete;
-    pshared_lock &operator=(const pshared_lock &) = delete;
-    pshared_lock(pshared_lock &&) = delete;
-    pshared_lock &operator=(pshared_lock &&) = delete;
+    mutex(const mutex &) = delete;
+    mutex &operator=(const mutex &) = delete;
+    mutex(mutex &&) = delete;
+    mutex &operator=(mutex &&) = delete;
 
-    ~pshared_lock() noexcept;
+    ~mutex() noexcept;
 
     void lock();
 
@@ -37,33 +37,33 @@ private:
     pthread_mutex_t lock_;
 };
 
-class CPPEV_PUBLIC pshared_cond final
+class CPPEV_PUBLIC cond final
 {
 public:
     using predicate = std::function<bool()>;
 
-    pshared_cond();
+    cond();
 
-    pshared_cond(const pshared_cond &) = delete;
-    pshared_cond &operator=(const pshared_cond &) = delete;
-    pshared_cond(pshared_cond &&) = delete;
-    pshared_cond &operator=(pshared_cond &&) = delete;
+    cond(const cond &) = delete;
+    cond &operator=(const cond &) = delete;
+    cond(cond &&) = delete;
+    cond &operator=(cond &&) = delete;
 
-    ~pshared_cond() noexcept;
+    ~cond() noexcept;
 
-    void wait(std::unique_lock<pshared_lock> &lock);
+    void wait(std::unique_lock<mutex> &lock);
 
-    void wait(std::unique_lock<pshared_lock> &lock, const predicate &pred);
+    void wait(std::unique_lock<mutex> &lock, const predicate &pred);
 
     template <class Rep, class Period>
-    std::cv_status wait_for(std::unique_lock<pshared_lock> &lock,
+    std::cv_status wait_for(std::unique_lock<mutex> &lock,
                             const std::chrono::duration<Rep, Period> &rel_time)
     {
         return wait_until(lock, std::chrono::steady_clock::now() + rel_time);
     }
 
     template <class Rep, class Period>
-    bool wait_for(std::unique_lock<pshared_lock> &lock,
+    bool wait_for(std::unique_lock<mutex> &lock,
                   const std::chrono::duration<Rep, Period> &rel_time,
                   const predicate &pred)
     {
@@ -73,7 +73,7 @@ public:
 
     template <class Duration>
     std::cv_status wait_until(
-        std::unique_lock<pshared_lock> &lock,
+        std::unique_lock<mutex> &lock,
         const std::chrono::time_point<std::chrono::system_clock, Duration>
             &abs_time)
     {
@@ -105,7 +105,7 @@ public:
 
     template <class Clock, class Duration>
     std::cv_status wait_until(
-        std::unique_lock<pshared_lock> &lock,
+        std::unique_lock<mutex> &lock,
         const std::chrono::time_point<Clock, Duration> &abs_time)
     {
         auto sys_abs_time =
@@ -114,7 +114,7 @@ public:
     }
 
     template <class Clock, class Duration>
-    bool wait_until(std::unique_lock<pshared_lock> &lock,
+    bool wait_until(std::unique_lock<mutex> &lock,
                     const std::chrono::time_point<Clock, Duration> &abs_time,
                     predicate pred)
     {
@@ -136,17 +136,17 @@ private:
     pthread_cond_t cond_;
 };
 
-class CPPEV_PUBLIC pshared_one_time_fence final
+class CPPEV_PUBLIC one_time_fence final
 {
 public:
-    pshared_one_time_fence();
+    one_time_fence();
 
-    pshared_one_time_fence(const pshared_one_time_fence &) = delete;
-    pshared_one_time_fence &operator=(const pshared_one_time_fence &) = delete;
-    pshared_one_time_fence(pshared_one_time_fence &&) = delete;
-    pshared_one_time_fence &operator=(pshared_one_time_fence &&) = delete;
+    one_time_fence(const one_time_fence &) = delete;
+    one_time_fence &operator=(const one_time_fence &) = delete;
+    one_time_fence(one_time_fence &&) = delete;
+    one_time_fence &operator=(one_time_fence &&) = delete;
 
-    ~pshared_one_time_fence();
+    ~one_time_fence();
 
     void wait();
 
@@ -157,44 +157,44 @@ public:
 private:
     bool ok_;
 
-    pshared_lock lock_;
+    mutex lock_;
 
-    pshared_cond cond_;
+    cond cond_;
 };
 
-class CPPEV_PUBLIC pshared_barrier final
+class CPPEV_PUBLIC barrier final
 {
 public:
-    pshared_barrier(int count);
+    barrier(int count);
 
-    pshared_barrier(const pshared_barrier &) = delete;
-    pshared_barrier &operator=(const pshared_barrier &) = delete;
-    pshared_barrier(pshared_barrier &&) = delete;
-    pshared_barrier &operator=(pshared_barrier &&) = delete;
+    barrier(const barrier &) = delete;
+    barrier &operator=(const barrier &) = delete;
+    barrier(barrier &&) = delete;
+    barrier &operator=(barrier &&) = delete;
 
-    ~pshared_barrier();
+    ~barrier();
 
     void wait();
 
 private:
     int count_;
 
-    pshared_lock lock_;
+    mutex lock_;
 
-    pshared_cond cond_;
+    cond cond_;
 };
 
-class CPPEV_PUBLIC pshared_rwlock final
+class CPPEV_PUBLIC rwlock final
 {
 public:
-    pshared_rwlock();
+    rwlock();
 
-    pshared_rwlock(const pshared_rwlock &) = delete;
-    pshared_rwlock &operator=(const pshared_rwlock &) = delete;
-    pshared_rwlock(pshared_rwlock &&) = delete;
-    pshared_rwlock &operator=(pshared_rwlock &&) = delete;
+    rwlock(const rwlock &) = delete;
+    rwlock &operator=(const rwlock &) = delete;
+    rwlock(rwlock &&) = delete;
+    rwlock &operator=(rwlock &&) = delete;
 
-    ~pshared_rwlock() noexcept;
+    ~rwlock() noexcept;
 
     void unlock();
 
@@ -213,7 +213,7 @@ private:
 class CPPEV_PUBLIC rdlockguard final
 {
 public:
-    explicit rdlockguard(pshared_rwlock &lock);
+    explicit rdlockguard(rwlock &lock);
 
     rdlockguard(const rdlockguard &) = delete;
     rdlockguard &operator=(const rdlockguard &) = delete;
@@ -227,13 +227,13 @@ public:
     void unlock();
 
 private:
-    pshared_rwlock *rwlock_;
+    rwlock *rwlock_;
 };
 
 class CPPEV_PUBLIC wrlockguard final
 {
 public:
-    explicit wrlockguard(pshared_rwlock &lock);
+    explicit wrlockguard(rwlock &lock);
 
     wrlockguard(const wrlockguard &) = delete;
     wrlockguard &operator=(const wrlockguard &) = delete;
@@ -247,7 +247,7 @@ public:
     void unlock();
 
 private:
-    pshared_rwlock *rwlock_;
+    rwlock *rwlock_;
 };
 
 }  // namespace cppev

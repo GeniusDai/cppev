@@ -125,7 +125,7 @@ TEST_F(TestIpcByFork, test_sem_shm_rwlock_by_fork)
         {
         }
 
-        pshared_rwlock lock;
+        rwlock lock;
         int var1;
         double var2;
     };
@@ -184,8 +184,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
         }
 
-        pshared_lock lock;
-        pshared_cond cond;
+        mutex lock;
+        cond cond;
         int var;
         bool ready;
     };
@@ -212,7 +212,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-1 test-1\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             ptr->var = NUMBER;
             ptr->ready = true;
             ptr->cond.notify_one();
@@ -226,7 +226,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
 
         for (int i = 0; i < 50; ++i)
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             std::cv_status status =
                 ptr->cond.wait_for(lock, std::chrono::milliseconds(10));
             ASSERT_EQ(status, std::cv_status::timeout);
@@ -238,7 +238,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-1 test-2\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
             ptr->cond.notify_one();
             std::cv_status status =
@@ -258,7 +258,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-1 test-3\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
             ptr->cond.notify_all();
             bool success = ptr->cond.wait_for(
@@ -274,7 +274,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-1 test-4\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
             ptr->cond.notify_all();
             auto start = std::chrono::system_clock::now();
@@ -310,7 +310,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-2 test-1\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
@@ -324,7 +324,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-2 test-2\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
@@ -339,7 +339,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-2 test-3\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
@@ -355,7 +355,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         printf("test_sem_shm_lock_cond_by_fork process-2 test-4\n");
 
         {
-            std::unique_lock<pshared_lock> lock(ptr->lock);
+            std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
                 ptr->cond.wait(lock);
@@ -385,8 +385,8 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
         {
         }
 
-        pshared_one_time_fence one_time_fence;
-        pshared_barrier barrier;
+        one_time_fence one_time_fence;
+        barrier barrier;
         int var;
     };
 
@@ -462,7 +462,7 @@ protected:
 
 TEST_F(TestPSharedLockByThread, test_rwlock_guard_movable)
 {
-    pshared_rwlock rwlck;
+    rwlock rwlck;
 
     {
         rdlockguard lg(rwlck);
@@ -483,7 +483,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_guard_movable)
 
 TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
 {
-    pshared_rwlock rwlck;
+    rwlock rwlck;
 
     // sub-thread
     auto func = [this, &rwlck]()
@@ -521,7 +521,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
 
 TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
 {
-    pshared_rwlock rwlck;
+    rwlock rwlck;
 
     // sub-thread
     auto func = [this, &rwlck]()
@@ -555,7 +555,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
 
 TEST_F(TestPSharedLockByThread, test_one_time_fence_wait_first)
 {
-    pshared_one_time_fence one_time_fence;
+    one_time_fence one_time_fence;
     auto func = [&]() -> void
     {
         one_time_fence.wait();
@@ -572,7 +572,7 @@ TEST_F(TestPSharedLockByThread, test_one_time_fence_wait_first)
 
 TEST_F(TestPSharedLockByThread, test_one_time_fence_notify_first)
 {
-    pshared_one_time_fence one_time_fence;
+    one_time_fence one_time_fence;
     auto func = [&]() -> void
     {
         one_time_fence.wait();
@@ -586,7 +586,7 @@ TEST_F(TestPSharedLockByThread, test_one_time_fence_notify_first)
 
 TEST_F(TestPSharedLockByThread, test_barrier_throw)
 {
-    pshared_barrier barrier(1);
+    barrier barrier(1);
     EXPECT_NO_THROW(barrier.wait());
     EXPECT_THROW(barrier.wait(), std::logic_error);
 }
@@ -594,7 +594,7 @@ TEST_F(TestPSharedLockByThread, test_barrier_throw)
 TEST_F(TestPSharedLockByThread, test_barrier_multithread)
 {
     const int num = 10;
-    pshared_barrier barrier(num + 1);
+    barrier barrier(num + 1);
     std::vector<std::thread> thrs;
     bool shall_throw = true;
 
@@ -624,19 +624,19 @@ TEST_F(TestPSharedLockByThread, test_barrier_multithread)
     EXPECT_THROW(barrier.wait(), std::logic_error);
 }
 
-TEST_F(TestPSharedLockByThread, test_pshared_lock_performance)
+TEST_F(TestPSharedLockByThread, test_mutex_performance)
 {
-    pshared_lock plock;
-    performance_test<pshared_lock>(plock);
+    mutex plock;
+    performance_test<mutex>(plock);
 }
 
-TEST_F(TestPSharedLockByThread, test_pshared_lock_shm_performance)
+TEST_F(TestPSharedLockByThread, test_mutex_shm_performance)
 {
     std::string shm_name = "/cppev_test_lock_shm";
-    shared_memory shm(shm_name, sizeof(pshared_lock));
-    pshared_lock *lock_ptr = shm.construct<pshared_lock>();
-    performance_test<pshared_lock>(*lock_ptr);
-    lock_ptr->~pshared_lock();
+    shared_memory shm(shm_name, sizeof(mutex));
+    mutex *lock_ptr = shm.construct<mutex>();
+    performance_test<mutex>(*lock_ptr);
+    lock_ptr->~mutex();
     shm.unlink();
 }
 

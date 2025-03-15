@@ -3,7 +3,7 @@
 namespace cppev
 {
 
-pshared_lock::pshared_lock()
+mutex::mutex()
 {
     int ret = 0;
     pthread_mutexattr_t attr;
@@ -44,12 +44,12 @@ pshared_lock::pshared_lock()
     }
 }
 
-pshared_lock::~pshared_lock() noexcept
+mutex::~mutex() noexcept
 {
     pthread_mutex_destroy(&lock_);
 }
 
-void pshared_lock::lock()
+void mutex::lock()
 {
     int ret = pthread_mutex_lock(&lock_);
     if (ret != 0)
@@ -58,7 +58,7 @@ void pshared_lock::lock()
     }
 }
 
-bool pshared_lock::try_lock()
+bool mutex::try_lock()
 {
     int ret = pthread_mutex_trylock(&lock_);
     if (ret != 0)
@@ -73,7 +73,7 @@ bool pshared_lock::try_lock()
     return true;
 }
 
-void pshared_lock::unlock()
+void mutex::unlock()
 {
     int ret = pthread_mutex_unlock(&lock_);
     if (ret != 0)
@@ -83,7 +83,7 @@ void pshared_lock::unlock()
     }
 }
 
-pshared_cond::pshared_cond()
+cond::cond()
 {
     int ret = 0;
     pthread_condattr_t attr;
@@ -112,12 +112,12 @@ pshared_cond::pshared_cond()
     }
 }
 
-pshared_cond::~pshared_cond() noexcept
+cond::~cond() noexcept
 {
     pthread_cond_destroy(&cond_);
 }
 
-void pshared_cond::wait(std::unique_lock<pshared_lock> &lock)
+void cond::wait(std::unique_lock<mutex> &lock)
 {
     int ret = pthread_cond_wait(&cond_, &lock.mutex()->lock_);
     if (ret != 0)
@@ -126,8 +126,7 @@ void pshared_cond::wait(std::unique_lock<pshared_lock> &lock)
     }
 }
 
-void pshared_cond::wait(std::unique_lock<pshared_lock> &lock,
-                        const predicate &pred)
+void cond::wait(std::unique_lock<mutex> &lock, const predicate &pred)
 {
     while (!pred())
     {
@@ -135,7 +134,7 @@ void pshared_cond::wait(std::unique_lock<pshared_lock> &lock,
     }
 }
 
-void pshared_cond::notify_one()
+void cond::notify_one()
 {
     int ret = pthread_cond_signal(&cond_);
     if (ret != 0)
@@ -145,7 +144,7 @@ void pshared_cond::notify_one()
     }
 }
 
-void pshared_cond::notify_all()
+void cond::notify_all()
 {
     int ret = pthread_cond_broadcast(&cond_);
     if (ret != 0)
@@ -155,17 +154,17 @@ void pshared_cond::notify_all()
     }
 }
 
-pshared_one_time_fence::pshared_one_time_fence() : ok_(false)
+one_time_fence::one_time_fence() : ok_(false)
 {
 }
 
-pshared_one_time_fence::~pshared_one_time_fence() = default;
+one_time_fence::~one_time_fence() = default;
 
-void pshared_one_time_fence::wait()
+void one_time_fence::wait()
 {
     if (!ok_)
     {
-        std::unique_lock<pshared_lock> lock(lock_);
+        std::unique_lock<mutex> lock(lock_);
         if (!ok_)
         {
             cond_.wait(lock,
@@ -177,30 +176,30 @@ void pshared_one_time_fence::wait()
     }
 }
 
-void pshared_one_time_fence::notify()
+void one_time_fence::notify()
 {
     if (!ok_)
     {
-        std::unique_lock<pshared_lock> lock(lock_);
+        std::unique_lock<mutex> lock(lock_);
         ok_ = true;
         cond_.notify_one();
     }
 }
 
-bool pshared_one_time_fence::ok() const noexcept
+bool one_time_fence::ok() const noexcept
 {
     return ok_;
 }
 
-pshared_barrier::pshared_barrier(int count) : count_(count)
+barrier::barrier(int count) : count_(count)
 {
 }
 
-pshared_barrier::~pshared_barrier() = default;
+barrier::~barrier() = default;
 
-void pshared_barrier::wait()
+void barrier::wait()
 {
-    std::unique_lock<pshared_lock> lock(lock_);
+    std::unique_lock<mutex> lock(lock_);
     --count_;
     if (count_ == 0)
     {
@@ -220,7 +219,7 @@ void pshared_barrier::wait()
     }
 }
 
-pshared_rwlock::pshared_rwlock()
+rwlock::rwlock()
 {
     int ret = 0;
     pthread_rwlockattr_t attr;
@@ -250,12 +249,12 @@ pshared_rwlock::pshared_rwlock()
     }
 }
 
-pshared_rwlock::~pshared_rwlock() noexcept
+rwlock::~rwlock() noexcept
 {
     pthread_rwlock_destroy(&lock_);
 }
 
-void pshared_rwlock::unlock()
+void rwlock::unlock()
 {
     int ret = pthread_rwlock_unlock(&lock_);
     if (ret != 0)
@@ -265,7 +264,7 @@ void pshared_rwlock::unlock()
     }
 }
 
-void pshared_rwlock::rdlock()
+void rwlock::rdlock()
 {
     int ret = pthread_rwlock_rdlock(&lock_);
     if (ret != 0)
@@ -275,7 +274,7 @@ void pshared_rwlock::rdlock()
     }
 }
 
-void pshared_rwlock::wrlock()
+void rwlock::wrlock()
 {
     int ret = pthread_rwlock_wrlock(&lock_);
     if (ret != 0)
@@ -285,7 +284,7 @@ void pshared_rwlock::wrlock()
     }
 }
 
-bool pshared_rwlock::try_rdlock()
+bool rwlock::try_rdlock()
 {
     int ret = pthread_rwlock_tryrdlock(&lock_);
     if (ret == 0)
@@ -301,7 +300,7 @@ bool pshared_rwlock::try_rdlock()
     return ret;
 }
 
-bool pshared_rwlock::try_wrlock()
+bool rwlock::try_wrlock()
 {
     int ret = pthread_rwlock_trywrlock(&lock_);
     if (ret == 0)
@@ -317,7 +316,7 @@ bool pshared_rwlock::try_wrlock()
     return ret;
 }
 
-rdlockguard::rdlockguard(pshared_rwlock &lock) : rwlock_(&lock)
+rdlockguard::rdlockguard(rwlock &lock) : rwlock_(&lock)
 {
     rwlock_->rdlock();
 }
@@ -360,7 +359,7 @@ void rdlockguard::unlock()
     rwlock_->unlock();
 }
 
-wrlockguard::wrlockguard(pshared_rwlock &lock) : rwlock_(&lock)
+wrlockguard::wrlockguard(rwlock &lock) : rwlock_(&lock)
 {
     rwlock_->wrlock();
 }
