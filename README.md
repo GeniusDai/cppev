@@ -10,7 +10,7 @@ Support io event listening by io-multiplexing, event-type readable / writable, e
 
 ### Multithreading
 
-Support subthread / threadpool / spinlock / signal-handing / reactor.
+Support subthread / threadpool / spinlock / signal-handing.
 
 ### Interprocess Communication
 
@@ -21,6 +21,10 @@ Support mutex / condition-variable / read-write-lock shared among processes.
 ### Binary File Loading
 
 Support executable-file loading by subprocess, dynamic-library loading in runtime.
+
+### Reactor
+
+Support tcp server / client by multi-threading / nonblocking-io / level-trigger-event-listening.
 
 # Usage
 
