@@ -835,7 +835,7 @@ std::tuple<std::string, int, family> socktcp::peername() const
     return query_ip_port_family(addr);
 }
 
-std::tuple<std::string, int, family> socktcp::connpeer() const noexcept
+std::tuple<std::string, int, family> socktcp::target_uri() const noexcept
 {
     return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
 }

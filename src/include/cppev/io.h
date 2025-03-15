@@ -252,10 +252,12 @@ protected:
 
     // TCP --> IPv4 / IPv6 :
     //         Record ip/port in connect()
-    //         Return by connpeer()
+    //         Return by target_uri()
     // TCP --> Unix :
     //         Record sockpath in bind_unix()/connect_unix()
-    //         Return by sockname()/peername()/connpeer()
+    //         Return by sockname()/peername()/target_uri()
+    // UDP --> IPv4 / IPv6 :
+    //         Not used
     // UDP --> Unix :
     //         Record sockpath in bind_unix()
     //         Return by recv()
@@ -325,7 +327,7 @@ public:
 
     // Connect target even not established: ip / port / family
     // For Unix-domain: ip=path, port=-1
-    std::tuple<std::string, int, family> connpeer() const noexcept;
+    std::tuple<std::string, int, family> target_uri() const noexcept;
 
     // setsockopt SO_KEEPALIVE
     void set_so_keepalive(bool enable = true);

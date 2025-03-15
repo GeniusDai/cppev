@@ -205,7 +205,7 @@ void iohandler::on_cont_writable(const std::shared_ptr<io> &iop)
 
     if (!iopt->check_connect())
     {
-        std::tuple<std::string, int, family> h = iopt->connpeer();
+        std::tuple<std::string, int, family> h = iopt->target_uri();
         LOG_ERROR_FMT("Connect %s %d failed when checking writable",
                       std::get<0>(h).c_str(), std::get<1>(h));
         pseudo_this->failures_[h] += 1;
