@@ -6,7 +6,7 @@ Tcp server initiates listening thread(s) to support ipc4 / ipv6 / unix protocol 
 
 Tcp client initiates connecting thread(s) to connect to server.
 
-Both server and client initiates thread pool to handle tcp connection.
+Both server and client initiate thread pool to handle tcp connection.
 
 * Usage
 
@@ -16,11 +16,11 @@ Both server and client initiates thread pool to handle tcp connection.
 
 ### 2. Large File Transfer
 
-Tcp client sends the name of the required file.
+Tcp client sends the required file' name.
 
 Tcp server caches and transfers the required file.
 
-Tcp client receives and stores the file to disk.
+Tcp client receives the file and stores it to disk.
 
 * Usage
 
@@ -33,7 +33,7 @@ Tcp client receives and stores the file to disk.
 
 ### 3. IO Event Loop
 
-Use the original event loop (not reactor) to connect via tcp / udp.
+Use the original event loop to connect via tcp / udp.
 
 * Usage
 
