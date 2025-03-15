@@ -13,7 +13,7 @@
 
 #include "cppev/common.h"
 #include "cppev/event_loop.h"
-#include "cppev/nio.h"
+#include "cppev/io.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
 
@@ -45,17 +45,16 @@ namespace reactor
 {
 
 // Callback function type.
-using tcp_event_handler =
-    std::function<void(const std::shared_ptr<nsocktcp> &)>;
+using tcp_event_handler = std::function<void(const std::shared_ptr<socktcp> &)>;
 
 // Async write data in write buffer.
-CPPEV_PUBLIC void async_write(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void async_write(const std::shared_ptr<socktcp> &iopt);
 
 // Safely close tcp socket.
-CPPEV_PUBLIC void safely_close(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void safely_close(const std::shared_ptr<socktcp> &iopt);
 
 // Get external data of reactor server and client.
-CPPEV_PUBLIC void *external_data(const std::shared_ptr<nsocktcp> &iopt);
+CPPEV_PUBLIC void *external_data(const std::shared_ptr<socktcp> &iopt);
 
 class acceptor;
 class connector;
@@ -139,19 +138,19 @@ public:
     ~iohandler();
 
     // Connected socket that has been registered to thread pool is readable.
-    static void on_readable(const std::shared_ptr<nio> &iop);
+    static void on_readable(const std::shared_ptr<io> &iop);
 
     // Connected socket that has been registered to thread pool is writable.
-    static void on_writable(const std::shared_ptr<nio> &iop);
+    static void on_writable(const std::shared_ptr<io> &iop);
 
     // Connected socket is writable, this callback is registered by listening
     // thread and will be executed by one thread of the pool to do init jobs.
-    static void on_acpt_writable(const std::shared_ptr<nio> &iop);
+    static void on_acpt_writable(const std::shared_ptr<io> &iop);
 
     // Connected socket is writable, this callback is registered by connecting
     // thread and will be executed by one thread of the pool to check the
     // connection and do init jobs.
-    static void on_cont_writable(const std::shared_ptr<nio> &iop);
+    static void on_cont_writable(const std::shared_ptr<io> &iop);
 
     // Run io handling.
     void run_impl() override;
@@ -183,7 +182,7 @@ public:
     // Listening socket is readable, indicating new client arrives, this
     // callback will be executed by accept thread to accept connection and
     // assign connection to thread pool.
-    static void on_acpt_readable(const std::shared_ptr<nio> &iop);
+    static void on_acpt_readable(const std::shared_ptr<io> &iop);
 
     // Register readable to event loop and start loop.
     void run_impl() override;
@@ -202,7 +201,7 @@ private:
     event_loop evlp_;
 
     // Listening socket.
-    std::vector<std::shared_ptr<nsocktcp>> socks_;
+    std::vector<std::shared_ptr<socktcp>> socks_;
 };
 
 class CPPEV_PRIVATE connector final : public runnable
@@ -220,7 +219,7 @@ public:
     // Pipe fd is readable, indicating new task added, this callback will be
     // executed by connect thread to execute the connection task and assign
     // connection to thread pool.
-    static void on_pipe_readable(const std::shared_ptr<nio> &iop);
+    static void on_pipe_readable(const std::shared_ptr<io> &iop);
 
     // Register readable to event loop and start loop.
     void run_impl() override;
@@ -242,10 +241,10 @@ private:
     std::mutex lock_;
 
     // Pipe write end.
-    std::shared_ptr<nstream> wrp_;
+    std::shared_ptr<stream> wrp_;
 
     // Pipe read end.
-    std::shared_ptr<nstream> rdp_;
+    std::shared_ptr<stream> rdp_;
 
     // Hosts waiting for connecting.
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash>

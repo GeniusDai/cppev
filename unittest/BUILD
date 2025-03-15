@@ -61,9 +61,9 @@ cc_test(
 )
 
 cc_test(
-    name = "test_nio",
+    name = "test_io",
     srcs = [
-        "test_nio.cc",
+        "test_io.cc",
     ],
     deps = [
         "//src:cppev",

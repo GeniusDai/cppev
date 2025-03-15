@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "cppev/event_loop.h"
-#include "cppev/nio.h"
+#include "cppev/io.h"
 
 namespace cppev
 {
@@ -15,14 +15,14 @@ const char *fifo = "./cppev_test_fifo";
 
 const char *str = "Cppev is a C++ event driven library";
 
-TEST(TestNio, test_diskfile)
+TEST(TestIO, test_diskfile)
 {
     int fd;
 
     fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
-    auto iofw = std::make_shared<nstream>(fd);
+    auto iofw = std::make_shared<stream>(fd);
     fd = open(file, O_RDONLY);
-    auto iofr = std::make_shared<nstream>(fd);
+    auto iofr = std::make_shared<stream>(fd);
 
     iofw->wbuffer().put_string(str);
     iofw->write_all();
@@ -33,9 +33,9 @@ TEST(TestNio, test_diskfile)
     unlink(file);
 }
 
-TEST(TestNio, test_pipe)
+TEST(TestIO, test_pipe)
 {
-    auto pipes = nio_factory::get_pipes();
+    auto pipes = io_factory::get_pipes();
     auto iopr = pipes[0];
     auto iopw = pipes[1];
 
@@ -45,9 +45,9 @@ TEST(TestNio, test_pipe)
     EXPECT_STREQ(str, iopr->rbuffer().rawbuf());
 }
 
-TEST(TestNio, test_fifo)
+TEST(TestIO, test_fifo)
 {
-    auto fifos = nio_factory::get_fifos(fifo);
+    auto fifos = io_factory::get_fifos(fifo);
     auto iofr = fifos[0];
     auto iofw = fifos[1];
     iofw->wbuffer().put_string(str);
@@ -58,15 +58,15 @@ TEST(TestNio, test_fifo)
     unlink(fifo);
 }
 
-class TestNioSocket
+class TestIOSocket
     : public testing::TestWithParam<std::tuple<family, bool, int, int>>
 {
 };
 
-TEST_P(TestNioSocket, test_tcp_socket)
+TEST_P(TestIOSocket, test_tcp_socket)
 {
     auto p = GetParam();
-    std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(std::get<0>(p));
+    std::shared_ptr<socktcp> sock = io_factory::get_socktcp(std::get<0>(p));
     sock->set_so_reuseaddr(std::get<1>(p));
     sock->set_so_reuseport(std::get<1>(p));
     sock->set_so_keepalive(std::get<1>(p));
@@ -106,10 +106,10 @@ TEST_P(TestNioSocket, test_tcp_socket)
     EXPECT_EQ(sock->get_so_error(), 0);
 }
 
-TEST_P(TestNioSocket, test_udp_socket)
+TEST_P(TestIOSocket, test_udp_socket)
 {
     auto p = GetParam();
-    std::shared_ptr<nsockudp> sock = nio_factory::get_nsockudp(std::get<0>(p));
+    std::shared_ptr<sockudp> sock = io_factory::get_sockudp(std::get<0>(p));
     sock->set_so_reuseaddr(std::get<1>(p));
     sock->set_so_reuseport(std::get<1>(p));
     sock->set_so_broadcast(std::get<1>(p));
@@ -127,7 +127,7 @@ TEST_P(TestNioSocket, test_udp_socket)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    CppevTest, TestNioSocket,
+    CppevTest, TestIOSocket,
     testing::Combine(
         testing::Values(family::ipv4, family::ipv6),  // protocol family
         testing::Bool(),                              // enable option

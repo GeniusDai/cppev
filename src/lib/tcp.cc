@@ -54,7 +54,7 @@ const void *tp_shared_data::external_data() const noexcept
     return external_data_ptr;
 }
 
-void async_write(const std::shared_ptr<nsocktcp> &iopt)
+void async_write(const std::shared_ptr<socktcp> &iopt)
 {
     tp_shared_data *dp =
         reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
@@ -70,28 +70,28 @@ void async_write(const std::shared_ptr<nsocktcp> &iopt)
             if (!iopt->is_closed())
             {
                 dp->on_closed(iopt);
-                std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
+                std::shared_ptr<io> iop = std::static_pointer_cast<io>(iopt);
                 iopt->evlp().fd_clean(iop);
                 iopt->close();
             }
         }
         else
         {
-            std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
+            std::shared_ptr<io> iop = std::static_pointer_cast<io>(iopt);
             iopt->evlp().fd_activate(iop, fd_event::fd_writable);
         }
     }
 }
 
-void safely_close(const std::shared_ptr<nsocktcp> &iopt)
+void safely_close(const std::shared_ptr<socktcp> &iopt)
 {
-    std::shared_ptr<nio> iop = std::static_pointer_cast<nio>(iopt);
+    std::shared_ptr<io> iop = std::static_pointer_cast<io>(iopt);
     // epoll/kqueue will remove fd when it's closed
     iopt->evlp().fd_clean(iop);
     iopt->close();
 }
 
-void *external_data(const std::shared_ptr<nsocktcp> &iopt)
+void *external_data(const std::shared_ptr<socktcp> &iopt)
 {
     return (reinterpret_cast<tp_shared_data *>(iopt->evlp().data()))
         ->external_data();
@@ -108,7 +108,7 @@ size_t host_hash::operator()(
 }
 
 const tcp_event_handler tp_shared_data::idle_handler =
-    [](const std::shared_ptr<nsocktcp> &) -> void
+    [](const std::shared_ptr<socktcp> &) -> void
 {
 };
 
@@ -119,9 +119,9 @@ iohandler::iohandler(tp_shared_data *data)
 
 iohandler::~iohandler() = default;
 
-void iohandler::on_readable(const std::shared_ptr<nio> &iop)
+void iohandler::on_readable(const std::shared_ptr<io> &iop)
 {
-    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    std::shared_ptr<socktcp> iopt = std::dynamic_pointer_cast<socktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_pointer_cast error");
@@ -145,9 +145,9 @@ void iohandler::on_readable(const std::shared_ptr<nio> &iop)
     }
 }
 
-void iohandler::on_writable(const std::shared_ptr<nio> &iop)
+void iohandler::on_writable(const std::shared_ptr<io> &iop)
 {
-    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    std::shared_ptr<socktcp> iopt = std::dynamic_pointer_cast<socktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_pointer_cast error");
@@ -172,9 +172,9 @@ void iohandler::on_writable(const std::shared_ptr<nio> &iop)
     }
 }
 
-void iohandler::on_acpt_writable(const std::shared_ptr<nio> &iop)
+void iohandler::on_acpt_writable(const std::shared_ptr<io> &iop)
 {
-    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    std::shared_ptr<socktcp> iopt = std::dynamic_pointer_cast<socktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_pointer_cast error");
@@ -191,9 +191,9 @@ void iohandler::on_acpt_writable(const std::shared_ptr<nio> &iop)
     LOG_INFO_FMT("Connected socket %d initialized", iop->fd());
 }
 
-void iohandler::on_cont_writable(const std::shared_ptr<nio> &iop)
+void iohandler::on_cont_writable(const std::shared_ptr<io> &iop)
 {
-    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    std::shared_ptr<socktcp> iopt = std::dynamic_pointer_cast<socktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_pointer_cast error");
@@ -244,7 +244,7 @@ acceptor::~acceptor() = default;
 
 void acceptor::listen(int port, family f, const char *ip)
 {
-    std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(f);
+    std::shared_ptr<socktcp> sock = io_factory::get_socktcp(f);
     sock->bind(ip, port);
     sock->listen();
     socks_.push_back(sock);
@@ -253,7 +253,7 @@ void acceptor::listen(int port, family f, const char *ip)
 
 void acceptor::listen_unix(const std::string &path, bool remove)
 {
-    std::shared_ptr<nsocktcp> sock = nio_factory::get_nsocktcp(family::local);
+    std::shared_ptr<socktcp> sock = io_factory::get_socktcp(family::local);
     sock->bind_unix(path, remove);
     sock->listen();
     socks_.push_back(sock);
@@ -261,14 +261,14 @@ void acceptor::listen_unix(const std::string &path, bool remove)
                  path.c_str());
 }
 
-void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
+void acceptor::on_acpt_readable(const std::shared_ptr<io> &iop)
 {
-    std::shared_ptr<nsocktcp> iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+    std::shared_ptr<socktcp> iopt = std::dynamic_pointer_cast<socktcp>(iop);
     if (iopt == nullptr)
     {
         throw_logic_error("dynamic_pointer_cast error");
     }
-    std::vector<std::shared_ptr<nsocktcp>> conns = iopt->accept();
+    std::vector<std::shared_ptr<socktcp>> conns = iopt->accept();
     tp_shared_data *dp =
         reinterpret_cast<tp_shared_data *>(iopt->evlp().data());
 
@@ -277,7 +277,7 @@ void acceptor::on_acpt_readable(const std::shared_ptr<nio> &iop)
         LOG_INFO_FMT("Listening socket %d accepted new socket %d", iopt->fd(),
                      conn->fd());
         dp->minloads_get_evlp()->fd_register_and_activate(
-            std::static_pointer_cast<nio>(conn), fd_event::fd_writable,
+            std::static_pointer_cast<io>(conn), fd_event::fd_writable,
             iohandler::on_acpt_writable);
     }
 }
@@ -287,7 +287,7 @@ void acceptor::run_impl()
     LOG_INFO << "Thread acceptor starting";
     for (auto &sock : socks_)
     {
-        evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(sock),
+        evlp_.fd_register_and_activate(std::static_pointer_cast<io>(sock),
                                        fd_event::fd_readable,
                                        acceptor::on_acpt_readable);
     }
@@ -303,7 +303,7 @@ void acceptor::shutdown()
 connector::connector(tp_shared_data *data)
     : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
-    auto pipes = nio_factory::get_pipes();
+    auto pipes = io_factory::get_pipes();
     rdp_ = pipes[0];
     wrp_ = pipes[1];
 }
@@ -339,9 +339,9 @@ void connector::add_unix(const std::string &path, int t)
     add(path, 0, family::local, t);
 }
 
-void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
+void connector::on_pipe_readable(const std::shared_ptr<io> &iop)
 {
-    nstream *iops = dynamic_cast<nstream *>(iop.get());
+    stream *iops = dynamic_cast<stream *>(iop.get());
     if (iops == nullptr)
     {
         throw_logic_error("dynamic_cast error");
@@ -363,8 +363,8 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
     {
         for (int i = 0; i < iter->second; ++i)
         {
-            std::shared_ptr<nsocktcp> sock =
-                nio_factory::get_nsocktcp(std::get<2>(iter->first));
+            std::shared_ptr<socktcp> sock =
+                io_factory::get_socktcp(std::get<2>(iter->first));
             bool succeed;
             if (std::get<2>(iter->first) == family::local)
             {
@@ -378,7 +378,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
             if (succeed)
             {
                 dp->minloads_get_evlp()->fd_register_and_activate(
-                    std::static_pointer_cast<nio>(sock), fd_event::fd_writable,
+                    std::static_pointer_cast<io>(sock), fd_event::fd_writable,
                     iohandler::on_cont_writable);
             }
             else
@@ -409,7 +409,7 @@ void connector::on_pipe_readable(const std::shared_ptr<nio> &iop)
 void connector::run_impl()
 {
     LOG_INFO << "Thread connector starting";
-    evlp_.fd_register_and_activate(std::static_pointer_cast<nio>(rdp_),
+    evlp_.fd_register_and_activate(std::static_pointer_cast<io>(rdp_),
                                    fd_event::fd_readable,
                                    connector::on_pipe_readable);
     evlp_.loop_forever();

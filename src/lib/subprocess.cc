@@ -8,7 +8,7 @@
 #include <set>
 #include <thread>
 
-#include "cppev/nio.h"
+#include "cppev/io.h"
 #include "cppev/utils.h"
 
 #ifdef __APPLE__
@@ -38,7 +38,7 @@ subp_open::subp_open(const std::string &cmd,
     int fds[2];
     int zero, one, two;
 
-    // Cannot use nio_factory::get_pipes since child process will destruct
+    // Cannot use io_factory::get_pipes since child process will destruct
     // the smart pointer which causes all the fds got closed in its side
     // and cannot communicate with parent process.
 
@@ -47,21 +47,21 @@ subp_open::subp_open(const std::string &cmd,
         throw_system_error("pipe error");
     }
     zero = fds[0];
-    stdin_ = std::make_unique<nstream>(fds[1]);
+    stdin_ = std::make_unique<stream>(fds[1]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     one = fds[1];
-    stdout_ = std::make_unique<nstream>(fds[0]);
+    stdout_ = std::make_unique<stream>(fds[0]);
 
     if (pipe(fds) < 0)
     {
         throw_system_error("pipe error");
     }
     two = fds[1];
-    stderr_ = std::make_unique<nstream>(fds[0]);
+    stderr_ = std::make_unique<stream>(fds[0]);
 
     pid_t pid = fork();
 

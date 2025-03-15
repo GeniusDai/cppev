@@ -1,4 +1,4 @@
-#include "cppev/nio.h"
+#include "cppev/io.h"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -22,31 +22,34 @@
 namespace cppev
 {
 
-nio::nio(int fd) : fd_(fd), closed_(false)
+io::io(int fd, bool block) : fd_(fd), block_(block), closed_(false)
 {
-    set_io_nonblock();
+    if (!block)
+    {
+        set_io_nonblock();
+    }
 }
 
-nio::nio(nio &&other) noexcept
+io::io(io &&other) noexcept
 {
     if (&other == this)
     {
         return;
     }
-    move(std::forward<nio>(other));
+    move(std::forward<io>(other));
 }
 
-nio &nio::operator=(nio &&other) noexcept
+io &io::operator=(io &&other) noexcept
 {
     if (&other == this)
     {
         return *this;
     }
-    move(std::forward<nio>(other));
+    move(std::forward<io>(other));
     return *this;
 }
 
-nio::~nio() noexcept
+io::~io() noexcept
 {
     if (!closed_)
     {
@@ -54,54 +57,54 @@ nio::~nio() noexcept
     }
 }
 
-int nio::fd() const noexcept
+int io::fd() const noexcept
 {
     return fd_;
 }
 
 // Read buffer
-const buffer &nio::rbuffer() const noexcept
+const buffer &io::rbuffer() const noexcept
 {
     return rbuffer_;
 }
 
-buffer &nio::rbuffer() noexcept
+buffer &io::rbuffer() noexcept
 {
     return rbuffer_;
 }
 
 // Write buffer
-const buffer &nio::wbuffer() const noexcept
+const buffer &io::wbuffer() const noexcept
 {
     return wbuffer_;
 }
 
-buffer &nio::wbuffer() noexcept
+buffer &io::wbuffer() noexcept
 {
     return wbuffer_;
 }
 
-const event_loop &nio::evlp() const noexcept
+const event_loop &io::evlp() const noexcept
 {
     return *evlp_;
 }
 
-event_loop &nio::evlp() noexcept
+event_loop &io::evlp() noexcept
 {
     return *evlp_;
 }
 
-void nio::set_evlp(event_loop *evlp) noexcept
+void io::set_evlp(event_loop *evlp) noexcept
 {
     evlp_ = evlp;
 }
 
-bool nio::is_closed() const noexcept
+bool io::is_closed() const noexcept
 {
     return closed_;
 }
 
-void nio::close() noexcept
+void io::close() noexcept
 {
     if (fd_ != -1)
     {
@@ -110,7 +113,7 @@ void nio::close() noexcept
     closed_ = true;
 }
 
-void nio::set_io_nonblock()
+void io::set_io_nonblock()
 {
     int flags = fcntl(fd_, F_GETFL);
     if (flags < 0)
@@ -121,9 +124,10 @@ void nio::set_io_nonblock()
     {
         throw_system_error("fcntl error");
     }
+    block_ = false;
 }
 
-void nio::set_io_block()
+void io::set_io_block()
 {
     int flags = fcntl(fd_, F_GETFL);
     if (flags < 0)
@@ -134,9 +138,10 @@ void nio::set_io_block()
     {
         throw_system_error("fcntl error");
     }
+    block_ = true;
 }
 
-void nio::move(nio &&other) noexcept
+void io::move(io &&other) noexcept
 {
     this->fd_ = other.fd_;
     this->closed_ = other.closed_;
@@ -149,47 +154,47 @@ void nio::move(nio &&other) noexcept
     other.evlp_ = nullptr;
 }
 
-nstream::nstream(int fd) : nio(fd), reset_(false), eof_(false), eop_(false)
+stream::stream(int fd) : io(fd), reset_(false), eof_(false), eop_(false)
 {
 }
 
-nstream::~nstream() = default;
+stream::~stream() = default;
 
-nstream::nstream(nstream &&other) noexcept : nio(std::forward<nstream>(other))
+stream::stream(stream &&other) noexcept : io(std::forward<stream>(other))
 {
     if (&other == this)
     {
         return;
     }
-    move(std::forward<nstream>(other), false);
+    move(std::forward<stream>(other), false);
 }
 
-nstream &nstream::operator=(nstream &&other) noexcept
+stream &stream::operator=(stream &&other) noexcept
 {
     if (&other == this)
     {
         return *this;
     }
-    move(std::forward<nstream>(other), true);
+    move(std::forward<stream>(other), true);
     return *this;
 }
 
-bool nstream::is_reset() const noexcept
+bool stream::is_reset() const noexcept
 {
     return reset_;
 }
 
-bool nstream::eof() const noexcept
+bool stream::eof() const noexcept
 {
     return eof_;
 }
 
-bool nstream::eop() const noexcept
+bool stream::eop() const noexcept
 {
     return eop_;
 }
 
-int nstream::read_chunk(int len)
+int stream::read_chunk(int len)
 {
     rbuffer().resize(rbuffer().offset_ + len);
     int origin_offset = rbuffer().offset_;
@@ -227,7 +232,7 @@ int nstream::read_chunk(int len)
     return rbuffer().offset_ - origin_offset;
 }
 
-int nstream::write_chunk(int len)
+int stream::write_chunk(int len)
 {
     int origin_start = wbuffer().start_;
     len = std::min(len, wbuffer().size());
@@ -271,8 +276,12 @@ int nstream::write_chunk(int len)
     return curr_start - origin_start;
 }
 
-int nstream::read_all(int step)
+int stream::read_all(int step)
 {
+    if (this->block_)
+    {
+        throw_logic_error("block io shall never call read_all");
+    }
     int total = 0;
     while (true)
     {
@@ -286,8 +295,12 @@ int nstream::read_all(int step)
     return total;
 }
 
-int nstream::write_all(int step)
+int stream::write_all(int step)
 {
+    if (this->block_)
+    {
+        throw_logic_error("block io shall never call write_all");
+    }
     int total = 0;
     while (true)
     {
@@ -301,23 +314,23 @@ int nstream::write_all(int step)
     return total;
 }
 
-void nstream::move(nstream &&other, bool move_base) noexcept
+void stream::move(stream &&other, bool move_base) noexcept
 {
     if (move_base)
     {
-        nio::move(std::forward<nstream>(other));
+        io::move(std::forward<stream>(other));
     }
     this->reset_ = other.reset_;
     this->eof_ = other.eof_;
     this->eop_ = other.eop_;
 }
 
-const std::unordered_map<family, int, enum_hash> nsock::fmap_ = {
+const std::unordered_map<family, int, enum_hash> sock::fmap_ = {
     {family::ipv4, AF_INET},
     {family::ipv6, AF_INET6},
     {family::local, AF_LOCAL}};
 
-const std::unordered_map<family, int, enum_hash> nsock::faddr_len_ = {
+const std::unordered_map<family, int, enum_hash> sock::faddr_len_ = {
     {family::ipv4, sizeof(sockaddr_in)},
     {family::ipv6, sizeof(sockaddr_in6)},
     {family::local, sizeof(sockaddr_un)}};
@@ -424,37 +437,37 @@ static std::tuple<std::string, int, family> query_ip_port_family(
     return std::make_tuple(ip, port, f);
 }
 
-nsock::nsock(int fd, family f) : nio(fd), family_(f)
+sock::sock(int fd, family f) : io(fd), family_(f)
 {
 }
 
-nsock::~nsock() = default;
+sock::~sock() = default;
 
-nsock::nsock(nsock &&other) noexcept : nio(std::forward<nsock>(other))
+sock::sock(sock &&other) noexcept : io(std::forward<sock>(other))
 {
     if (&other == this)
     {
         return;
     }
-    move(std::forward<nsock>(other), false);
+    move(std::forward<sock>(other), false);
 }
 
-nsock &nsock::operator=(nsock &&other) noexcept
+sock &sock::operator=(sock &&other) noexcept
 {
     if (&other == this)
     {
         return *this;
     }
-    move(std::forward<nsock>(other), true);
+    move(std::forward<sock>(other), true);
     return *this;
 }
 
-family nsock::sockfamily() const noexcept
+family sock::sockfamily() const noexcept
 {
     return family_;
 }
 
-void nsock::bind(const char *ip, int port)
+void sock::bind(const char *ip, int port)
 {
     sockaddr_storage addr;
     memset(&addr, 0, sizeof(addr));
@@ -468,17 +481,17 @@ void nsock::bind(const char *ip, int port)
     }
 }
 
-void nsock::bind(int port)
+void sock::bind(int port)
 {
     bind(nullptr, port);
 }
 
-void nsock::bind(const std::string &ip, int port)
+void sock::bind(const std::string &ip, int port)
 {
     bind(ip.c_str(), port);
 }
 
-void nsock::bind_unix(const char *path, bool remove)
+void sock::bind_unix(const char *path, bool remove)
 {
     if (remove)
     {
@@ -495,12 +508,12 @@ void nsock::bind_unix(const char *path, bool remove)
     }
 }
 
-void nsock::bind_unix(const std::string &path, bool remove)
+void sock::bind_unix(const std::string &path, bool remove)
 {
     bind_unix(path.c_str(), remove);
 }
 
-void nsock::set_so_reuseaddr(bool enable)
+void sock::set_so_reuseaddr(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -510,7 +523,7 @@ void nsock::set_so_reuseaddr(bool enable)
     }
 }
 
-bool nsock::get_so_reuseaddr() const
+bool sock::get_so_reuseaddr() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -521,7 +534,7 @@ bool nsock::get_so_reuseaddr() const
     return static_cast<bool>(optval);
 }
 
-void nsock::set_so_reuseport(bool enable)
+void sock::set_so_reuseport(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -531,7 +544,7 @@ void nsock::set_so_reuseport(bool enable)
     }
 }
 
-bool nsock::get_so_reuseport() const
+bool sock::get_so_reuseport() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -542,7 +555,7 @@ bool nsock::get_so_reuseport() const
     return static_cast<bool>(optval);
 }
 
-void nsock::set_so_rcvbuf(int size)
+void sock::set_so_rcvbuf(int size)
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) == -1)
     {
@@ -550,7 +563,7 @@ void nsock::set_so_rcvbuf(int size)
     }
 }
 
-int nsock::get_so_rcvbuf() const
+int sock::get_so_rcvbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -561,7 +574,7 @@ int nsock::get_so_rcvbuf() const
     return size;
 }
 
-void nsock::set_so_sndbuf(int size)
+void sock::set_so_sndbuf(int size)
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &size, sizeof(size)) == -1)
     {
@@ -569,7 +582,7 @@ void nsock::set_so_sndbuf(int size)
     }
 }
 
-int nsock::get_so_sndbuf() const
+int sock::get_so_sndbuf() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -580,7 +593,7 @@ int nsock::get_so_sndbuf() const
     return size;
 }
 
-void nsock::set_so_rcvlowat(int size)
+void sock::set_so_rcvlowat(int size)
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_RCVLOWAT, &size, sizeof(size)) == -1)
     {
@@ -588,7 +601,7 @@ void nsock::set_so_rcvlowat(int size)
     }
 }
 
-int nsock::get_so_rcvlowat() const
+int sock::get_so_rcvlowat() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -599,7 +612,7 @@ int nsock::get_so_rcvlowat() const
     return size;
 }
 
-void nsock::set_so_sndlowat(int size)
+void sock::set_so_sndlowat(int size)
 {
     if (setsockopt(fd_, SOL_SOCKET, SO_SNDLOWAT, &size, sizeof(size)) == -1)
     {
@@ -607,7 +620,7 @@ void nsock::set_so_sndlowat(int size)
     }
 }
 
-int nsock::get_so_sndlowat() const
+int sock::get_so_sndlowat() const
 {
     int size;
     socklen_t len = sizeof(size);
@@ -618,61 +631,60 @@ int nsock::get_so_sndlowat() const
     return size;
 }
 
-void nsock::move(nsock &&other, bool move_base) noexcept
+void sock::move(sock &&other, bool move_base) noexcept
 {
     if (move_base)
     {
-        nio::move(std::forward<nsock>(other));
+        io::move(std::forward<sock>(other));
     }
     this->family_ = other.family_;
     this->peer_ = other.peer_;
 }
 
-nsocktcp::nsocktcp(int sockfd, family f)
-    : nio(sockfd), nsock(-1, f), nstream(-1)
+socktcp::socktcp(int sockfd, family f) : io(sockfd), sock(-1, f), stream(-1)
 {
 }
 
-nsocktcp::~nsocktcp() = default;
+socktcp::~socktcp() = default;
 
-nsocktcp::nsocktcp(nsocktcp &&other) noexcept
-    : nio(std::forward<nsocktcp>(other)),
-      nsock(std::forward<nsocktcp>(other)),
-      nstream(std::forward<nsocktcp>(other))
+socktcp::socktcp(socktcp &&other) noexcept
+    : io(std::forward<socktcp>(other)),
+      sock(std::forward<socktcp>(other)),
+      stream(std::forward<socktcp>(other))
 {
     if (&other == this)
     {
         return;
     }
-    move(std::forward<nsocktcp>(other), false);
+    move(std::forward<socktcp>(other), false);
 }
 
-nsocktcp &nsocktcp::operator=(nsocktcp &&other) noexcept
+socktcp &socktcp::operator=(socktcp &&other) noexcept
 {
     if (&other == this)
     {
         return *this;
     }
-    move(std::forward<nsocktcp>(other), true);
+    move(std::forward<socktcp>(other), true);
     return *this;
 }
 
-bool nsocktcp::connect(const std::string &ip, int port)
+bool socktcp::connect(const std::string &ip, int port)
 {
     return connect(ip.c_str(), port);
 }
 
-bool nsocktcp::connect_unix(const std::string &path)
+bool socktcp::connect_unix(const std::string &path)
 {
     return connect_unix(path.c_str());
 }
 
-bool nsocktcp::check_connect() const
+bool socktcp::check_connect() const
 {
     return get_so_error() == 0;
 }
 
-void nsocktcp::set_so_keepalive(bool enable)
+void socktcp::set_so_keepalive(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -682,7 +694,7 @@ void nsocktcp::set_so_keepalive(bool enable)
     }
 }
 
-bool nsocktcp::get_so_keepalive() const
+bool socktcp::get_so_keepalive() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -693,7 +705,7 @@ bool nsocktcp::get_so_keepalive() const
     return static_cast<bool>(optval);
 }
 
-void nsocktcp::set_so_linger(bool l_onoff, int l_linger)
+void socktcp::set_so_linger(bool l_onoff, int l_linger)
 {
     struct linger lg;
     lg.l_onoff = static_cast<int>(l_onoff);
@@ -704,7 +716,7 @@ void nsocktcp::set_so_linger(bool l_onoff, int l_linger)
     }
 }
 
-std::pair<bool, int> nsocktcp::get_so_linger() const
+std::pair<bool, int> socktcp::get_so_linger() const
 {
     struct linger lg;
     socklen_t len = sizeof(lg);
@@ -715,7 +727,7 @@ std::pair<bool, int> nsocktcp::get_so_linger() const
     return std::make_pair<>(static_cast<bool>(lg.l_onoff), lg.l_linger);
 }
 
-void nsockudp::set_so_broadcast(bool enable)
+void sockudp::set_so_broadcast(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -725,7 +737,7 @@ void nsockudp::set_so_broadcast(bool enable)
     }
 }
 
-bool nsockudp::get_so_broadcast() const
+bool sockudp::get_so_broadcast() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -736,7 +748,7 @@ bool nsockudp::get_so_broadcast() const
     return static_cast<bool>(optval);
 }
 
-void nsocktcp::set_tcp_nodelay(bool enable)
+void socktcp::set_tcp_nodelay(bool enable)
 {
     int optval = static_cast<int>(enable);
     socklen_t len = sizeof(optval);
@@ -746,7 +758,7 @@ void nsocktcp::set_tcp_nodelay(bool enable)
     }
 }
 
-bool nsocktcp::get_tcp_nodelay() const
+bool socktcp::get_tcp_nodelay() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -757,7 +769,7 @@ bool nsocktcp::get_tcp_nodelay() const
     return static_cast<bool>(optval);
 }
 
-int nsocktcp::get_so_error() const
+int socktcp::get_so_error() const
 {
     int optval;
     socklen_t len = sizeof(optval);
@@ -768,7 +780,7 @@ int nsocktcp::get_so_error() const
     return optval;
 }
 
-void nsocktcp::shutdown(shutdown_mode howto) noexcept
+void socktcp::shutdown(shutdown_mode howto) noexcept
 {
     switch (howto)
     {
@@ -791,7 +803,7 @@ void nsocktcp::shutdown(shutdown_mode howto) noexcept
     }
 }
 
-std::tuple<std::string, int, family> nsocktcp::sockname() const
+std::tuple<std::string, int, family> socktcp::sockname() const
 {
     if (family_ == family::local)
     {
@@ -807,7 +819,7 @@ std::tuple<std::string, int, family> nsocktcp::sockname() const
     return query_ip_port_family(addr);
 }
 
-std::tuple<std::string, int, family> nsocktcp::peername() const
+std::tuple<std::string, int, family> socktcp::peername() const
 {
     if (family_ == family::local)
     {
@@ -823,12 +835,12 @@ std::tuple<std::string, int, family> nsocktcp::peername() const
     return query_ip_port_family(addr);
 }
 
-std::tuple<std::string, int, family> nsocktcp::connpeer() const noexcept
+std::tuple<std::string, int, family> socktcp::connpeer() const noexcept
 {
     return std::make_tuple(std::get<0>(peer_), std::get<1>(peer_), family_);
 }
 
-void nsocktcp::listen(int backlog)
+void socktcp::listen(int backlog)
 {
     if (::listen(fd_, backlog) < 0)
     {
@@ -836,7 +848,7 @@ void nsocktcp::listen(int backlog)
     }
 }
 
-bool nsocktcp::connect(const char *ip, int port)
+bool socktcp::connect(const char *ip, int port)
 {
     peer_ = std::make_tuple(ip, port);
     sockaddr_storage addr;
@@ -854,7 +866,7 @@ bool nsocktcp::connect(const char *ip, int port)
     return true;
 }
 
-bool nsocktcp::connect_unix(const char *path)
+bool socktcp::connect_unix(const char *path)
 {
     peer_ = std::make_tuple(path, -1);
     sockaddr_storage addr;
@@ -873,9 +885,9 @@ bool nsocktcp::connect_unix(const char *path)
     return true;
 }
 
-std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
+std::vector<std::shared_ptr<socktcp>> socktcp::accept(int batch)
 {
-    std::vector<std::shared_ptr<nsocktcp>> sockfds;
+    std::vector<std::shared_ptr<socktcp>> sockfds;
     for (int i = 0; i < batch; ++i)
     {
         int sockfd = ::accept(fd_, nullptr, nullptr);
@@ -892,7 +904,7 @@ std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
         }
         else
         {
-            sockfds.emplace_back(std::make_shared<nsocktcp>(sockfd, family_));
+            sockfds.emplace_back(std::make_shared<socktcp>(sockfd, family_));
             if (family_ == family::local)
             {
                 sockfds.back()->peer_ = peer_;
@@ -902,53 +914,53 @@ std::vector<std::shared_ptr<nsocktcp>> nsocktcp::accept(int batch)
     return sockfds;
 }
 
-void nsocktcp::move(nsocktcp &&other, bool move_base) noexcept
+void socktcp::move(socktcp &&other, bool move_base) noexcept
 {
     if (move_base)
     {
-        nio::move(std::forward<nsocktcp>(other));
-        nsock::move(std::forward<nsocktcp>(other), false);
-        nstream::move(std::forward<nsocktcp>(other), false);
+        io::move(std::forward<socktcp>(other));
+        sock::move(std::forward<socktcp>(other), false);
+        stream::move(std::forward<socktcp>(other), false);
     }
 }
 
-nsockudp::nsockudp(int sockfd, family f) : nio(sockfd), nsock(-1, f)
+sockudp::sockudp(int sockfd, family f) : io(sockfd), sock(-1, f)
 {
 }
 
-nsockudp::~nsockudp() = default;
+sockudp::~sockudp() = default;
 
-nsockudp::nsockudp(nsockudp &&other) noexcept
-    : nio(std::forward<nsockudp>(other)), nsock(std::forward<nsockudp>(other))
+sockudp::sockudp(sockudp &&other) noexcept
+    : io(std::forward<sockudp>(other)), sock(std::forward<sockudp>(other))
 {
     if (&other == this)
     {
         return;
     }
-    move(std::forward<nsockudp>(other), false);
+    move(std::forward<sockudp>(other), false);
 }
 
-nsockudp &nsockudp::operator=(nsockudp &&other) noexcept
+sockudp &sockudp::operator=(sockudp &&other) noexcept
 {
     if (&other == this)
     {
         return *this;
     }
-    move(std::forward<nsockudp>(other), true);
+    move(std::forward<sockudp>(other), true);
     return *this;
 }
 
-void nsockudp::send(const std::string &ip, int port)
+void sockudp::send(const std::string &ip, int port)
 {
     send(ip.c_str(), port);
 }
 
-void nsockudp::send_unix(const std::string &path)
+void sockudp::send_unix(const std::string &path)
 {
     send_unix(path.c_str());
 }
 
-std::tuple<std::string, int, family> nsockudp::recv()
+std::tuple<std::string, int, family> sockudp::recv()
 {
     sockaddr_storage addr;
     socklen_t len = faddr_len_.at(family_);
@@ -967,7 +979,7 @@ std::tuple<std::string, int, family> nsockudp::recv()
     return query_ip_port_family(addr);
 }
 
-void nsockudp::send(const char *ip, int port)
+void sockudp::send(const char *ip, int port)
 {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
@@ -982,7 +994,7 @@ void nsockudp::send(const char *ip, int port)
     wbuffer().consume(ret);
 }
 
-void nsockudp::send_unix(const char *path)
+void sockudp::send_unix(const char *path)
 {
     sockaddr_storage addr;
     addr.ss_family = fmap_.at(family_);
@@ -997,41 +1009,41 @@ void nsockudp::send_unix(const char *path)
     wbuffer().consume(ret);
 }
 
-void nsockudp::move(nsockudp &&other, bool move_base) noexcept
+void sockudp::move(sockudp &&other, bool move_base) noexcept
 {
     if (move_base)
     {
-        nsock::move(std::forward<nsockudp>(other), true);
+        sock::move(std::forward<sockudp>(other), true);
     }
 }
 
-namespace nio_factory
+namespace io_factory
 {
 
-std::shared_ptr<nsocktcp> get_nsocktcp(family f)
+std::shared_ptr<socktcp> get_socktcp(family f)
 {
-    int fd = ::socket(nsock::fmap_.at(f), SOCK_STREAM, 0);
+    int fd = ::socket(sock::fmap_.at(f), SOCK_STREAM, 0);
     if (fd < 0)
     {
         throw_system_error("socket error");
     }
-    return std::make_shared<nsocktcp>(fd, f);
+    return std::make_shared<socktcp>(fd, f);
 }
 
-std::shared_ptr<nsockudp> get_nsockudp(family f)
+std::shared_ptr<sockudp> get_sockudp(family f)
 {
-    int fd = ::socket(nsock::fmap_.at(f), SOCK_DGRAM, 0);
+    int fd = ::socket(sock::fmap_.at(f), SOCK_DGRAM, 0);
     if (fd < 0)
     {
         throw_system_error("socket error");
     }
-    std::shared_ptr<nsockudp> sock = std::make_shared<nsockudp>(fd, f);
+    std::shared_ptr<sockudp> sock = std::make_shared<sockudp>(fd, f);
     sock->rbuffer().resize(sysconfig::udp_buffer_size);
     sock->wbuffer().resize(sysconfig::udp_buffer_size);
     return sock;
 }
 
-std::vector<std::shared_ptr<nstream>> get_pipes()
+std::vector<std::shared_ptr<stream>> get_pipes()
 {
     int pfds[2];
     // pfds[0] refers to the read end of the pipe
@@ -1040,14 +1052,14 @@ std::vector<std::shared_ptr<nstream>> get_pipes()
     {
         throw_system_error("pipe error");
     }
-    std::vector<std::shared_ptr<nstream>> pipes = {
-        std::make_shared<nstream>(pfds[0]),
-        std::make_shared<nstream>(pfds[1]),
+    std::vector<std::shared_ptr<stream>> pipes = {
+        std::make_shared<stream>(pfds[0]),
+        std::make_shared<stream>(pfds[1]),
     };
     return pipes;
 }
 
-std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &path)
+std::vector<std::shared_ptr<stream>> get_fifos(const std::string &path)
 {
     if (mkfifo(path.c_str(), S_IRWXU) == -1 && errno != EEXIST)
     {
@@ -1064,13 +1076,13 @@ std::vector<std::shared_ptr<nstream>> get_fifos(const std::string &path)
     {
         throw_system_error("open error");
     }
-    std::vector<std::shared_ptr<nstream>> fifos = {
-        std::make_shared<nstream>(fdr),
-        std::make_shared<nstream>(fdw),
+    std::vector<std::shared_ptr<stream>> fifos = {
+        std::make_shared<stream>(fdr),
+        std::make_shared<stream>(fdw),
     };
     return fifos;
 }
 
-}  // namespace nio_factory
+}  // namespace io_factory
 
 }  // namespace cppev

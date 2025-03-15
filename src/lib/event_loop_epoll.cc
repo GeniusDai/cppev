@@ -71,7 +71,7 @@ void event_loop::fd_io_multiplexing_create_nts()
     }
 }
 
-void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
+void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<io> &iop,
                                             fd_event ev_type)
 {
     LOG_DEBUG_FMT("Activate fd %d %s event", iop->fd(),
@@ -105,7 +105,7 @@ void event_loop::fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
     }
 }
 
-void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop,
+void event_loop::fd_io_multiplexing_del_nts(const std::shared_ptr<io> &iop,
                                             fd_event ev_type)
 {
     LOG_DEBUG_FMT("Deactivate fd %d %s event", iop->fd(),

@@ -4,7 +4,7 @@
 
 ### IO
 
-Support io nonblocking operations of disk-file / pipe / fifo / socket (socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain).
+Support io operations of disk-file / pipe / fifo / socket (socket protocol-type tcp / udp, protocol-family ipv4 / ipv6 / unix-domain).
 
 Support io event listening by io-multiplexing, event-type readable / writable, event-mode level-trigger / edge-trigger / oneshot.
 

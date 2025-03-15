@@ -4,8 +4,8 @@
 #include <unordered_set>
 
 #include "cppev/event_loop.h"
+#include "cppev/io.h"
 #include "cppev/logger.h"
-#include "cppev/nio.h"
 
 namespace cppev
 {
@@ -68,23 +68,23 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
     auto p = GetParam();
 
     fd_event_handler acpt_writable_callback =
-        [p](const std::shared_ptr<nio> &iop)
+        [p](const std::shared_ptr<io> &iop)
     {
         auto dp = reinterpret_cast<int *>(iop->evlp().data());
         dp ? ++(*dp) : 0;
-        auto conns = std::dynamic_pointer_cast<nsocktcp>(iop)->accept();
+        auto conns = std::dynamic_pointer_cast<socktcp>(iop)->accept();
         for (auto conn : conns)
         {
             iop->evlp().fd_set_mode(conn, p);
             iop->evlp().fd_register_and_activate(
-                std::static_pointer_cast<nio>(conn), fd_event::fd_writable,
-                [](const std::shared_ptr<nio> &iop)
+                std::static_pointer_cast<io>(conn), fd_event::fd_writable,
+                [](const std::shared_ptr<io> &iop)
                 {
                     LOG_INFO_FMT(
                         "Server side connected socket %d writable event "
                         "triggered",
                         iop->fd());
-                    auto iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+                    auto iopt = std::dynamic_pointer_cast<socktcp>(iop);
                     iopt->wbuffer().put_string(str);
                     iopt->write_all();
                     std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -95,14 +95,14 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
     for (size_t i = 0; i < vec.size(); ++i)
     {
         // Test Event Loop API
-        auto listensock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
-        listensock->bind(std::get<1>(vec[i]));
-        listensock->listen();
-        auto acpt_niop = std::dynamic_pointer_cast<nio>(listensock);
-        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable,
+        auto listesock = io_factory::get_socktcp(std::get<0>(vec[i]));
+        listesock->bind(std::get<1>(vec[i]));
+        listesock->listen();
+        auto acpt_iop = std::dynamic_pointer_cast<io>(listesock);
+        acpt_evlp.fd_register_and_activate(acpt_iop, fd_event::fd_readable,
                                            acpt_writable_callback);
-        acpt_evlp.fd_clean(acpt_niop);
-        acpt_evlp.fd_register_and_activate(acpt_niop, fd_event::fd_readable,
+        acpt_evlp.fd_clean(acpt_iop);
+        acpt_evlp.fd_register_and_activate(acpt_iop, fd_event::fd_readable,
                                            acpt_writable_callback);
     }
 
@@ -111,13 +111,13 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
         {
             for (size_t i = 0; i < vec.size(); ++i)
             {
-                auto connsock = nio_factory::get_nsocktcp(std::get<0>(vec[i]));
-                EXPECT_TRUE(connsock->connect(std::get<2>(vec[i]),
-                                              std::get<1>(vec[i])));
-                auto conn_niop = std::dynamic_pointer_cast<nio>(connsock);
+                auto consock = io_factory::get_socktcp(std::get<0>(vec[i]));
+                EXPECT_TRUE(
+                    consock->connect(std::get<2>(vec[i]), std::get<1>(vec[i])));
+                auto conn_iop = std::dynamic_pointer_cast<io>(consock);
                 cont_evlp.fd_register(
-                    conn_niop, fd_event::fd_writable,
-                    [](const std::shared_ptr<nio> &iop)
+                    conn_iop, fd_event::fd_writable,
+                    [](const std::shared_ptr<io> &iop)
                     {
                         LOG_INFO_FMT(
                             "Client side connected socket %d writable event "
@@ -126,9 +126,9 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
                         auto dp = reinterpret_cast<int *>(iop->evlp().data());
                         dp ? ++(*dp) : 0;
                     });
-                cont_evlp.fd_activate(conn_niop, fd_event::fd_writable);
-                cont_evlp.fd_deactivate(conn_niop, fd_event::fd_writable);
-                cont_evlp.fd_activate(conn_niop, fd_event::fd_writable);
+                cont_evlp.fd_activate(conn_iop, fd_event::fd_writable);
+                cont_evlp.fd_deactivate(conn_iop, fd_event::fd_writable);
+                cont_evlp.fd_activate(conn_iop, fd_event::fd_writable);
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             cont_evlp.loop_once();
@@ -182,18 +182,18 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_second)
 
     auto p = GetParam();
 
-    fd_event_handler conn_callback = [p](const std::shared_ptr<nio> &iop)
+    fd_event_handler conn_callback = [p](const std::shared_ptr<io> &iop)
     {
         LOG_INFO << "Executing fd " << iop->fd() << " fd_writable callback";
         iop->evlp().fd_set_mode(iop, p);
         iop->evlp().fd_deactivate(iop, fd_event::fd_writable);
         iop->evlp().fd_register_and_activate(
-            std::dynamic_pointer_cast<nio>(iop), fd_event::fd_readable,
-            [](const std::shared_ptr<nio> &iop)
+            std::dynamic_pointer_cast<io>(iop), fd_event::fd_readable,
+            [](const std::shared_ptr<io> &iop)
             {
                 LOG_INFO << "Executing fd " << iop->fd()
                          << " fd_readable callback";
-                auto iopt = std::dynamic_pointer_cast<nsocktcp>(iop);
+                auto iopt = std::dynamic_pointer_cast<socktcp>(iop);
                 iopt->read_chunk(8);
                 if (iop->rbuffer().size() != strlen(str))
                 {
@@ -205,50 +205,50 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_second)
             });
     };
 
-    auto listensock1 = nio_factory::get_nsocktcp(family::local);
-    listensock1->bind_unix(path, true);
-    listensock1->listen();
+    auto listesock1 = io_factory::get_socktcp(family::local);
+    listesock1->bind_unix(path, true);
+    listesock1->listen();
 
-    auto listensock2 = nio_factory::get_nsocktcp(family::ipv6);
-    listensock2->bind(port);
-    listensock2->listen();
+    auto listesock2 = io_factory::get_socktcp(family::ipv6);
+    listesock2->bind(port);
+    listesock2->listen();
 
     std::thread sub_thr(
         [&]()
         {
-            auto connsock1 = nio_factory::get_nsocktcp(family::local);
-            bool succeed = connsock1->connect_unix(path);
+            auto consock1 = io_factory::get_socktcp(family::local);
+            bool succeed = consock1->connect_unix(path);
             ASSERT_TRUE(succeed);
 
-            auto connsock2 = nio_factory::get_nsocktcp(family::ipv6);
-            succeed = connsock2->connect("::1", port);
+            auto consock2 = io_factory::get_socktcp(family::ipv6);
+            succeed = consock2->connect("::1", port);
             ASSERT_TRUE(succeed);
 
             client_evlp.fd_register_and_activate(
-                std::dynamic_pointer_cast<nio>(connsock1),
-                fd_event::fd_writable, conn_callback);
+                std::dynamic_pointer_cast<io>(consock1), fd_event::fd_writable,
+                conn_callback);
             client_evlp.fd_register_and_activate(
-                std::dynamic_pointer_cast<nio>(connsock2),
-                fd_event::fd_writable, conn_callback);
+                std::dynamic_pointer_cast<io>(consock2), fd_event::fd_writable,
+                conn_callback);
             client_evlp.loop_forever();
         });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    auto conns1 = listensock1->accept();
+    auto conns1 = listesock1->accept();
     EXPECT_TRUE(conns1.size() == 1);
-    auto connsock1 = conns1[0];
+    auto consock1 = conns1[0];
 
-    auto conns2 = listensock2->accept();
+    auto conns2 = listesock2->accept();
     EXPECT_TRUE(conns2.size() == 1);
-    auto connsock2 = conns2[0];
+    auto consock2 = conns2[0];
 
     for (int i = 0; i < 2; ++i)
     {
-        connsock1->wbuffer().put_string(str);
-        connsock1->write_all();
-        connsock2->wbuffer().put_string(str);
-        connsock2->write_all();
+        consock1->wbuffer().put_string(str);
+        consock1->write_all();
+        consock2->wbuffer().put_string(str);
+        consock2->write_all();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     LOG_INFO << "To leave";

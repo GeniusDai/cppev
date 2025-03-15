@@ -31,13 +31,13 @@ Tcp client receives and stores the file to disk.
         $ ./file_transfer_client        # Shell-2
         $ openssl md5 /tmp/test_cppev_file_transfer_6C0224787A17.file*
 
-### 3. Nio Event Loop
+### 3. IO Event Loop
 
 Use the original event loop (not reactor) to connect via tcp / udp.
 
 * Usage
 
-        $ cd examples/nio_evlp
+        $ cd examples/io_evlp
         $ ./tcp_server      # Shell-1
         $ ./tcp_client      # Shell-2
         $ ./udp_server      # Shell-3

@@ -24,7 +24,7 @@
  * On the socket closed : Log the info.
  */
 cppev::reactor::tcp_event_handler on_accept =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     iopt->wbuffer().put_string("Cppev is a C++ event driven library");
     cppev::reactor::async_write(iopt);
@@ -32,7 +32,7 @@ cppev::reactor::tcp_event_handler on_accept =
 };
 
 cppev::reactor::tcp_event_handler on_read_complete =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     std::string message = iopt->rbuffer().get_string();
     LOG_INFO_FMT("Received message : %s", message.c_str());
@@ -43,13 +43,13 @@ cppev::reactor::tcp_event_handler on_read_complete =
 };
 
 cppev::reactor::tcp_event_handler on_write_complete =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     LOG_DEBUG_FMT("Fd %d on write finish", iopt->fd());
 };
 
 cppev::reactor::tcp_event_handler on_closed =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     LOG_DEBUG_FMT("Fd %d on close finish", iopt->fd());
 };

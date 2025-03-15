@@ -6,4 +6,4 @@ endfunction(compile_target)
 
 add_subdirectory(tcp_stress)
 add_subdirectory(file_transfer)
-add_subdirectory(nio_evlp)
+add_subdirectory(io_evlp)

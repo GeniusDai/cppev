@@ -2,9 +2,9 @@
 #include "cppev/cppev.h"
 
 cppev::fd_event_handler accepted_socket_callback =
-    [](const std::shared_ptr<cppev::nio> &iop) -> void
+    [](const std::shared_ptr<cppev::io> &iop) -> void
 {
-    cppev::nsocktcp *iops = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    cppev::socktcp *iops = dynamic_cast<cppev::socktcp *>(iop.get());
     if (iops == nullptr)
     {
         cppev::throw_logic_error("server connected socket dynamic cast error!");
@@ -24,15 +24,15 @@ cppev::fd_event_handler accepted_socket_callback =
 };
 
 cppev::fd_event_handler listening_socket_callback =
-    [](const std::shared_ptr<cppev::nio> &iop) -> void
+    [](const std::shared_ptr<cppev::io> &iop) -> void
 {
-    cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    cppev::socktcp *iopt = dynamic_cast<cppev::socktcp *>(iop.get());
     if (iopt == nullptr)
     {
         cppev::throw_logic_error("server listening socket dynamic cast error!");
     }
-    std::shared_ptr<cppev::nio> conn =
-        std::dynamic_pointer_cast<cppev::nio>(iopt->accept(1).front());
+    std::shared_ptr<cppev::io> conn =
+        std::dynamic_pointer_cast<cppev::io>(iopt->accept(1).front());
     iop->evlp().fd_register_and_activate(conn, cppev::fd_event::fd_readable,
                                          accepted_socket_callback);
 };
@@ -41,9 +41,9 @@ void start_server_loop()
 {
     cppev::event_loop evlp;
 
-    auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
-    auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
-    auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
+    auto tcp_ipv4 = cppev::io_factory::get_socktcp(cppev::family::ipv4);
+    auto tcp_ipv6 = cppev::io_factory::get_socktcp(cppev::family::ipv6);
+    auto tcp_unix = cppev::io_factory::get_socktcp(cppev::family::local);
 
     tcp_ipv4->bind(TCP_IPV4_PORT);
     tcp_ipv6->bind(TCP_IPV6_PORT);

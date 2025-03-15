@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-#include "cppev/nio.h"
+#include "cppev/io.h"
 
 namespace cppev
 {
@@ -81,11 +81,11 @@ private:
 
     std::vector<std::string> env_;
 
-    std::unique_ptr<nstream> stdin_;
+    std::unique_ptr<stream> stdin_;
 
-    std::unique_ptr<nstream> stdout_;
+    std::unique_ptr<stream> stdout_;
 
-    std::unique_ptr<nstream> stderr_;
+    std::unique_ptr<stream> stderr_;
 
     pid_t pid_;
 

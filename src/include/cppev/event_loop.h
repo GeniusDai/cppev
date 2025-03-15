@@ -12,8 +12,8 @@
 #include <unordered_map>
 
 #include "cppev/common.h"
+#include "cppev/io.h"
 #include "cppev/logger.h"
-#include "cppev/nio.h"
 #include "cppev/utils.h"
 
 namespace cppev
@@ -33,7 +33,7 @@ enum class CPPEV_PUBLIC fd_event
     2) Writable and writing not fulfill the sys-buffer:
         Different, epoll won't trigger again, kqueue will keep triggering.
 
-    Suggest using nio::read_all / nio::write_all.
+    Suggest using io::read_all / io::write_all.
  */
 enum class CPPEV_PUBLIC fd_event_mode
 {
@@ -57,7 +57,7 @@ CPPEV_PRIVATE void operator^=(fd_event &lhs, fd_event rhs);
 CPPEV_PRIVATE extern const std::unordered_map<fd_event, const char *>
     fd_event_to_string;
 
-using fd_event_handler = std::function<void(const std::shared_ptr<nio> &)>;
+using fd_event_handler = std::function<void(const std::shared_ptr<io> &)>;
 
 struct CPPEV_PRIVATE fd_event_hash
 {
@@ -97,55 +97,55 @@ public:
     //          events. It's different for epoll / kqueue.
     // Note:    If user wants to atomicly set mode and activate, shall implement
     //          it themselves by mutex.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_mode   event mode.
-    void fd_set_mode(const std::shared_ptr<nio> &iop, fd_event_mode ev_mode);
+    void fd_set_mode(const std::shared_ptr<io> &iop, fd_event_mode ev_mode);
 
     // Register fd event to event pollor but not activate in
     // sys-io-multiplexing.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
     // @param handler   fd event handler.
     // @param prio      event priority.
-    void fd_register(const std::shared_ptr<nio> &iop, fd_event ev_type,
+    void fd_register(const std::shared_ptr<io> &iop, fd_event ev_type,
                      const fd_event_handler &handler = fd_event_handler(),
                      priority prio = priority::p0);
 
     // Activate fd event.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
-    void fd_activate(const std::shared_ptr<nio> &iop, fd_event ev_type);
+    void fd_activate(const std::shared_ptr<io> &iop, fd_event ev_type);
 
     // Register fd event to event pollor and activate in sys-io-multiplexing.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
     // @param handler   fd event handler.
     // @param prio      event priority.
     void fd_register_and_activate(
-        const std::shared_ptr<nio> &iop, fd_event ev_type,
+        const std::shared_ptr<io> &iop, fd_event ev_type,
         const fd_event_handler &handler = fd_event_handler(),
         priority prio = priority::p0);
 
     // Remove fd event from event pollor but not deactivate in
     // sys-io-multiplexing.
-    // @param iop           nio smart pointer.
+    // @param iop           io smart pointer.
     // @param ev_type   event type.
-    void fd_remove(const std::shared_ptr<nio> &iop, fd_event ev_type);
+    void fd_remove(const std::shared_ptr<io> &iop, fd_event ev_type);
 
     // Deactivate fd event.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
-    void fd_deactivate(const std::shared_ptr<nio> &iop, fd_event ev_type);
+    void fd_deactivate(const std::shared_ptr<io> &iop, fd_event ev_type);
 
     // Remove fd event from event pollor and deactivate in sys-io-multiplexing.
-    // @param iop           nio smart pointer.
+    // @param iop           io smart pointer.
     // @param ev_type   event type.
-    void fd_remove_and_deactivate(const std::shared_ptr<nio> &iop,
+    void fd_remove_and_deactivate(const std::shared_ptr<io> &iop,
                                   fd_event ev_type);
 
     // Delete and deactivate all events of the fd, clean all related data.
-    // @param iop           nio smart pointer.
-    void fd_clean(const std::shared_ptr<nio> &iop);
+    // @param iop           io smart pointer.
+    void fd_clean(const std::shared_ptr<io> &iop);
 
     // Wait for events, only loop once.
     // @param timeout       timeout in millisecond, -1 means infinite.
@@ -163,16 +163,16 @@ public:
 
 private:
     // Helper function to register fd event to event pollor.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
     // @param handler   fd event handler.
     // @param prio      event priority.
-    void fd_register_nts(const std::shared_ptr<nio> &iop, fd_event ev_type,
+    void fd_register_nts(const std::shared_ptr<io> &iop, fd_event ev_type,
                          const fd_event_handler &handler, priority prio);
 
     // Helper function to remove fd event from event pollor.
-    // @param iop           nio smart pointer.
-    void fd_remove_nts(const std::shared_ptr<nio> &iop, fd_event ev_type);
+    // @param iop           io smart pointer.
+    void fd_remove_nts(const std::shared_ptr<io> &iop, fd_event ev_type);
 
     // Helper function to create io multiplexing fd.
     // Implementation specific.
@@ -180,16 +180,16 @@ private:
 
     // Helper function to add fd event listening.
     // Implementation specific.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
-    void fd_io_multiplexing_add_nts(const std::shared_ptr<nio> &iop,
+    void fd_io_multiplexing_add_nts(const std::shared_ptr<io> &iop,
                                     fd_event ev_type);
 
     // Helper function to delete fd event listening.
     // Implementation specific.
-    // @param iop       nio smart pointer.
+    // @param iop       io smart pointer.
     // @param ev_type   event type.
-    void fd_io_multiplexing_del_nts(const std::shared_ptr<nio> &iop,
+    void fd_io_multiplexing_del_nts(const std::shared_ptr<io> &iop,
                                     fd_event ev_type);
 
     // Helper function to wait for event(s) trigger.
@@ -218,9 +218,9 @@ private:
     // External class which owns eventloop.
     void *owner_;
 
-    // Hash:   (fd, event) --> (priority, nio, callback).
+    // Hash:   (fd, event) --> (priority, io, callback).
     std::unordered_map<std::tuple<int, fd_event>,
-                       std::tuple<priority, std::shared_ptr<nio>,
+                       std::tuple<priority, std::shared_ptr<io>,
                                   std::shared_ptr<fd_event_handler>>,
                        fd_event_hash>
         fd_event_datas_;

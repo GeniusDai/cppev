@@ -1,5 +1,5 @@
-#ifndef _cppev_nio_h_6C0224787A17_
-#define _cppev_nio_h_6C0224787A17_
+#ifndef _cppev_io_h_6C0224787A17_
+#define _cppev_io_h_6C0224787A17_
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -19,11 +19,11 @@
 namespace cppev
 {
 
-class nio;
-class nstream;
-class nsock;
-class nsockudp;
-class nsocktcp;
+class io;
+class stream;
+class sock;
+class sockudp;
+class socktcp;
 class event_loop;
 
 enum class CPPEV_PUBLIC family
@@ -33,32 +33,32 @@ enum class CPPEV_PUBLIC family
     local,
 };
 
-namespace nio_factory
+namespace io_factory
 {
 
-CPPEV_PUBLIC std::shared_ptr<nsocktcp> get_nsocktcp(family f);
+CPPEV_PUBLIC std::shared_ptr<socktcp> get_socktcp(family f);
 
-CPPEV_PUBLIC std::shared_ptr<nsockudp> get_nsockudp(family f);
+CPPEV_PUBLIC std::shared_ptr<sockudp> get_sockudp(family f);
 
-CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_pipes();
+CPPEV_PUBLIC std::vector<std::shared_ptr<stream>> get_pipes();
 
-CPPEV_PUBLIC std::vector<std::shared_ptr<nstream>> get_fifos(
+CPPEV_PUBLIC std::vector<std::shared_ptr<stream>> get_fifos(
     const std::string &str);
 
-};  // namespace nio_factory
+};  // namespace io_factory
 
-class CPPEV_PUBLIC nio
+class CPPEV_PUBLIC io
 {
 public:
-    explicit nio(int fd);
+    explicit io(int fd, bool block = false);
 
-    nio(const nio &) = delete;
-    nio &operator=(const nio &) = delete;
+    io(const io &) = delete;
+    io &operator=(const io &) = delete;
 
-    nio(nio &&other) noexcept;
-    nio &operator=(nio &&other) noexcept;
+    io(io &&other) noexcept;
+    io &operator=(io &&other) noexcept;
 
-    virtual ~nio() noexcept;
+    virtual ~io() noexcept;
 
     // File descriptor
     int fd() const noexcept;
@@ -75,19 +75,19 @@ public:
     // Write buffer
     buffer &wbuffer() noexcept;
 
-    // Query event loop this nio belongs to
+    // Query event loop this io belongs to
     const event_loop &evlp() const noexcept;
 
-    // Query event loop this nio belongs to
+    // Query event loop this io belongs to
     event_loop &evlp() noexcept;
 
-    // Set event loop this nio belongs to
+    // Set event loop this io belongs to
     void set_evlp(event_loop *evlp) noexcept;
 
-    // Is nio closed
+    // Is io closed
     bool is_closed() const noexcept;
 
-    // Close nio
+    // Close io
     void close() noexcept;
 
     // Set fd to nonblock
@@ -100,6 +100,9 @@ protected:
     // File descriptor
     int fd_;
 
+    // Whether block io
+    bool block_;
+
     // Whether closed
     bool closed_;
 
@@ -109,23 +112,23 @@ protected:
     // Write buffer
     buffer wbuffer_;
 
-    // One nio belongs to one event loop
+    // One io belongs to one event loop
     event_loop *evlp_;
 
     // Move constructor implementation
-    void move(nio &&other) noexcept;
+    void move(io &&other) noexcept;
 };
 
-class CPPEV_PUBLIC nstream : public virtual nio
+class CPPEV_PUBLIC stream : public virtual io
 {
 public:
-    explicit nstream(int fd);
+    explicit stream(int fd);
 
-    nstream(nstream &&other) noexcept;
+    stream(stream &&other) noexcept;
 
-    nstream &operator=(nstream &&other) noexcept;
+    stream &operator=(stream &&other) noexcept;
 
-    virtual ~nstream();
+    virtual ~stream();
 
     // Is connection reset, ECONNRESET
     bool is_reset() const noexcept;
@@ -136,22 +139,26 @@ public:
     // Error of pipe, EPIPE
     bool eop() const noexcept;
 
-    // Read until block or unreadable
+    // Block IO:    Read until finishing len bytes or block
+    // Nonblock IO: Read until finishing len bytes or io kernel buffer empty
     // @param len   Bytes to read, at most len
     // @return      Exact bytes that have been read into rbuffer
     int read_chunk(int len);
 
-    // Write until block or unwritable
+    // Block IO:    Write until finishing len bytes or block
+    // Nonblock IO: Write until finishing len bytes or io kernel buffer full
     // @param len   Bytes to write, at most len
     // @return      Exact bytes that have been writen from wbuffer
     int write_chunk(int len);
 
-    // Read until block or unreadable
+    // Block IO:    Throw std::logic_error
+    // Nonblock IO: Read until io kernel buffer empty
     // @param step  Bytes to read in each loop
     // @return      Exact bytes that have been read into rbuffer
     int read_all(int step = sysconfig::buffer_io_step);
 
-    // Write until block or unwritable
+    // Block IO:    Throw std::logic_error
+    // Nonblock IO: Write until io kernel buffer full or user buffer empty
     // @param step  Bytes to write in each loop
     // @return      Exact bytes that have been writen from wbuffer
     int write_all(int step = sysconfig::buffer_io_step);
@@ -167,22 +174,22 @@ protected:
     bool eop_;
 
     // Move constructor implementation
-    void move(nstream &&other, bool move_base) noexcept;
+    void move(stream &&other, bool move_base) noexcept;
 };
 
-class CPPEV_PUBLIC nsock : public virtual nio
+class CPPEV_PUBLIC sock : public virtual io
 {
-    friend std::shared_ptr<nsocktcp> nio_factory::get_nsocktcp(family f);
-    friend std::shared_ptr<nsockudp> nio_factory::get_nsockudp(family f);
+    friend std::shared_ptr<socktcp> io_factory::get_socktcp(family f);
+    friend std::shared_ptr<sockudp> io_factory::get_sockudp(family f);
 
 public:
-    nsock(int fd, family f);
+    sock(int fd, family f);
 
-    nsock(nsock &&other) noexcept;
+    sock(sock &&other) noexcept;
 
-    nsock &operator=(nsock &&other) noexcept;
+    sock &operator=(sock &&other) noexcept;
 
-    virtual ~nsock();
+    virtual ~sock();
 
     // socket family
     family sockfamily() const noexcept;
@@ -255,7 +262,7 @@ protected:
     std::tuple<std::string, int> peer_;
 
     // Move constructor implementation
-    void move(nsock &&other, bool move_base) noexcept;
+    void move(sock &&other, bool move_base) noexcept;
 
     static const std::unordered_map<family, int, enum_hash> fmap_;
 
@@ -269,16 +276,16 @@ enum class CPPEV_PUBLIC shutdown_mode
     shutdown_rdwr,
 };
 
-class CPPEV_PUBLIC nsocktcp final : public nsock, public nstream
+class CPPEV_PUBLIC socktcp final : public sock, public stream
 {
 public:
-    nsocktcp(int sockfd, family f);
+    socktcp(int sockfd, family f);
 
-    nsocktcp(nsocktcp &&other) noexcept;
+    socktcp(socktcp &&other) noexcept;
 
-    nsocktcp &operator=(nsocktcp &&other) noexcept;
+    socktcp &operator=(socktcp &&other) noexcept;
 
-    ~nsocktcp();
+    ~socktcp();
 
     // listen: IPv4 / IPv6 / Unix-domain
     void listen(int backlog = SOMAXCONN);
@@ -296,7 +303,11 @@ public:
     bool connect_unix(const std::string &path);
 
     // accept: IPv4 / IPv6 / Unix-domain
-    std::vector<std::shared_ptr<nsocktcp>> accept(int batch = INT_MAX);
+    // Block IO:    Always accept the exactly number of connected sockets, may
+    //              get block.
+    // Nonblock IO: Try to accept the exactly number of connected sockets until
+    //              no connected sockets are in the backlog.
+    std::vector<std::shared_ptr<socktcp>> accept(int batch = INT_MAX);
 
     // shutdown: IPv4 / IPv6 / Unix-domain
     void shutdown(shutdown_mode howto) noexcept;
@@ -339,19 +350,19 @@ public:
 
 private:
     // Move constructor implementation
-    void move(nsocktcp &&other, bool move_base) noexcept;
+    void move(socktcp &&other, bool move_base) noexcept;
 };
 
-class CPPEV_PUBLIC nsockudp final : public nsock
+class CPPEV_PUBLIC sockudp final : public sock
 {
 public:
-    nsockudp(int sockfd, family f);
+    sockudp(int sockfd, family f);
 
-    nsockudp(nsockudp &&other) noexcept;
+    sockudp(sockudp &&other) noexcept;
 
-    nsockudp &operator=(nsockudp &&other) noexcept;
+    sockudp &operator=(sockudp &&other) noexcept;
 
-    ~nsockudp();
+    ~sockudp();
 
     // recvfrom: IPv4 / IPv6 / Unix-domain
     std::tuple<std::string, int, family> recv();
@@ -376,9 +387,9 @@ public:
 
 private:
     // Move constructor implementation
-    void move(nsockudp &&other, bool move_base) noexcept;
+    void move(sockudp &&other, bool move_base) noexcept;
 };
 
 }  // namespace cppev
 
-#endif  // nio.h
+#endif  // io.h

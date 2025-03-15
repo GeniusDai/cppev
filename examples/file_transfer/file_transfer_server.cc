@@ -19,8 +19,8 @@ public:
         }
         LOG_INFO << "start loading file";
         int fd = open(filename.c_str(), O_RDONLY);
-        std::shared_ptr<cppev::nstream> iops =
-            std::make_shared<cppev::nstream>(fd);
+        std::shared_ptr<cppev::stream> iops =
+            std::make_shared<cppev::stream>(fd);
         iops->read_all(CHUNK_SIZE);
         close(fd);
         hash_[filename] = iops;
@@ -31,11 +31,11 @@ public:
 private:
     std::mutex lock_;
 
-    std::unordered_map<std::string, std::shared_ptr<cppev::nstream>> hash_;
+    std::unordered_map<std::string, std::shared_ptr<cppev::stream>> hash_;
 };
 
 cppev::reactor::tcp_event_handler on_read_complete =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     LOG_INFO << "start callback : on_read_complete";
     std::string filename = iopt->rbuffer().get_string(-1, false);
@@ -57,7 +57,7 @@ cppev::reactor::tcp_event_handler on_read_complete =
 };
 
 cppev::reactor::tcp_event_handler on_write_complete =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     LOG_INFO << "start callback : on_write_complete";
     cppev::reactor::safely_close(iopt);

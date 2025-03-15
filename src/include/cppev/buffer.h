@@ -17,8 +17,8 @@ class CPPEV_PUBLIC basic_buffer final
 {
     // Q: Why the two classes should be friend?
     // A: To save a memory copy.
-    friend class nstream;
-    friend class nsockudp;
+    friend class stream;
+    friend class sockudp;
 
 public:
     basic_buffer() noexcept : basic_buffer(1)

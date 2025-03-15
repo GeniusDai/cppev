@@ -2,9 +2,9 @@
 #include "cppev/cppev.h"
 
 cppev::fd_event_handler binding_socket_callback =
-    [](const std::shared_ptr<cppev::nio> &iop) -> void
+    [](const std::shared_ptr<cppev::io> &iop) -> void
 {
-    cppev::nsockudp *iopu = dynamic_cast<cppev::nsockudp *>(iop.get());
+    cppev::sockudp *iopu = dynamic_cast<cppev::sockudp *>(iop.get());
     if (iopu == nullptr)
     {
         cppev::throw_logic_error("server bind socket dynamic cast error!");
@@ -22,9 +22,9 @@ void start_server_loop()
 {
     cppev::event_loop evlp;
 
-    auto udp_ipv4 = cppev::nio_factory::get_nsockudp(cppev::family::ipv4);
-    auto udp_ipv6 = cppev::nio_factory::get_nsockudp(cppev::family::ipv6);
-    auto udp_unix = cppev::nio_factory::get_nsockudp(cppev::family::local);
+    auto udp_ipv4 = cppev::io_factory::get_sockudp(cppev::family::ipv4);
+    auto udp_ipv6 = cppev::io_factory::get_sockudp(cppev::family::ipv6);
+    auto udp_unix = cppev::io_factory::get_sockudp(cppev::family::local);
 
     udp_ipv4->bind(UDP_IPV4_PORT);
     udp_ipv6->bind(UDP_IPV6_PORT);

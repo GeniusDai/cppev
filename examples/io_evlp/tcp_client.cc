@@ -2,9 +2,9 @@
 #include "cppev/cppev.h"
 
 cppev::fd_event_handler connecting_socket_callback =
-    [](const std::shared_ptr<cppev::nio> &iop) -> void
+    [](const std::shared_ptr<cppev::io> &iop) -> void
 {
-    cppev::nsocktcp *iopt = dynamic_cast<cppev::nsocktcp *>(iop.get());
+    cppev::socktcp *iopt = dynamic_cast<cppev::socktcp *>(iop.get());
     if (iopt == nullptr)
     {
         cppev::throw_logic_error("client connect socket dynamic cast error!");
@@ -22,11 +22,10 @@ void connect_to_servers()
 {
     cppev::event_loop evlp;
 
-    auto tcp_ipv4 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
-    auto tcp_ipv6 = cppev::nio_factory::get_nsocktcp(cppev::family::ipv6);
-    auto tcp_unix = cppev::nio_factory::get_nsocktcp(cppev::family::local);
-    auto tcp_ipv4_to_ipv6 =
-        cppev::nio_factory::get_nsocktcp(cppev::family::ipv4);
+    auto tcp_ipv4 = cppev::io_factory::get_socktcp(cppev::family::ipv4);
+    auto tcp_ipv6 = cppev::io_factory::get_socktcp(cppev::family::ipv6);
+    auto tcp_unix = cppev::io_factory::get_socktcp(cppev::family::local);
+    auto tcp_ipv4_to_ipv6 = cppev::io_factory::get_socktcp(cppev::family::ipv4);
 
     tcp_ipv4->connect("127.0.0.1", TCP_IPV4_PORT);
     tcp_ipv6->connect("::1", TCP_IPV6_PORT);

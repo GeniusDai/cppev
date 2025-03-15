@@ -13,23 +13,23 @@ public:
     void setfd(int conn, int file_descriptor)
     {
         std::unique_lock<std::mutex> lock(lock_);
-        hash_[conn] = std::make_shared<cppev::nstream>(file_descriptor);
+        hash_[conn] = std::make_shared<cppev::stream>(file_descriptor);
     }
 
-    std::shared_ptr<cppev::nstream> getfd(int conn)
+    std::shared_ptr<cppev::stream> getfd(int conn)
     {
         std::unique_lock<std::mutex> lock(lock_);
         return hash_[conn];
     }
 
 private:
-    std::unordered_map<int, std::shared_ptr<cppev::nstream>> hash_;
+    std::unordered_map<int, std::shared_ptr<cppev::stream>> hash_;
 
     std::mutex lock_;
 };
 
 cppev::reactor::tcp_event_handler on_connect =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     iopt->wbuffer().put_string(FILENAME);
     iopt->wbuffer().put_string("\n");
@@ -51,7 +51,7 @@ cppev::reactor::tcp_event_handler on_connect =
 };
 
 cppev::reactor::tcp_event_handler on_read_complete =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     iopt->read_all();
     fdcache *cache =
@@ -63,7 +63,7 @@ cppev::reactor::tcp_event_handler on_read_complete =
 };
 
 cppev::reactor::tcp_event_handler on_closed =
-    [](const std::shared_ptr<cppev::nsocktcp> &iopt) -> void
+    [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
 {
     LOG_INFO << "receiving file complete";
 };

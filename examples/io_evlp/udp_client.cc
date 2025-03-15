@@ -5,9 +5,9 @@ void send_to_servers()
 {
     cppev::event_loop evlp;
 
-    auto udp_ipv4 = cppev::nio_factory::get_nsockudp(cppev::family::ipv4);
-    auto udp_ipv6 = cppev::nio_factory::get_nsockudp(cppev::family::ipv6);
-    auto udp_unix = cppev::nio_factory::get_nsockudp(cppev::family::local);
+    auto udp_ipv4 = cppev::io_factory::get_sockudp(cppev::family::ipv4);
+    auto udp_ipv6 = cppev::io_factory::get_sockudp(cppev::family::ipv6);
+    auto udp_unix = cppev::io_factory::get_sockudp(cppev::family::local);
 
     udp_ipv4->wbuffer().produce(MSG, MSG_LEN);
     udp_ipv6->wbuffer().produce(MSG, MSG_LEN);
