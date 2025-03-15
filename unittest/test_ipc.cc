@@ -125,7 +125,7 @@ TEST_F(TestIpcByFork, test_sem_shm_rwlock_by_fork)
         {
         }
 
-        rwlock lock;
+        rwlock lock{sync_level::process};
         int var1;
         double var2;
     };
@@ -184,8 +184,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
         }
 
-        mutex lock;
-        cond cond;
+        mutex lock{sync_level::process};
+        cond cv{sync_level::process};
         int var;
         bool ready;
     };
@@ -215,8 +215,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<mutex> lock(ptr->lock);
             ptr->var = NUMBER;
             ptr->ready = true;
-            ptr->cond.notify_one();
-            ptr->cond.wait(lock);
+            ptr->cv.notify_one();
+            ptr->cv.wait(lock);
         }
 
         ASSERT_TRUE(ptr->lock.try_lock());
@@ -228,7 +228,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
             std::unique_lock<mutex> lock(ptr->lock);
             std::cv_status status =
-                ptr->cond.wait_for(lock, std::chrono::milliseconds(10));
+                ptr->cv.wait_for(lock, std::chrono::milliseconds(10));
             ASSERT_EQ(status, std::cv_status::timeout);
         }
 
@@ -240,9 +240,9 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
             std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
-            ptr->cond.notify_one();
+            ptr->cv.notify_one();
             std::cv_status status =
-                ptr->cond.wait_for(lock, std::chrono::milliseconds(delay * 3));
+                ptr->cv.wait_for(lock, std::chrono::milliseconds(delay * 3));
             ASSERT_EQ(status, std::cv_status::no_timeout);
         }
 
@@ -260,8 +260,8 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
             std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
-            ptr->cond.notify_all();
-            bool success = ptr->cond.wait_for(
+            ptr->cv.notify_all();
+            bool success = ptr->cv.wait_for(
                 lock, std::chrono::milliseconds(delay * 3), pred);
             ASSERT_TRUE(success);
         }
@@ -276,10 +276,10 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         {
             std::unique_lock<mutex> lock(ptr->lock);
             ptr->ready = true;
-            ptr->cond.notify_all();
+            ptr->cv.notify_all();
             auto start = std::chrono::system_clock::now();
-            bool success = ptr->cond.wait_for(
-                lock, std::chrono::milliseconds(delay), pred);
+            bool success =
+                ptr->cv.wait_for(lock, std::chrono::milliseconds(delay), pred);
             auto end = std::chrono::system_clock::now();
             std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(
                              (end - start))
@@ -313,10 +313,10 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
-                ptr->cond.wait(lock);
+                ptr->cv.wait(lock);
             }
             ASSERT_EQ(ptr->var, NUMBER);
-            ptr->cond.notify_one();
+            ptr->cv.notify_one();
         }
 
         // Test-2
@@ -327,11 +327,11 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
-                ptr->cond.wait(lock);
+                ptr->cv.wait(lock);
             }
             ASSERT_TRUE(ptr->ready);
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-            ptr->cond.notify_one();
+            ptr->cv.notify_one();
         }
 
         // Test-3
@@ -342,12 +342,12 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
-                ptr->cond.wait(lock);
+                ptr->cv.wait(lock);
             }
             ASSERT_TRUE(ptr->ready);
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
             ptr->var = NUMBER;
-            ptr->cond.notify_all();
+            ptr->cv.notify_all();
         }
 
         // // Test-4
@@ -358,14 +358,14 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
             std::unique_lock<mutex> lock(ptr->lock);
             if (!ptr->ready)
             {
-                ptr->cond.wait(lock);
+                ptr->cv.wait(lock);
             }
             ASSERT_TRUE(ptr->ready);
             lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(delay * 3));
             lock.lock();
             ptr->var = NUMBER;
-            ptr->cond.notify_all();
+            ptr->cv.notify_all();
         }
 
         // Finish
@@ -381,12 +381,12 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
 {
     struct TestStruct : public TestStructBase
     {
-        TestStruct() : barrier(2), var(0)
+        TestStruct() : br(sync_level::process, 2), var(0)
         {
         }
 
-        one_time_fence one_time_fence;
-        barrier barrier;
+        one_time_fence otf{sync_level::process};
+        barrier br;
         int var;
     };
 
@@ -404,11 +404,11 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
             shm.construct<TestStruct>();
         }
 
-        ptr->one_time_fence.wait();
-        EXPECT_TRUE(ptr->one_time_fence.ok());
-        ptr->one_time_fence.wait();
+        ptr->otf.wait();
+        EXPECT_TRUE(ptr->otf.ok());
+        ptr->otf.wait();
         EXPECT_EQ(ptr->var, 100);
-        ptr->barrier.wait();
+        ptr->br.wait();
 
         if (shm.creator())
         {
@@ -426,14 +426,14 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
         }
 
         ptr->var = 100;
-        EXPECT_FALSE(ptr->one_time_fence.ok());
-        ptr->one_time_fence.notify();
-        EXPECT_TRUE(ptr->one_time_fence.ok());
-        ptr->one_time_fence.wait();
-        EXPECT_TRUE(ptr->one_time_fence.ok());
+        EXPECT_FALSE(ptr->otf.ok());
+        ptr->otf.notify();
+        EXPECT_TRUE(ptr->otf.ok());
+        ptr->otf.wait();
+        EXPECT_TRUE(ptr->otf.ok());
 
-        ptr->barrier.wait();
-        EXPECT_THROW(ptr->barrier.wait(), std::logic_error);
+        ptr->br.wait();
+        EXPECT_THROW(ptr->br.wait(), std::logic_error);
 
         if (shm.creator())
         {
@@ -462,7 +462,7 @@ protected:
 
 TEST_F(TestPSharedLockByThread, test_rwlock_guard_movable)
 {
-    rwlock rwlck;
+    rwlock rwlck(sync_level::process);
 
     {
         rdlockguard lg(rwlck);
@@ -483,7 +483,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_guard_movable)
 
 TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
 {
-    rwlock rwlck;
+    rwlock rwlck(sync_level::process);
 
     // sub-thread
     auto func = [this, &rwlck]()
@@ -521,7 +521,7 @@ TEST_F(TestPSharedLockByThread, test_rwlock_rdlocked)
 
 TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
 {
-    rwlock rwlck;
+    rwlock rwlck(sync_level::process);
 
     // sub-thread
     auto func = [this, &rwlck]()
@@ -555,52 +555,52 @@ TEST_F(TestPSharedLockByThread, test_rwlock_wrlocked)
 
 TEST_F(TestPSharedLockByThread, test_one_time_fence_wait_first)
 {
-    one_time_fence one_time_fence;
+    one_time_fence otf(sync_level::process);
     auto func = [&]() -> void
     {
-        one_time_fence.wait();
-        one_time_fence.wait();
-        one_time_fence.wait();
+        otf.wait();
+        otf.wait();
+        otf.wait();
     };
 
     std::thread thr(func);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    one_time_fence.notify();
-    one_time_fence.notify();
+    otf.notify();
+    otf.notify();
     thr.join();
 }
 
 TEST_F(TestPSharedLockByThread, test_one_time_fence_notify_first)
 {
-    one_time_fence one_time_fence;
+    one_time_fence otf(sync_level::process);
     auto func = [&]() -> void
     {
-        one_time_fence.wait();
-        one_time_fence.wait();
+        otf.wait();
+        otf.wait();
     };
 
-    one_time_fence.notify();
+    otf.notify();
     std::thread thr(func);
     thr.join();
 }
 
 TEST_F(TestPSharedLockByThread, test_barrier_throw)
 {
-    barrier barrier(1);
-    EXPECT_NO_THROW(barrier.wait());
-    EXPECT_THROW(barrier.wait(), std::logic_error);
+    barrier br(sync_level::process, 1);
+    EXPECT_NO_THROW(br.wait());
+    EXPECT_THROW(br.wait(), std::logic_error);
 }
 
 TEST_F(TestPSharedLockByThread, test_barrier_multithread)
 {
     const int num = 10;
-    barrier barrier(num + 1);
+    barrier br(sync_level::process, num + 1);
     std::vector<std::thread> thrs;
     bool shall_throw = true;
 
     auto func = [&]() -> void
     {
-        barrier.wait();
+        br.wait();
         if (shall_throw)
         {
             throw_runtime_error("test not ok!");
@@ -614,19 +614,19 @@ TEST_F(TestPSharedLockByThread, test_barrier_multithread)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     shall_throw = false;
-    EXPECT_NO_THROW(barrier.wait());
+    EXPECT_NO_THROW(br.wait());
 
     for (int i = 0; i < num; ++i)
     {
         thrs[i].join();
     }
 
-    EXPECT_THROW(barrier.wait(), std::logic_error);
+    EXPECT_THROW(br.wait(), std::logic_error);
 }
 
 TEST_F(TestPSharedLockByThread, test_mutex_performance)
 {
-    mutex plock;
+    mutex plock(sync_level::process);
     performance_test<mutex>(plock);
 }
 
@@ -634,7 +634,7 @@ TEST_F(TestPSharedLockByThread, test_mutex_shm_performance)
 {
     std::string shm_name = "/cppev_test_lock_shm";
     shared_memory shm(shm_name, sizeof(mutex));
-    mutex *lock_ptr = shm.construct<mutex>();
+    mutex *lock_ptr = shm.construct<mutex>(sync_level::process);
     performance_test<mutex>(*lock_ptr);
     lock_ptr->~mutex();
     shm.unlink();

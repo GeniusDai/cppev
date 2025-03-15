@@ -1,12 +1,9 @@
 #ifndef _cppev_ipc_h_6C0224787A17_
 #define _cppev_ipc_h_6C0224787A17_
 
-#include <pthread.h>
 #include <semaphore.h>
 #include <sys/time.h>
 
-#include <condition_variable>
-#include <mutex>
 #include <string>
 
 #include "cppev/common.h"

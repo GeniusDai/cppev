@@ -3,7 +3,12 @@
 namespace cppev
 {
 
-mutex::mutex()
+static const std::unordered_map<sync_level, int> sync_level_map = {
+    {sync_level::thread, PTHREAD_PROCESS_PRIVATE},
+    {sync_level::process, PTHREAD_PROCESS_SHARED},
+};
+
+mutex::mutex(sync_level sl)
 {
     int ret = 0;
     pthread_mutexattr_t attr;
@@ -25,7 +30,7 @@ mutex::mutex()
         throw_system_error_with_specific_errno(
             "pthread_mutexattr_setprotocol error", ret);
     }
-    ret = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    ret = pthread_mutexattr_setpshared(&attr, sync_level_map.at(sl));
     if (ret != 0)
     {
         throw_system_error_with_specific_errno(
@@ -83,7 +88,7 @@ void mutex::unlock()
     }
 }
 
-cond::cond()
+cond::cond(sync_level sl)
 {
     int ret = 0;
     pthread_condattr_t attr;
@@ -93,7 +98,7 @@ cond::cond()
         throw_system_error_with_specific_errno("pthread_condattr_init error",
                                                ret);
     }
-    ret = pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    ret = pthread_condattr_setpshared(&attr, sync_level_map.at(sl));
     if (ret != 0)
     {
         throw_system_error_with_specific_errno(
@@ -154,7 +159,7 @@ void cond::notify_all()
     }
 }
 
-one_time_fence::one_time_fence() : ok_(false)
+one_time_fence::one_time_fence(sync_level sl) : ok_(false), lock_(sl), cond_(sl)
 {
 }
 
@@ -191,7 +196,7 @@ bool one_time_fence::ok() const noexcept
     return ok_;
 }
 
-barrier::barrier(int count) : count_(count)
+barrier::barrier(sync_level sl, int count) : count_(count), lock_(sl), cond_(sl)
 {
 }
 
@@ -219,7 +224,7 @@ void barrier::wait()
     }
 }
 
-rwlock::rwlock()
+rwlock::rwlock(sync_level sl)
 {
     int ret = 0;
     pthread_rwlockattr_t attr;
@@ -229,7 +234,7 @@ rwlock::rwlock()
         throw_system_error_with_specific_errno("pthread_rwlockattr_init error",
                                                ret);
     }
-    ret = pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    ret = pthread_rwlockattr_setpshared(&attr, sync_level_map.at(sl));
     if (ret != 0)
     {
         throw_system_error_with_specific_errno(

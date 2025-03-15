@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <vector>
 
@@ -13,12 +14,18 @@
 namespace cppev
 {
 
+enum class sync_level
+{
+    thread,
+    process,
+};
+
 class CPPEV_PUBLIC mutex final
 {
     friend class cond;
 
 public:
-    mutex();
+    mutex(sync_level sl);
 
     mutex(const mutex &) = delete;
     mutex &operator=(const mutex &) = delete;
@@ -42,7 +49,7 @@ class CPPEV_PUBLIC cond final
 public:
     using predicate = std::function<bool()>;
 
-    cond();
+    cond(sync_level sl);
 
     cond(const cond &) = delete;
     cond &operator=(const cond &) = delete;
@@ -139,7 +146,7 @@ private:
 class CPPEV_PUBLIC one_time_fence final
 {
 public:
-    one_time_fence();
+    one_time_fence(sync_level sl);
 
     one_time_fence(const one_time_fence &) = delete;
     one_time_fence &operator=(const one_time_fence &) = delete;
@@ -165,7 +172,7 @@ private:
 class CPPEV_PUBLIC barrier final
 {
 public:
-    barrier(int count);
+    barrier(sync_level sl, int count);
 
     barrier(const barrier &) = delete;
     barrier &operator=(const barrier &) = delete;
@@ -187,7 +194,7 @@ private:
 class CPPEV_PUBLIC rwlock final
 {
 public:
-    rwlock();
+    rwlock(sync_level sl);
 
     rwlock(const rwlock &) = delete;
     rwlock &operator=(const rwlock &) = delete;
