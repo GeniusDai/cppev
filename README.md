@@ -10,13 +10,15 @@ Support io event listening by io-multiplexing, event-type readable / writable, e
 
 ### Multithreading
 
-Support subthread / threadpool / spinlock / signal-handing.
+Support subthread / threadpool.
 
 ### Interprocess Communication
 
 Support semaphore / shared-memory.
 
-Support mutex / condition-variable / read-write-lock shared among processes.
+### Thread and Process Synchronization
+
+Support thread / process level signal-handing / mutex / condition-variable / read-write-lock.
 
 ### Binary File Loading
 
