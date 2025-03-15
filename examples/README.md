@@ -2,9 +2,9 @@
 
 ### 1. Tcp Stress Test
 
-Tcp server initiates 3 listening threads to support ipc4 / ipv6 / unix protocol family.
+Tcp server initiates listening thread(s) to support ipc4 / ipv6 / unix protocol family.
 
-Tcp client initiates N connecting threads to connect to server.
+Tcp client initiates connecting thread(s) to connect to server.
 
 Both server and client initiates thread pool to handle tcp connection.
 
