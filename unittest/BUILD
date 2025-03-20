@@ -169,9 +169,9 @@ cc_binary(
     ],
 )
 
-# Attention! In ubuntu-20.04.
-# The function dlerror and dlsym is undefined in the test_dynamic_loader.pic.o
-# and cc_shared_library won't transfer linkopts. So cannot use //src:cppev_dynamic.
+# Cannot use //src:cppev_dynamic in ubuntu-20.04 due to
+# dlopen related code is in libdl.so but latter merged to
+# libc.so, cc_shared_library won't transfer linkopts.
 cc_test(
     name = "test_dynamic_loader",
     srcs = [

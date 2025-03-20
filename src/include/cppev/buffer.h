@@ -24,13 +24,10 @@ public:
     {
         if (cap_ < 1)
         {
-            throw_logic_error("buffer size shall not be less than 1!");
+            cap_ = 1;
         }
         buffer_ = std::make_unique<Char[]>(cap_);
-        if (cap_)
-        {
-            memset(buffer_.get(), 0, cap_);
-        }
+        memset(buffer_.get(), 0, cap_);
     }
 
     basic_buffer(const basic_buffer &other) noexcept
@@ -105,26 +102,34 @@ public:
         return offset_;
     }
 
-    const Char *rawbuf() const noexcept
+    const Char *ptr() const noexcept
+    {
+        return buffer_.get();
+    }
+
+    Char *ptr() noexcept
+    {
+        return buffer_.get();
+    }
+
+    const Char *data() const noexcept
     {
         return buffer_.get() + start_;
     }
 
-    Char *rawbuf() noexcept
+    Char *data() noexcept
     {
         return buffer_.get() + start_;
     }
 
-    // Expand buffer
+    // Expand buffer which will never shrink and the real capacity
+    // is always 2^n (n>=0).
+    // @param cap   Capacity buffer aims to expand to.
     void resize(int cap) noexcept
     {
         if (cap_ >= cap)
         {
             return;
-        }
-        if (0 == cap_)
-        {
-            cap_ = 1;
         }
         while (cap_ < cap)
         {
@@ -139,7 +144,7 @@ public:
         buffer_ = std::move(nbuffer);
     }
 
-    // Move unconsumed buffer to the start
+    // Move unconsumed buffer to the start.
     void tiny() noexcept
     {
         if (start_ == 0)
@@ -156,7 +161,7 @@ public:
         offset_ = len;
     }
 
-    // Clear buffer
+    // Clear buffer.
     void clear() noexcept
     {
         memset(buffer_.get(), 0, cap_);

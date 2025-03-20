@@ -172,12 +172,12 @@ int subp_open::returncode() const noexcept
 
 const char *subp_open::stdout() const noexcept
 {
-    return stdout_->rbuffer().rawbuf();
+    return stdout_->rbuffer().data();
 }
 
 const char *subp_open::stderr() const noexcept
 {
-    return stderr_->rbuffer().rawbuf();
+    return stderr_->rbuffer().data();
 }
 
 pid_t subp_open::pid() const noexcept

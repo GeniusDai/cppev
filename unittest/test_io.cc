@@ -28,7 +28,7 @@ TEST(TestIO, test_diskfile)
     iofw->write_all();
     iofw->close();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuffer().rawbuf(), str);
+    EXPECT_STREQ(iofr->rbuffer().data(), str);
 
     unlink(file);
 }
@@ -42,7 +42,7 @@ TEST(TestIO, test_pipe)
     iopw->wbuffer().put_string(str);
     iopw->write_all();
     iopr->read_all();
-    EXPECT_STREQ(str, iopr->rbuffer().rawbuf());
+    EXPECT_STREQ(str, iopr->rbuffer().data());
 }
 
 TEST(TestIO, test_fifo)
@@ -53,7 +53,7 @@ TEST(TestIO, test_fifo)
     iofw->wbuffer().put_string(str);
     iofw->write_all();
     iofr->read_all();
-    EXPECT_STREQ(iofr->rbuffer().rawbuf(), str);
+    EXPECT_STREQ(iofr->rbuffer().data(), str);
 
     unlink(fifo);
 }
