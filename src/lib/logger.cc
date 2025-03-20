@@ -96,7 +96,7 @@ std::string logger::level_to_string(log_level level) const
     case log_level::error:
         return "ERROR";
     case log_level::fatal:
-        return "ERROR";
+        return "FATAL";
     default:
         return "UNKNOWN";
     }
