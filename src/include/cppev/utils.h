@@ -164,6 +164,8 @@ CPPEV_PUBLIC void throw_runtime_error(Args... args)
     throw std::runtime_error(oss.str());
 }
 
+bool CPPEV_PUBLIC exception_guard(const std::function<void()> &func);
+
 /*
  * Process level signal handling
  */

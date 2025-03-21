@@ -81,6 +81,19 @@ int64_t greatest_common_divisor(const std::vector<int64_t> &nums)
     return prev;
 }
 
+bool CPPEV_PUBLIC exception_guard(const std::function<void()> &func)
+{
+    try
+    {
+        func();
+    }
+    catch (const std::exception &e)
+    {
+        return false;
+    }
+    return true;
+}
+
 void ignore_signal(int sig)
 {
     handle_signal(sig, SIG_IGN);

@@ -1,11 +1,31 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
+#include <exception>
+
 #include "cppev/logger.h"
 #include "cppev/utils.h"
 
 namespace cppev
 {
+
+TEST(TestExceptionGuard, test_exception_guard)
+{
+    bool ret;
+    ret = exception_guard(
+        []()
+        {
+            throw std::overflow_error("error for test");
+        });
+    ASSERT_FALSE(ret);
+
+    ret = exception_guard(
+        []()
+        {
+            int a = 666;
+        });
+    ASSERT_TRUE(ret);
+}
 
 TEST(TestThrowErrors, test_throw_error)
 {
