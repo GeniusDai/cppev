@@ -56,37 +56,30 @@ CPPEV_PUBLIC void safely_close(const std::shared_ptr<socktcp> &iopt);
 // Get external data of reactor server and client.
 CPPEV_PUBLIC void *external_data(const std::shared_ptr<socktcp> &iopt);
 
-class acceptor;
-class connector;
-class iohandler;
-class tcp_server;
-class tcp_client;
-
 struct CPPEV_PRIVATE host_hash
 {
     size_t operator()(const std::tuple<std::string, int, family> &h) const;
 };
 
 // Data used for event loop initialization.
-struct CPPEV_PRIVATE tp_shared_data final
+struct CPPEV_PRIVATE data_storage final
 {
 private:
-    friend class tcp_server;
-    friend class tcp_client;
+    friend class tcp_common;
 
     // Idle function for callback.
     static const tcp_event_handler idle_handler;
 
 public:
     // All the five callbacks will be executed by worker thread.
-    explicit tp_shared_data(void *external_data_ptr);
+    explicit data_storage(void *external_data_ptr);
 
-    tp_shared_data(const tp_shared_data &) = delete;
-    tp_shared_data &operator=(const tp_shared_data &) = delete;
-    tp_shared_data(tp_shared_data &&) = delete;
-    tp_shared_data &operator=(tp_shared_data &&) = delete;
+    data_storage(const data_storage &) = delete;
+    data_storage &operator=(const data_storage &) = delete;
+    data_storage(data_storage &&) = delete;
+    data_storage &operator=(data_storage &&) = delete;
 
-    ~tp_shared_data();
+    ~data_storage();
 
     // When tcp server accepts new connection.
     tcp_event_handler on_accept;
@@ -124,11 +117,10 @@ private:
 
 class CPPEV_PRIVATE iohandler final : public runnable
 {
-    friend class tcp_server;
-    friend class tcp_client;
-
 public:
-    explicit iohandler(tp_shared_data *data);
+    using init_checker = std::function<bool(const std::shared_ptr<io> &iop)>;
+
+    explicit iohandler(data_storage *data);
 
     iohandler(const iohandler &) = delete;
     iohandler &operator=(const iohandler &) = delete;
@@ -143,14 +135,15 @@ public:
     // Connected socket that has been registered to thread pool is writable.
     static void on_writable(const std::shared_ptr<io> &iop);
 
-    // Connected socket is writable, this callback is registered by listening
-    // thread and will be executed by one thread of the pool to do init jobs.
-    static void on_acpt_writable(const std::shared_ptr<io> &iop);
+    // Connecting socket is writable, registered by listening / connecting
+    // thread and will be executed by one thread of the pool to do the
+    // check and init jobs.
+    static void on_conn_establish(const std::shared_ptr<io> &iop,
+                                  init_checker checker,
+                                  tcp_event_handler handler);
 
-    // Connected socket is writable, this callback is registered by connecting
-    // thread and will be executed by one thread of the pool to check the
-    // connection and do init jobs.
-    static void on_cont_writable(const std::shared_ptr<io> &iop);
+    // Get event loop.
+    event_loop &evlp();
 
     // Run io handling.
     void run_impl() override;
@@ -161,16 +154,12 @@ public:
 private:
     // Event loop.
     event_loop evlp_;
-
-    // Hosts failed in the SO_ERROR check.
-    std::unordered_map<std::tuple<std::string, int, family>, int, host_hash>
-        failures_;
 };
 
 class CPPEV_PRIVATE acceptor final : public runnable
 {
 public:
-    explicit acceptor(tp_shared_data *data);
+    explicit acceptor(data_storage *data);
 
     acceptor(const acceptor &) = delete;
     acceptor &operator=(const acceptor &) = delete;
@@ -210,7 +199,7 @@ private:
 class CPPEV_PRIVATE connector final : public runnable
 {
 public:
-    explicit connector(tp_shared_data *data);
+    explicit connector(data_storage *data);
 
     connector(const connector &) = delete;
     connector &operator=(const connector &) = delete;
@@ -230,10 +219,6 @@ public:
     // Add connection task (ip, port, family).
     // Thread safe.
     void add(const std::string &ip, int port, family f, int t);
-
-    // Add connection task (path, 0, family::local).
-    // Thread safe.
-    void add_unix(const std::string &path, int t);
 
     // Shutdown io eventloop.
     // Thread safe.
@@ -256,33 +241,23 @@ private:
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash>
         hosts_;
 
-    // Hosts failed in the connect syscall.
+    // Hosts failed in the connect syscall or SO_ERROR check.
     std::unordered_map<std::tuple<std::string, int, family>, int, host_hash>
         failures_;
 };
 
-class CPPEV_PUBLIC tcp_server final
+class CPPEV_INTERNAL tcp_common
 {
 public:
-    // Construct tcp server
-    // @param iohandler_num      IO thread pool size.
-    // @param single_acceptor    Whether using one acceptor for all listening
-    // socket.
-    // @param external_data      External data pointer.
-    explicit tcp_server(int iohandler_num, bool single_acceptor = true,
-                        void *external_data = nullptr);
+    // Contruct common data structures for tcp server and client.
+    explicit tcp_common(int iohandler_num, void *external_data);
 
-    tcp_server(const tcp_server &) = delete;
-    tcp_server &operator=(const tcp_server &) = delete;
-    tcp_server(tcp_server &&) = delete;
-    tcp_server &operator=(tcp_server &&) = delete;
+    tcp_common(const tcp_common &) = delete;
+    tcp_common &operator=(const tcp_common &) = delete;
+    tcp_common(tcp_common &&) = delete;
+    tcp_common &operator=(tcp_common &&) = delete;
 
-    ~tcp_server();
-
-    // Set handler which will be triggered when tcp server accepts new
-    // connection.
-    // @param handler   Handler for the event.
-    void set_on_accept(const tcp_event_handler &handler);
+    virtual ~tcp_common();
 
     // Set handler which will be triggered when read from tcp connection
     // completes.
@@ -298,6 +273,65 @@ public:
     // host.
     // @param handler   Handler for the event.
     void set_on_closed(const tcp_event_handler &handler);
+
+protected:
+    template <typename R1>
+    void run(std::vector<std::unique_ptr<R1>> &rv)
+    {
+        ignore_signal(SIGPIPE);
+        tp_.run();
+        for (auto &r : rv)
+        {
+            r->run();
+        }
+    }
+
+    template <typename R1>
+    void shutdown(std::vector<std::unique_ptr<R1>> &rv)
+    {
+        for (auto &r : rv)
+        {
+            r->shutdown();
+        }
+        for (auto &r : rv)
+        {
+            r->join();
+        }
+
+        for (int i = 0; i < tp_.size(); ++i)
+        {
+            tp_[i].shutdown();
+        }
+        for (int i = 0; i < tp_.size(); ++i)
+        {
+            tp_[i].join();
+        }
+    }
+
+    // Thread pool shared data.
+    data_storage data_;
+
+    // Worker threads.
+    thread_pool<iohandler, data_storage *> tp_;
+};
+
+class CPPEV_PUBLIC tcp_server final : public tcp_common
+{
+public:
+    // Construct tcp server
+    // @param iohandler_num      IO thread pool size.
+    // @param single_acceptor    Whether using one acceptor for all listening
+    // socket.
+    // @param external_data      External data pointer.
+    explicit tcp_server(int iohandler_num, bool single_acceptor = true,
+                        void *external_data = nullptr);
+
+    ~tcp_server();
+
+    // Set handler which will be triggered when tcp server accepts new
+    // connection.
+    // @param handler   Handler for the event.
+    void set_on_accept(const tcp_event_handler &handler);
 
     // Listen in port.
     // Can be called only before run().
@@ -319,20 +353,14 @@ public:
     void shutdown();
 
 private:
-    // Thread pool shared data.
-    tp_shared_data data_;
-
     // Whether use single acceptor for multiple listening socket.
     bool single_acceptor_;
-
-    // Worker threads.
-    thread_pool<iohandler, tp_shared_data *> tp_;
 
     // Listening threads.
     std::vector<std::unique_ptr<acceptor>> acpts_;
 };
 
-class CPPEV_PUBLIC tcp_client final
+class CPPEV_PUBLIC tcp_client final : public tcp_common
 {
 public:
     // Construct tcp client
@@ -342,32 +370,12 @@ public:
     explicit tcp_client(int iohandler_num, int connector_num = 1,
                         void *external_data = nullptr);
 
-    tcp_client(const tcp_client &) = delete;
-    tcp_client &operator=(const tcp_client &) = delete;
-    tcp_client(tcp_client &&) = delete;
-    tcp_client &operator=(tcp_client &&) = delete;
-
     ~tcp_client();
 
     // Set handler which will be triggered when tcp client establishes new
     // connection.
     // @param handler   Handler for the event.
     void set_on_connect(const tcp_event_handler &handler);
-
-    // Set handler which will be triggered when read from tcp connection
-    // completes.
-    // @param handler   Handler for the event.
-    void set_on_read_complete(const tcp_event_handler &handler);
-
-    // Set handler which will be triggered when write to tcp connection
-    // completes.
-    // @param handler   Handler for the event.
-    void set_on_write_complete(const tcp_event_handler &handler);
-
-    // Set handler which will be triggered when tcp socket is closed by opposite
-    // host.
-    // @param handler   Handler for the event.
-    void set_on_closed(const tcp_event_handler &handler);
 
     // Add target uri to connect.
     // Can be called before or after run().
@@ -390,12 +398,6 @@ public:
     void shutdown();
 
 private:
-    // Thread pool shared data.
-    tp_shared_data data_;
-
-    // Worker threads.
-    thread_pool<iohandler, tp_shared_data *> tp_;
-
     // Connecting threads.
     std::vector<std::unique_ptr<connector>> conts_;
 };

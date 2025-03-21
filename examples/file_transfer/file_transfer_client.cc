@@ -33,7 +33,8 @@ cppev::reactor::tcp_event_handler on_connect =
 {
     iopt->wbuffer().put_string(FILENAME);
     iopt->wbuffer().put_string("\n");
-    iopt->write_all();
+    cppev::reactor::async_write(iopt);
+    LOG_INFO << "request file " << FILENAME;
 
     std::stringstream file_copy_name;
     file_copy_name << FILENAME << "." << iopt->fd() << "." << std::showbase
@@ -47,7 +48,7 @@ cppev::reactor::tcp_event_handler on_connect =
     fdcache *cache =
         reinterpret_cast<fdcache *>(cppev::reactor::external_data(iopt));
     cache->setfd(iopt->fd(), fd);
-    LOG_INFO << "creating file complete";
+    LOG_INFO << "create file " << file_copy_name.str();
 };
 
 cppev::reactor::tcp_event_handler on_read_complete =
