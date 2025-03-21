@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cppev/ipc.h"
 #include "cppev/lock.h"
+#include "cppev/logger.h"
 
 namespace cppev
 {
@@ -403,10 +404,11 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
         }
 
         ptr->otf.wait();
-        EXPECT_TRUE(ptr->otf.ok());
-        ptr->otf.wait();
         EXPECT_EQ(ptr->var, 100);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         ptr->br.wait();
+        LOG_INFO << "Process " << getpid() << " passed barrier";
 
         if (shm.creator())
         {
@@ -424,13 +426,13 @@ TEST_F(TestIpcByFork, test_shm_one_time_fence_barrier_by_fork)
         }
 
         ptr->var = 100;
-        EXPECT_FALSE(ptr->otf.ok());
         ptr->otf.notify();
-        EXPECT_TRUE(ptr->otf.ok());
+
         ptr->otf.wait();
-        EXPECT_TRUE(ptr->otf.ok());
 
         ptr->br.wait();
+        LOG_INFO << "Process " << getpid() << " passed barrier";
+
         EXPECT_THROW(ptr->br.wait(), std::logic_error);
 
         if (shm.creator())

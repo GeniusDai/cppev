@@ -205,7 +205,7 @@ void event_loop::loop_once(int timeout)
     }
 }
 
-void event_loop::stop_loop_once()
+void event_loop::stop_loop()
 {
     auto iopps = io_factory::get_pipes();
     iopps[1]->set_evlp(this);
@@ -243,11 +243,6 @@ void event_loop::loop_forever(int timeout)
     {
         loop_once(timeout);
     }
-}
-
-void event_loop::stop_loop_forever()
-{
-    stop_loop_once();
 }
 
 void event_loop::fd_register_nts(const std::shared_ptr<io> &iop,

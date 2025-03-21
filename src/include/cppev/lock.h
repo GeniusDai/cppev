@@ -159,8 +159,6 @@ public:
 
     void notify();
 
-    bool ok() const noexcept;
-
 private:
     bool ok_;
 

@@ -232,7 +232,7 @@ void iohandler::run_impl()
 
 void iohandler::shutdown()
 {
-    evlp_.stop_loop_forever();
+    evlp_.stop_loop();
 }
 
 acceptor::acceptor(tp_shared_data *data)
@@ -297,7 +297,7 @@ void acceptor::run_impl()
 
 void acceptor::shutdown()
 {
-    evlp_.stop_loop_forever();
+    evlp_.stop_loop();
 }
 
 connector::connector(tp_shared_data *data)
@@ -320,14 +320,7 @@ void connector::add(const std::string &ip, int port, family f, int t)
 
     {
         std::unique_lock<std::mutex> _(lock_);
-        if (hosts_.count(h))
-        {
-            hosts_[h] += t;
-        }
-        else
-        {
-            hosts_[h] = t;
-        }
+        hosts_[h] += t;
     }
 
     wrp_->wbuffer().put_string("0");
@@ -418,7 +411,7 @@ void connector::run_impl()
 
 void connector::shutdown()
 {
-    evlp_.stop_loop_forever();
+    evlp_.stop_loop();
 }
 
 tcp_server::tcp_server(int iohandler_num, bool single_acceptor,

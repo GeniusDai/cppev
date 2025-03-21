@@ -191,11 +191,6 @@ void one_time_fence::notify()
     }
 }
 
-bool one_time_fence::ok() const noexcept
-{
-    return ok_;
-}
-
 barrier::barrier(sync_level sl, int count) : count_(count), lock_(sl), cond_(sl)
 {
 }
@@ -220,7 +215,7 @@ void barrier::wait()
     }
     else
     {
-        throw_logic_error("too many threads waited in the barrier");
+        throw_logic_error("too many threads waiting in the barrier");
     }
 }
 

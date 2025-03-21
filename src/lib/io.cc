@@ -62,7 +62,6 @@ int io::fd() const noexcept
     return fd_;
 }
 
-// Read buffer
 const buffer &io::rbuffer() const noexcept
 {
     return rbuffer_;
@@ -73,7 +72,6 @@ buffer &io::rbuffer() noexcept
     return rbuffer_;
 }
 
-// Write buffer
 const buffer &io::wbuffer() const noexcept
 {
     return wbuffer_;
@@ -1046,8 +1044,7 @@ std::shared_ptr<sockudp> get_sockudp(family f)
 std::vector<std::shared_ptr<stream>> get_pipes()
 {
     int pfds[2];
-    // pfds[0] refers to the read end of the pipe
-    // pfds[1] refers to the write end of the pipe
+    // Pipe : 0 read end, 1 write end
     if (pipe(pfds) != 0)
     {
         throw_system_error("pipe error");

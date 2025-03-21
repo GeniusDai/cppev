@@ -188,12 +188,15 @@ public:
     void run_impl() override;
 
     // Specify listening socket's port and family.
+    // Should be called before subthread runs.
     void listen(int port, family f, const char *ip);
 
     // Specify unix domain listening socket's path.
+    // Should be called before subthread runs.
     void listen_unix(const std::string &path, bool remove);
 
     // Shutdown io eventloop.
+    // Thread safe.
     void shutdown();
 
 private:
@@ -225,19 +228,22 @@ public:
     void run_impl() override;
 
     // Add connection task (ip, port, family).
+    // Thread safe.
     void add(const std::string &ip, int port, family f, int t);
 
     // Add connection task (path, 0, family::local).
+    // Thread safe.
     void add_unix(const std::string &path, int t);
 
     // Shutdown io eventloop.
+    // Thread safe.
     void shutdown();
 
 private:
     // Event loop.
     event_loop evlp_;
 
-    // Protects hosts_.
+    // Thread safe of "adding hosts" * N and "consume hosts".
     std::mutex lock_;
 
     // Pipe write end.
@@ -294,12 +300,14 @@ public:
     void set_on_closed(const tcp_event_handler &handler);
 
     // Listen in port.
+    // Can be called only before run().
     // @param port      TCP Port to listen.
     // @param f         TCP socket family, can be IPv4 or IPv6.
     // @param ip        IP to bind.
     void listen(int port, family f, const char *ip = nullptr);
 
     // Listen in uri.
+    // Can be called only before run().
     // @param path      TCP Unix socket path to listen.
     // @param remove    Whether remove the socket file when it already exists.
     void listen_unix(const std::string &path, bool remove = false);
@@ -362,6 +370,7 @@ public:
     void set_on_closed(const tcp_event_handler &handler);
 
     // Add target uri to connect.
+    // Can be called before or after run().
     // @param ip        Opposite host IP.
     // @param port      Opposite port.
     // @param f         TCP socket family, can be IPv4 or IPv6.
@@ -369,14 +378,15 @@ public:
     void add(const std::string &ip, int port, family f, int t = 1);
 
     // Add target uri to connect.
+    // Can be called before or after run().
     // @param path      TCP Unix socket path to connect.
     // @param t         Counts of the uri to add.
     void add_unix(const std::string &path, int t = 1);
 
-    // Start server asynchronously.
+    // Start client asynchronously.
     void run();
 
-    // Shutdown client synchronously, return when all server threads exit.
+    // Shutdown client synchronously, return when all client threads exit.
     void shutdown();
 
 private:

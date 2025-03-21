@@ -139,7 +139,7 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
         [&]()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            acpt_evlp.stop_loop_forever();
+            acpt_evlp.stop_loop();
         });
 
     acpt_evlp.loop_forever();
@@ -156,7 +156,7 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
             acpt_evlp.loop_once();
         });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    acpt_evlp.stop_loop_once();
+    acpt_evlp.stop_loop();
     thr1.join();
     LOG_INFO << "loop once stopped";
 
@@ -166,7 +166,7 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
             acpt_evlp.loop_forever();
         });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    acpt_evlp.stop_loop_forever();
+    acpt_evlp.stop_loop();
     thr2.join();
     LOG_INFO << "loop forever stopped";
 }
@@ -253,7 +253,7 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_second)
     }
     LOG_INFO << "To leave";
 
-    client_evlp.stop_loop_forever();
+    client_evlp.stop_loop();
     sub_thr.join();
 }
 

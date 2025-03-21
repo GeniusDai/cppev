@@ -151,15 +151,12 @@ public:
     // @param timeout       timeout in millisecond, -1 means infinite.
     void loop_once(int timeout = -1);
 
-    // Stop loop once.
-    void stop_loop_once();
-
     // Wait for events, loop infinitely.
     // @param timeout       timeout in millisecond, -1 means infinite.
     void loop_forever(int timeout = -1);
 
-    // Stop loop infinitely.
-    void stop_loop_forever();
+    // Stop loop.
+    void stop_loop();
 
 private:
     // Helper function to register fd event to event pollor.
