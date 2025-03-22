@@ -68,11 +68,7 @@ TEST_P(TestLockByThread, test_rwlock_rdlocked)
         std::unique_lock<mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock,
-                       [this]() -> bool
-                       {
-                           return this->ready_;
-                       });
+            cond_.wait(lock, [this]() -> bool { return this->ready_; });
         }
 
         ASSERT_TRUE(rwlck.try_rdlock());
@@ -104,11 +100,7 @@ TEST_P(TestLockByThread, test_rwlock_wrlocked)
         std::unique_lock<mutex> lock(lock_);
         if (!ready_)
         {
-            cond_.wait(lock,
-                       [this]() -> bool
-                       {
-                           return this->ready_;
-                       });
+            cond_.wait(lock, [this]() -> bool { return this->ready_; });
         }
         ASSERT_FALSE(rwlck.try_rdlock());
         ASSERT_FALSE(rwlck.try_wrlock());

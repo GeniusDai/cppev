@@ -246,10 +246,7 @@ TEST_F(TestIpcByFork, test_sem_shm_lock_cond_by_fork)
         }
 
         // Test-3
-        auto pred = [ptr, &NUMBER]()
-        {
-            return ptr->var == NUMBER;
-        };
+        auto pred = [ptr, &NUMBER]() { return ptr->var == NUMBER; };
 
         ptr->var = NUMBER + 1;
         ptr->ready = false;

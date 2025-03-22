@@ -172,11 +172,7 @@ void one_time_fence::wait()
         std::unique_lock<mutex> lock(lock_);
         if (!ok_)
         {
-            cond_.wait(lock,
-                       [this]()
-                       {
-                           return ok_;
-                       });
+            cond_.wait(lock, [this]() { return ok_; });
         }
     }
 }
@@ -207,11 +203,7 @@ void barrier::wait()
     }
     else if (count_ > 0)
     {
-        cond_.wait(lock,
-                   [this]()
-                   {
-                       return count_ == 0;
-                   });
+        cond_.wait(lock, [this]() { return count_ == 0; });
     }
     else
     {

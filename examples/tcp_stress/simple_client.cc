@@ -22,9 +22,7 @@
  */
 cppev::reactor::tcp_event_handler on_connect =
     [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
-{
-    LOG_DEBUG_FMT("Fd %d on accept finish", iopt->fd());
-};
+{ LOG_DEBUG_FMT("Fd %d on accept finish", iopt->fd()); };
 
 cppev::reactor::tcp_event_handler on_read_complete =
     [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
@@ -41,15 +39,11 @@ cppev::reactor::tcp_event_handler on_read_complete =
 
 cppev::reactor::tcp_event_handler on_write_complete =
     [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
-{
-    LOG_DEBUG_FMT("Fd %d on write finish", iopt->fd());
-};
+{ LOG_DEBUG_FMT("Fd %d on write finish", iopt->fd()); };
 
 cppev::reactor::tcp_event_handler on_closed =
     [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
-{
-    LOG_DEBUG_FMT("Fd %d on close finish", iopt->fd());
-};
+{ LOG_DEBUG_FMT("Fd %d on close finish", iopt->fd()); };
 
 /*
  * Start Client

@@ -65,9 +65,7 @@ cppev::reactor::tcp_event_handler on_read_complete =
 
 cppev::reactor::tcp_event_handler on_closed =
     [](const std::shared_ptr<cppev::socktcp> &iopt) -> void
-{
-    LOG_INFO << "receiving file complete";
-};
+{ LOG_INFO << "receiving file complete"; };
 
 int main(int argc, char **argv)
 {

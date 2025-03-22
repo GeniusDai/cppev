@@ -150,21 +150,13 @@ TEST_P(TestEventLoop, test_tcp_connect_with_evlp_first)
 
     LOG_INFO << "server client test ended";
 
-    std::thread thr1(
-        [&]()
-        {
-            acpt_evlp.loop_once();
-        });
+    std::thread thr1([&]() { acpt_evlp.loop_once(); });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     acpt_evlp.stop_loop();
     thr1.join();
     LOG_INFO << "loop once stopped";
 
-    std::thread thr2(
-        [&]()
-        {
-            acpt_evlp.loop_forever();
-        });
+    std::thread thr2([&]() { acpt_evlp.loop_forever(); });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     acpt_evlp.stop_loop();
     thr2.join();

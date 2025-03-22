@@ -12,18 +12,11 @@ namespace cppev
 TEST(TestExceptionGuard, test_exception_guard)
 {
     bool ret;
-    ret = exception_guard(
-        []()
-        {
-            throw std::overflow_error("error for test");
-        });
+    ret =
+        exception_guard([]() { throw std::overflow_error("error for test"); });
     ASSERT_FALSE(ret);
 
-    ret = exception_guard(
-        []()
-        {
-            int a = 666;
-        });
+    ret = exception_guard([]() { int a = 666; });
     ASSERT_TRUE(ret);
 }
 
@@ -166,10 +159,7 @@ TEST(TestCommonUtils, test_strip)
 
 typedef void (*testing_func_type)(int, bool);
 
-auto signal_handler = [](int sig)
-{
-    LOG_INFO_FMT("handling signal %d", sig);
-};
+auto signal_handler = [](int sig) { LOG_INFO_FMT("handling signal %d", sig); };
 
 // Basic Signal API Usage:
 // 1. "block signal" + "sigwait"

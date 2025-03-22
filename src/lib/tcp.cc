@@ -57,11 +57,7 @@ const void *data_storage::external_data() const noexcept
 void async_write(const std::shared_ptr<socktcp> &iopt)
 {
     data_storage *dp = reinterpret_cast<data_storage *>(iopt->evlp().data());
-    if (!exception_guard(
-            [&iops = iopt]
-            {
-                iops->write_all();
-            }))
+    if (!exception_guard([&iops = iopt] { iops->write_all(); }))
     {
         LOG_ERROR_FMT("Syscall write error for fd %d", iopt->fd());
     }
@@ -114,9 +110,7 @@ size_t host_hash::operator()(
 }
 
 const tcp_event_handler data_storage::idle_handler =
-    [](const std::shared_ptr<socktcp> &) -> void
-{
-};
+    [](const std::shared_ptr<socktcp> &) -> void {};
 
 iohandler::iohandler(data_storage *data)
     : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
@@ -133,11 +127,7 @@ void iohandler::on_readable(const std::shared_ptr<io> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     data_storage *dp = reinterpret_cast<data_storage *>(iop->evlp().data());
-    if (!exception_guard(
-            [&iops = iopt]
-            {
-                iops->read_all();
-            }))
+    if (!exception_guard([&iops = iopt] { iops->read_all(); }))
     {
         LOG_ERROR_FMT("Syscall read error for fd %d", iopt->fd());
     }
@@ -166,11 +156,7 @@ void iohandler::on_writable(const std::shared_ptr<io> &iop)
         throw_logic_error("dynamic_pointer_cast error");
     }
     data_storage *dp = reinterpret_cast<data_storage *>(iop->evlp().data());
-    if (!exception_guard(
-            [&iops = iopt]
-            {
-                iops->write_all();
-            }))
+    if (!exception_guard([&iops = iopt] { iops->write_all(); }))
     {
         LOG_ERROR_FMT("Syscall write error for fd %d", iopt->fd());
     }
@@ -270,9 +256,7 @@ void acceptor::on_acpt_readable(const std::shared_ptr<io> &iop)
     data_storage *dp = reinterpret_cast<data_storage *>(iopt->evlp().data());
 
     static iohandler::init_checker checker = [](const std::shared_ptr<io> &)
-    {
-        return true;
-    };
+    { return true; };
 
     std::vector<std::shared_ptr<socktcp>> conns = iopt->accept();
 
@@ -329,11 +313,7 @@ void connector::add(const std::string &ip, int port, family f, int t)
     }
 
     wrp_->wbuffer().put_string("0");
-    if (!exception_guard(
-            [&iops = this->wrp_]
-            {
-                iops->write_all(1);
-            }))
+    if (!exception_guard([&iops = this->wrp_] { iops->write_all(1); }))
     {
         LOG_ERROR_FMT("Syscall write error for fd %d", wrp_->fd());
     }
@@ -380,11 +360,7 @@ void connector::on_pipe_readable(const std::shared_ptr<io> &iop)
         return ret;
     };
 
-    if (!exception_guard(
-            [&iops]
-            {
-                iops->read_all(1);
-            }))
+    if (!exception_guard([&iops] { iops->read_all(1); }))
     {
         LOG_ERROR_FMT("Syscall read error for fd %d", iops->fd());
     }
