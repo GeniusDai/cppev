@@ -1,20 +1,30 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <mutex>
 
+#include "cppev/logger.h"
 #include "cppev/runnable.h"
 #include "cppev/thread_pool.h"
 
 namespace cppev
 {
 
-const int delay = 10;
+const int delay = 100;
+
+static std::mutex mtx;
+static int var;
 
 class runnable_tester : public runnable
 {
 public:
     void run_impl() override
     {
+        {
+            std::unique_lock<std::mutex> _(mtx);
+            var++;
+        }
+        LOG_INFO << "thread running";
         std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
 };
@@ -34,10 +44,13 @@ public:
 
 TEST(TestThreadPool, test_thread_pool_by_join)
 {
-    thread_pool<runnable_tester> tp(50);
+    var = 0;
+    int thr_num = 20;
+    thread_pool<runnable_tester> tp(thr_num);
     tp.run();
     auto start = std::chrono::high_resolution_clock::now();
     tp.join();
+    ASSERT_EQ(var, thr_num);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> d =
         std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
@@ -46,10 +59,17 @@ TEST(TestThreadPool, test_thread_pool_by_join)
 
 TEST(TestThreadPool, test_thread_pool_by_cancel)
 {
-    thread_pool<runnable_tester> tp(50);
-    tp.run();
+    thread_pool<runnable_tester> tp(20);
+    for (auto &thr : tp)
+    {
+        thr.run();
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay / 2));
     tp.cancel();
-    tp.join();
+    for (auto &thr : tp)
+    {
+        thr.join();
+    }
 }
 
 TEST(TestThreadPool, test_thread_pool_compile_with_param)

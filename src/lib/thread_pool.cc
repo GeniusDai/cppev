@@ -3,30 +3,66 @@
 namespace cppev
 {
 
-namespace task_queue
-{
-
-task_queue::task_queue() noexcept : stop_(false)
+thread_pool_task_queue_runnable::thread_pool_task_queue_runnable(
+    thread_pool_task_queue *tptq) noexcept
+    : tptq_(tptq)
 {
 }
 
-task_queue::~task_queue() = default;
+void thread_pool_task_queue_runnable::run_impl()
+{
+    thread_pool_task_handler handler;
+    while (true)
+    {
+        {
+            std::unique_lock<std::mutex> lock(tptq_->lock_);
+            if (tptq_->queue_.empty())
+            {
+                if (tptq_->stop_)
+                {
+                    break;
+                }
+                tptq_->cond_.wait(
+                    lock, [this]() -> bool
+                    { return tptq_->queue_.size() || tptq_->stop_; });
+            }
+            if (tptq_->queue_.empty() && tptq_->stop_)
+            {
+                break;
+            }
+            handler = std::move(tptq_->queue_.front());
+            tptq_->queue_.pop();
+        }
+        tptq_->cond_.notify_all();
+        handler();
+    }
+}
 
-void task_queue::add_task(const thread_pool_task_handler &h) noexcept
+thread_pool_task_queue::thread_pool_task_queue(int thr_num)
+    : thread_pool<thread_pool_task_queue_runnable, thread_pool_task_queue *>(
+          thr_num, this),
+      stop_(false)
+{
+}
+
+thread_pool_task_queue::~thread_pool_task_queue() = default;
+
+void thread_pool_task_queue::add_task(
+    const thread_pool_task_handler &h) noexcept
 {
     std::unique_lock<std::mutex> lock(lock_);
     queue_.push(h);
     cond_.notify_one();
 }
 
-void task_queue::add_task(thread_pool_task_handler &&h) noexcept
+void thread_pool_task_queue::add_task(thread_pool_task_handler &&h) noexcept
 {
     std::unique_lock<std::mutex> lock(lock_);
     queue_.push(std::forward<thread_pool_task_handler>(h));
     cond_.notify_one();
 }
 
-void task_queue::add_task(
+void thread_pool_task_queue::add_task(
     const std::vector<thread_pool_task_handler> &vh) noexcept
 {
     std::unique_lock<std::mutex> lock(lock_);
@@ -37,52 +73,6 @@ void task_queue::add_task(
     cond_.notify_all();
 }
 
-thread_pool_task_queue_runnable::thread_pool_task_queue_runnable(
-    task_queue *task_queue) noexcept
-    : task_queue_(task_queue)
-{
-}
-
-void thread_pool_task_queue_runnable::run_impl()
-{
-    thread_pool_task_handler handler;
-    while (true)
-    {
-        {
-            std::unique_lock<std::mutex> lock(task_queue_->lock_);
-            if (task_queue_->queue_.empty())
-            {
-                if (task_queue_->stop_)
-                {
-                    break;
-                }
-                task_queue_->cond_.wait(lock,
-                                        [this]() -> bool
-                                        {
-                                            return task_queue_->queue_.size() ||
-                                                   task_queue_->stop_;
-                                        });
-                if (task_queue_->queue_.empty() && task_queue_->stop_)
-                {
-                    break;
-                }
-            }
-            handler = std::move(task_queue_->queue_.front());
-            task_queue_->queue_.pop();
-        }
-        task_queue_->cond_.notify_all();
-        handler();
-    }
-}
-
-thread_pool_task_queue::thread_pool_task_queue(int thr_num)
-    : task_queue(),
-      thread_pool<thread_pool_task_queue_runnable, task_queue *>(thr_num, this)
-{
-}
-
-thread_pool_task_queue::~thread_pool_task_queue() = default;
-
 void thread_pool_task_queue::stop() noexcept
 {
     {
@@ -92,7 +82,5 @@ void thread_pool_task_queue::stop() noexcept
     }
     join();
 }
-
-}  // namespace task_queue
 
 }  // namespace cppev

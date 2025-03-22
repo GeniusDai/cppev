@@ -23,6 +23,8 @@ class CPPEV_PUBLIC thread_pool
                   "Not constructible");
 
 public:
+    using container_type = std::vector<std::unique_ptr<Runnable>>;
+
     explicit thread_pool(int thr_num, Args &&...args)
     {
         for (int i = 0; i < thr_num; ++i)
@@ -40,7 +42,46 @@ public:
 
     virtual ~thread_pool() = default;
 
-    // Run all threads
+    class iterator
+    {
+    public:
+        explicit iterator(container_type &rv, int idx) : rv_(rv), idx_(idx)
+        {
+        }
+
+        bool operator!=(const iterator &other)
+        {
+            return idx_ != other.idx_;
+        }
+
+        Runnable &operator*()
+        {
+            return *rv_[idx_];
+        }
+
+        iterator &operator++()
+        {
+            ++idx_;
+            return *this;
+        }
+
+    private:
+        container_type &rv_;
+
+        int idx_;
+    };
+
+    iterator begin()
+    {
+        return iterator(thrs_, 0);
+    }
+
+    iterator end()
+    {
+        return iterator(thrs_, thrs_.size());
+    }
+
+    // Run all threads.
     void run()
     {
         for (auto &thr : thrs_)
@@ -49,7 +90,7 @@ public:
         }
     }
 
-    // Wait for all threads
+    // Wait for all threads.
     void join()
     {
         for (auto &thr : thrs_)
@@ -58,7 +99,7 @@ public:
         }
     }
 
-    // Cancel all threads
+    // Cancel all threads.
     virtual void cancel()
     {
         for (auto &thr : thrs_)
@@ -67,73 +108,52 @@ public:
         }
     }
 
-    // Specific const one of the threads
+    // Specific const one of the threads.
     const Runnable &operator[](int i) const noexcept
     {
         return *(thrs_[i].get());
     }
 
-    // Specific one of the threads
+    // Specific one of the threads.
     Runnable &operator[](int i) noexcept
     {
         return *(thrs_[i].get());
     }
 
-    // Thread pool size
+    // Thread pool size.
     int size() const noexcept
     {
         return thrs_.size();
     }
 
 protected:
-    std::vector<std::unique_ptr<Runnable>> thrs_;
+    container_type thrs_;
 };
 
-namespace task_queue
-{
-
-using thread_pool_task_handler = std::function<void(void)>;
-
-class CPPEV_INTERNAL task_queue
-{
-    friend class thread_pool_task_queue_runnable;
-
-public:
-    task_queue() noexcept;
-
-    virtual ~task_queue();
-
-    void add_task(const thread_pool_task_handler &h) noexcept;
-
-    void add_task(thread_pool_task_handler &&h) noexcept;
-
-    void add_task(const std::vector<thread_pool_task_handler> &vh) noexcept;
-
-protected:
-    std::queue<thread_pool_task_handler> queue_;
-
-    std::mutex lock_;
-
-    std::condition_variable cond_;
-
-    bool stop_;
-};
+class thread_pool_task_queue;
 
 class CPPEV_PRIVATE thread_pool_task_queue_runnable final : public runnable
 {
 public:
-    thread_pool_task_queue_runnable(task_queue *task_queue) noexcept;
+    thread_pool_task_queue_runnable(thread_pool_task_queue *tptq) noexcept;
 
     void run_impl() override;
 
 private:
-    task_queue *task_queue_;
+    thread_pool_task_queue *tptq_;
 };
 
+using thread_pool_task_handler = std::function<void(void)>;
+
 class CPPEV_PUBLIC thread_pool_task_queue final
-    : public task_queue,
-      public thread_pool<thread_pool_task_queue_runnable, task_queue *>
+    : private thread_pool<thread_pool_task_queue_runnable,
+                          thread_pool_task_queue *>
 {
+    friend class thread_pool_task_queue_runnable;
+
+    using thread_pool_base_type =
+        thread_pool<thread_pool_task_queue_runnable, thread_pool_task_queue *>;
+
 public:
     thread_pool_task_queue(int thr_num);
 
@@ -144,14 +164,27 @@ public:
 
     ~thread_pool_task_queue();
 
+    using thread_pool_base_type::run;
+
+    using thread_pool_base_type::size;
+
+    void add_task(const thread_pool_task_handler &h) noexcept;
+
+    void add_task(thread_pool_task_handler &&h) noexcept;
+
+    void add_task(const std::vector<thread_pool_task_handler> &vh) noexcept;
+
     void stop() noexcept;
+
+private:
+    std::queue<thread_pool_task_handler> queue_;
+
+    std::mutex lock_;
+
+    std::condition_variable cond_;
+
+    bool stop_;
 };
-
-}  // namespace task_queue
-
-using thread_pool_task_queue = task_queue::thread_pool_task_queue;
-
-using thread_pool_task_handler = task_queue::thread_pool_task_handler;
 
 }  // namespace cppev
 

@@ -276,35 +276,35 @@ public:
 
 protected:
     template <typename R1>
-    void run(std::vector<std::unique_ptr<R1>> &rv)
+    void run(std::vector<std::unique_ptr<R1>> &rpv)
     {
         ignore_signal(SIGPIPE);
         tp_.run();
-        for (auto &r : rv)
+        for (auto &rp : rpv)
         {
-            r->run();
+            rp->run();
         }
     }
 
     template <typename R1>
-    void shutdown(std::vector<std::unique_ptr<R1>> &rv)
+    void shutdown(std::vector<std::unique_ptr<R1>> &rpv)
     {
-        for (auto &r : rv)
+        for (auto &rp : rpv)
         {
-            r->shutdown();
+            rp->shutdown();
         }
-        for (auto &r : rv)
+        for (auto &rp : rpv)
         {
-            r->join();
+            rp->join();
         }
 
-        for (int i = 0; i < tp_.size(); ++i)
+        for (auto &thr : tp_)
         {
-            tp_[i].shutdown();
+            thr.shutdown();
         }
-        for (int i = 0; i < tp_.size(); ++i)
+        for (auto &thr : tp_)
         {
-            tp_[i].join();
+            thr.join();
         }
     }
 

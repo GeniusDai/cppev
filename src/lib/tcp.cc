@@ -440,9 +440,9 @@ void connector::shutdown()
 tcp_common::tcp_common(int iohandler_num, void *external_data)
     : data_(external_data), tp_(iohandler_num, &data_)
 {
-    for (int i = 0; i < tp_.size(); ++i)
+    for (auto &thr : tp_)
     {
-        data_.evls.push_back(&(tp_[i].evlp()));
+        data_.evls.push_back(&(thr.evlp()));
     }
 }
 
