@@ -37,10 +37,8 @@ struct TestStructBase
 
 const int delay = 100;
 
-TEST_F(TestIpcByFork, test_sem_shm_by_fork)
+TEST_F(TestIpcByFork, test_sem_shm_move)
 {
-    int shm_size = 12;
-
     std::vector<semaphore> sem_vec;
     sem_vec.emplace_back(name_);
     EXPECT_TRUE(sem_vec[0].creator());
@@ -48,10 +46,15 @@ TEST_F(TestIpcByFork, test_sem_shm_by_fork)
     sem_vec.pop_back();
 
     std::vector<shared_memory> shm_vec;
-    shm_vec.emplace_back(name_, shm_size);
+    shm_vec.emplace_back(name_, 66);
     EXPECT_TRUE(shm_vec[0].creator());
     shm_vec[0].unlink();
     shm_vec.clear();
+}
+
+TEST_F(TestIpcByFork, test_sem_shm_by_fork)
+{
+    int shm_size = 12;
 
     pid_t pid = fork();
     if (pid < 0)
