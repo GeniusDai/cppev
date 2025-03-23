@@ -146,6 +146,9 @@ public:
     event_loop &evlp();
 
     // Run io handling.
+    void run_without_exception_handling();
+
+    // Run with exception handling.
     void run_impl() override;
 
     // Shutdown io eventloop.
@@ -174,6 +177,9 @@ public:
     static void on_acpt_readable(const std::shared_ptr<io> &iop);
 
     // Register readable to event loop and start loop.
+    void run_without_exception_handling();
+
+    // Run with exception handling.
     void run_impl() override;
 
     // Specify listening socket's port and family.
@@ -214,6 +220,9 @@ public:
     static void on_pipe_readable(const std::shared_ptr<io> &iop);
 
     // Register readable to event loop and start loop.
+    void run_without_exception_handling();
+
+    // Run with exception handling.
     void run_impl() override;
 
     // Add connection task (ip, port, family).

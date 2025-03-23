@@ -112,6 +112,21 @@ size_t host_hash::operator()(
 const tcp_event_handler data_storage::idle_handler =
     [](const std::shared_ptr<socktcp> &) -> void {};
 
+static void with_exception_handling(const std::string &thr_name,
+                                    std::function<void()> handler)
+{
+    LOG_INFO_FMT("Thread %s starting", thr_name.c_str());
+    try
+    {
+        handler();
+    }
+    catch (std::exception &e)
+    {
+        LOG_ERROR << e.what();
+    }
+    LOG_INFO_FMT("Thread %s ending", thr_name.c_str());
+}
+
 iohandler::iohandler(data_storage *data)
     : evlp_(reinterpret_cast<void *>(data), reinterpret_cast<void *>(this))
 {
@@ -208,11 +223,16 @@ event_loop &iohandler::evlp()
     return evlp_;
 }
 
+void iohandler::run_without_exception_handling()
+{
+    evlp_.loop_forever();
+}
+
 void iohandler::run_impl()
 {
-    LOG_INFO << "Thread iohandler starting";
-    evlp_.loop_forever();
-    LOG_INFO << "Thread iohandler ending";
+    with_exception_handling(
+        "iohandler",
+        std::bind(&iohandler::run_without_exception_handling, this));
 }
 
 void iohandler::shutdown()
@@ -271,9 +291,8 @@ void acceptor::on_acpt_readable(const std::shared_ptr<io> &iop)
     }
 }
 
-void acceptor::run_impl()
+void acceptor::run_without_exception_handling()
 {
-    LOG_INFO << "Thread acceptor starting";
     for (auto &sock : socks_)
     {
         evlp_.fd_register_and_activate(std::static_pointer_cast<io>(sock),
@@ -281,7 +300,12 @@ void acceptor::run_impl()
                                        acceptor::on_acpt_readable);
     }
     evlp_.loop_forever();
-    LOG_INFO << "Thread acceptor ending";
+}
+
+void acceptor::run_impl()
+{
+    with_exception_handling(
+        "acceptor", std::bind(&acceptor::run_without_exception_handling, this));
 }
 
 void acceptor::shutdown()
@@ -422,14 +446,19 @@ void connector::on_pipe_readable(const std::shared_ptr<io> &iop)
     }
 }
 
-void connector::run_impl()
+void connector::run_without_exception_handling()
 {
-    LOG_INFO << "Thread connector starting";
     evlp_.fd_register_and_activate(std::static_pointer_cast<io>(rdp_),
                                    fd_event::fd_readable,
                                    connector::on_pipe_readable);
     evlp_.loop_forever();
-    LOG_INFO << "Thread connector ending";
+}
+
+void connector::run_impl()
+{
+    with_exception_handling(
+        "connector",
+        std::bind(&connector::run_without_exception_handling, this));
 }
 
 void connector::shutdown()
