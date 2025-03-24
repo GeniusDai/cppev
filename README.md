@@ -26,7 +26,7 @@ Support executable-file loading by subprocess, dynamic-library loading in runtim
 
 ### Reactor
 
-Support tcp server / client by multi-threading / nonblocking-io / level-trigger-event-listening.
+Support tcp server / client by multi-threading / nonblocking-io / level-trigger-event-listening with performance and robustness.
 
 # Usage
 
