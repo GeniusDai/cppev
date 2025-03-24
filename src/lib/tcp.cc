@@ -237,7 +237,10 @@ void iohandler::run_impl()
 
 void iohandler::shutdown()
 {
-    evlp_.stop_loop();
+    if (!evlp_.stop_loop(sysconfig::reactor_shutdown_timeout))
+    {
+        LOG_WARNING_FMT("iohandler shutdown wait timeout");
+    }
 }
 
 acceptor::acceptor(data_storage *data)
@@ -310,7 +313,10 @@ void acceptor::run_impl()
 
 void acceptor::shutdown()
 {
-    evlp_.stop_loop();
+    if (!evlp_.stop_loop(sysconfig::reactor_shutdown_timeout))
+    {
+        LOG_WARNING_FMT("acceptor shutdown wait timeout");
+    }
 }
 
 connector::connector(data_storage *data)
@@ -463,7 +469,10 @@ void connector::run_impl()
 
 void connector::shutdown()
 {
-    evlp_.stop_loop();
+    if (!evlp_.stop_loop(sysconfig::reactor_shutdown_timeout))
+    {
+        LOG_WARNING_FMT("connector shutdown wait timeout");
+    }
 }
 
 tcp_common::tcp_common(int iohandler_num, void *external_data)

@@ -11,14 +11,17 @@ namespace cppev
 namespace sysconfig
 {
 
-// Buffer size for udp socket
+// Buffer size for udp socket.
 CPPEV_PUBLIC extern int udp_buffer_size;
 
-// File descriptor numbers for each epoll / kevent
+// File descriptor numbers for each epoll / kevent.
 CPPEV_PUBLIC extern int event_number;
 
-// Default batch size for stream's read and write
+// Default batch size for stream's read and write.
 CPPEV_PUBLIC extern int buffer_io_step;
+
+// Timeout for reactor shutdown in milliseconds.
+CPPEV_PUBLIC extern int reactor_shutdown_timeout;
 
 }  // namespace sysconfig
 
