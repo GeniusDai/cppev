@@ -205,7 +205,7 @@ void event_loop::loop_once(int timeout)
     }
 }
 
-void event_loop::stop_loop()
+bool event_loop::stop_loop_ts_wl(waiter_type waiter)
 {
     auto iopps = io_factory::get_pipes();
     iopps[1]->set_evlp(this);
@@ -226,10 +226,30 @@ void event_loop::stop_loop()
     this->fd_register_and_activate(std::dynamic_pointer_cast<io>(iopps[1]),
                                    fd_event::fd_writable, handler,
                                    priority::lowest);
+
+    std::unique_lock<std::mutex> lock(lock_);
+    return waiter(lock);
+}
+
+void event_loop::stop_loop()
+{
+    waiter_type waiter = [this](std::unique_lock<std::mutex> &lock) -> bool
     {
-        std::unique_lock<std::mutex> lock(lock_);
-        cond_.wait(lock, [this] { return this->stop_; });
-    }
+        this->cond_.wait(lock, [this] { return this->stop_; });
+        return true;
+    };
+    stop_loop_ts_wl(std::move(waiter));
+}
+
+bool event_loop::stop_loop(int timeout)
+{
+    waiter_type waiter = [this,
+                          timeout](std::unique_lock<std::mutex> &lock) -> bool
+    {
+        return this->cond_.wait_for(lock, std::chrono::milliseconds(timeout),
+                                    [this] { return this->stop_; });
+    };
+    return stop_loop_ts_wl(std::move(waiter));
 }
 
 void event_loop::loop_forever(int timeout)

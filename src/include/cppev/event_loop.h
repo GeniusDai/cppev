@@ -158,6 +158,11 @@ public:
     // Stop loop.
     void stop_loop();
 
+    // Stop loop with timeout.
+    // @param timeout       timeout in millisecond.
+    // @return              true: other thread loop stopped; false: timeout.
+    bool stop_loop(int timeout);
+
 private:
     // Helper function to register fd event to event pollor.
     // @param iop       io smart pointer.
@@ -196,6 +201,13 @@ private:
     //                  seperated.
     std::vector<std::tuple<int, fd_event>> fd_io_multiplexing_wait_ts(
         int timeout);
+
+    using waiter_type = std::function<bool(std::unique_lock<std::mutex> &)>;
+
+    // Helper function to stop event loop.
+    // @param waiter    waiter function.
+    // @return              true: other thread loop stopped; false: timeout.
+    bool stop_loop_ts_wl(waiter_type waiter);
 
     // Protect the internal data structures to guarantee thread safety of
     // "register / remove / loop".
